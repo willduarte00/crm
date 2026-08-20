@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Agency Settings - AdPrecision CRM</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-secondary-fixed-variant": "#005049",
+                        "on-background": "#0b1c30",
+                        "surface-container-highest": "#d3e4fe",
+                        "primary-container": "#131b2e",
+                        "error": "#ba1a1a",
+                        "surface-container-high": "#dce9ff",
+                        "tertiary-fixed": "#e0e3e5",
+                        "on-primary": "#ffffff",
+                        "surface-container-lowest": "#ffffff",
+                        "inverse-primary": "#bec6e0",
+                        "primary-fixed": "#dae2fd",
+                        "error-container": "#ffdad6",
+                        "secondary-fixed": "#89f5e7",
+                        "inverse-on-surface": "#eaf1ff",
+                        "surface-bright": "#f8f9ff",
+                        "outline": "#76777d",
+                        "secondary": "#006a61",
+                        "surface-variant": "#d3e4fe",
+                        "on-tertiary": "#ffffff",
+                        "surface-container": "#e5eeff",
+                        "tertiary-fixed-dim": "#c4c7c9",
+                        "tertiary": "#000000",
+                        "inverse-surface": "#213145",
+                        "surface-container-low": "#eff4ff",
+                        "tertiary-container": "#191c1e",
+                        "on-tertiary-fixed-variant": "#444749",
+                        "on-error-container": "#93000a",
+                        "on-primary-container": "#7c839b",
+                        "on-tertiary-fixed": "#191c1e",
+                        "on-secondary-fixed": "#00201d",
+                        "on-secondary": "#ffffff",
+                        "outline-variant": "#c6c6cd",
+                        "on-surface-variant": "#45464d",
+                        "primary-fixed-dim": "#bec6e0",
+                        "surface": "#f8f9ff",
+                        "on-primary-fixed": "#131b2e",
+                        "on-tertiary-container": "#818486",
+                        "on-primary-fixed-variant": "#3f465c",
+                        "on-surface": "#0b1c30",
+                        "on-secondary-container": "#006f66",
+                        "background": "#f8f9ff",
+                        "surface-tint": "#565e74",
+                        "secondary-container": "#86f2e4",
+                        "primary": "#000000",
+                        "on-error": "#ffffff",
+                        "surface-dim": "#cbdbf5",
+                        "secondary-fixed-dim": "#6bd8cb"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "lg": "24px",
+                        "xl": "32px",
+                        "base": "4px",
+                        "xs": "4px",
+                        "md": "16px",
+                        "sm": "8px",
+                        "margin-safe": "32px",
+                        "max-width": "1440px",
+                        "gutter": "24px",
+                        "2xl": "48px"
+                    },
+                    "fontFamily": {
+                        "label-sm": ["Inter"],
+                        "display-lg-mobile": ["Inter"],
+                        "label-md": ["Inter"],
+                        "headline-sm": ["Inter"],
+                        "data-tabular": ["Inter"],
+                        "display-lg": ["Inter"],
+                        "headline-md": ["Inter"],
+                        "body-md": ["Inter"],
+                        "body-lg": ["Inter"]
+                    },
+                    "fontSize": {
+                        "label-sm": ["12px", { "lineHeight": "16px", "fontWeight": "500" }],
+                        "display-lg-mobile": ["28px", { "lineHeight": "34px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "label-md": ["13px", { "lineHeight": "18px", "letterSpacing": "0.05em", "fontWeight": "600" }],
+                        "headline-sm": ["20px", { "lineHeight": "28px", "fontWeight": "600" }],
+                        "data-tabular": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+                        "display-lg": ["36px", { "lineHeight": "44px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "headline-md": ["24px", { "lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+                        "body-md": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+                        "body-lg": ["16px", { "lineHeight": "24px", "fontWeight": "400" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .input-field {
+            @apply w-full bg-surface-container-lowest border border-outline-variant rounded-DEFAULT px-md py-sm text-on-surface focus:outline-none focus:border-secondary focus:ring-2 focus:ring-secondary/20 transition-all font-body-md;
+        }
+        .btn-primary {
+            @apply bg-[#0D9488] text-white hover:bg-[#0f766e] font-label-md px-md py-sm rounded-DEFAULT transition-colors duration-200 flex items-center justify-center gap-xs;
+        }
+        .card-surface {
+            @apply bg-surface-container-lowest border border-outline-variant rounded-lg p-lg;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background font-body-md min-h-screen flex">
+<!-- SideNavBar (from JSON) -->
+<nav class="hidden md:flex flex-col h-full w-[260px] fixed left-0 top-0 border-r border-outline-variant bg-surface p-md overflow-y-auto z-20">
+<div class="mb-xl px-sm">
+<div class="flex items-center gap-md">
+<div class="w-10 h-10 rounded-full bg-primary-container flex items-center justify-center text-on-primary-container font-headline-sm font-bold">
+                    A
+                </div>
+<div>
+<h1 class="font-headline-md text-headline-md font-bold text-on-surface">AdPrecision</h1>
+<p class="font-body-md text-body-md text-on-surface-variant">Marketing CRM</p>
+</div>
+</div>
+</div>
+<div class="flex flex-col gap-xs flex-1">
+<a class="flex items-center gap-sm text-on-surface-variant hover:bg-surface-container-high rounded-lg px-4 py-3 transition-colors duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+<span class="font-label-md text-label-md">Dashboard</span>
+</a>
+<a class="flex items-center gap-sm text-on-surface-variant hover:bg-surface-container-high rounded-lg px-4 py-3 transition-colors duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="groups">groups</span>
+<span class="font-label-md text-label-md">Clients</span>
+</a>
+<a class="flex items-center gap-sm text-on-surface-variant hover:bg-surface-container-high rounded-lg px-4 py-3 transition-colors duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="account_tree">account_tree</span>
+<span class="font-label-md text-label-md">Pipeline</span>
+</a>
+<a class="flex items-center gap-sm text-on-surface-variant hover:bg-surface-container-high rounded-lg px-4 py-3 transition-colors duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="description">description</span>
+<span class="font-label-md text-label-md">Contracts</span>
+</a>
+<a class="flex items-center gap-sm text-on-surface-variant hover:bg-surface-container-high rounded-lg px-4 py-3 transition-colors duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="payments">payments</span>
+<span class="font-label-md text-label-md">Financials</span>
+</a>
+<a class="flex items-center gap-sm text-on-surface-variant hover:bg-surface-container-high rounded-lg px-4 py-3 transition-colors duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="person">person</span>
+<span class="font-label-md text-label-md">Users</span>
+</a>
+<a class="flex items-center gap-sm bg-secondary-container text-on-secondary-container rounded-lg px-4 py-3 scale-[0.99] transition-transform duration-150" href="#">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+<span class="font-label-md text-label-md">Settings</span>
+</a>
+</div>
+</nav>
+<!-- Main Content Area -->
+<div class="flex-1 flex flex-col md:ml-[260px] min-h-screen">
+<!-- TopNavBar (from JSON) -->
+<header class="fixed top-0 right-0 w-full md:w-[calc(100%-260px)] h-16 bg-surface border-b border-outline-variant flex justify-between items-center px-lg z-10">
+<div class="flex items-center gap-md">
+<!-- Mobile Menu Trigger -->
+<button class="md:hidden p-2 text-on-surface-variant hover:bg-surface-container-low rounded-full">
+<span class="material-symbols-outlined">menu</span>
+</button>
+<div class="hidden md:flex text-on-surface-variant font-body-md text-body-md items-center gap-sm">
+<span class="hover:text-primary cursor-pointer transition-colors">Home</span>
+<span class="material-symbols-outlined text-sm">chevron_right</span>
+<span class="text-secondary font-bold">Settings</span>
+</div>
+</div>
+<div class="flex items-center gap-sm text-primary">
+<button class="hover:bg-surface-container-low rounded-full p-2 transition-colors">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+</button>
+<button class="hover:bg-surface-container-low rounded-full p-2 transition-colors">
+<span class="material-symbols-outlined" data-icon="help">help</span>
+</button>
+<button class="hover:bg-surface-container-low rounded-full p-2 transition-colors">
+<span class="material-symbols-outlined" data-icon="apps">apps</span>
+</button>
+<div class="w-8 h-8 rounded-full bg-surface-variant ml-sm flex items-center justify-center border border-outline-variant cursor-pointer overflow-hidden">
+<img alt="User Profile" class="w-full h-full object-cover" data-alt="A small, professional headshot of a business user in a corporate CRM setting, conveying efficiency and trust, minimalist light background." src="https://lh3.googleusercontent.com/aida-public/AB6AXuA6FAwN5bCBrZKE4jLBbxKZXGTIxPUMIkm-ffiQ4O0UcPcVeVQIrIfeSbalg6s5p9NuehqVkbfKOySQ7mLAo9JNKXnXcR8c044Ia5xjmwDcjP4nOuJrpaOqRMFolcyys7spQW7F6_dHxPRpuiBIxJyjLFWCb8IqoTmvbY6vRsL2cpcpxuTZU-ZtksHaO-SiqiH8Uv9SH7rRrn3cRwIgCiwcoCvJwMhYKBKIDiBOz0PI9carIsv11CKDLA"/>
+</div>
+</div>
+</header>
+<!-- Canvas -->
+<main class="flex-1 mt-16 p-lg md:p-xl lg:px-2xl max-w-max-width mx-auto w-full">
+<div class="mb-lg flex justify-between items-end">
+<div>
+<h2 class="font-display-lg text-display-lg text-on-surface mb-xs">Agency Settings</h2>
+<p class="font-body-lg text-body-lg text-on-surface-variant">Manage your agency's core details and financial information.</p>
+</div>
+<button class="btn-primary hidden md:flex">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">save</span>
+                    Save All Changes
+                </button>
+</div>
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-lg lg:gap-xl">
+<!-- Left Column: Navigation/Summary -->
+<div class="lg:col-span-3 space-y-md">
+<div class="card-surface p-md">
+<nav class="flex flex-col gap-xs">
+<a class="font-label-md text-label-md px-md py-sm rounded-DEFAULT bg-surface-container-high text-on-surface flex items-center gap-sm" href="#profile">
+<span class="material-symbols-outlined text-[18px]">domain</span>
+                                Agency Profile
+                            </a>
+<a class="font-label-md text-label-md px-md py-sm rounded-DEFAULT text-on-surface-variant hover:bg-surface-container-low flex items-center gap-sm transition-colors" href="#financials">
+<span class="material-symbols-outlined text-[18px]">account_balance</span>
+                                Financial Details
+                            </a>
+</nav>
+</div>
+</div>
+<!-- Right Column: Settings Forms -->
+<div class="lg:col-span-9 space-y-xl">
+<!-- Agency Profile Section -->
+<section class="card-surface scroll-mt-24" id="profile">
+<div class="border-b border-outline-variant pb-md mb-md">
+<h3 class="font-headline-sm text-headline-sm text-on-surface flex items-center gap-sm">
+<span class="material-symbols-outlined text-secondary">domain</span>
+                                Agency Profile
+                            </h3>
+</div>
+<div class="flex flex-col md:flex-row gap-lg">
+<div class="flex-shrink-0 flex flex-col items-center gap-sm">
+<div class="w-32 h-32 rounded-lg bg-surface-container border border-dashed border-outline flex flex-col items-center justify-center text-on-surface-variant cursor-pointer hover:bg-surface-container-high transition-colors relative overflow-hidden group">
+<span class="material-symbols-outlined text-3xl mb-xs">upload_file</span>
+<span class="font-label-sm text-label-sm">Upload Logo</span>
+<div class="absolute inset-0 bg-black/5 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+<span class="font-label-md text-white bg-black/50 px-2 py-1 rounded">Change</span>
+</div>
+</div>
+<p class="font-body-md text-[12px] text-on-surface-variant text-center max-w-[120px]">JPG, PNG or SVG. Max 2MB.</p>
+</div>
+<div class="flex-1 space-y-md">
+<div>
+<label class="block font-label-md text-label-md text-on-surface mb-xs">Agency Name</label>
+<input class="input-field" type="text" value="AdPrecision Marketing"/>
+</div>
+<div>
+<label class="block font-label-md text-label-md text-on-surface mb-xs">Primary Contact Email</label>
+<input class="input-field" type="email" value="contact@adprecision.com"/>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-md">
+<div>
+<label class="block font-label-md text-label-md text-on-surface mb-xs">Phone Number</label>
+<input class="input-field" type="tel" value="+1 (555) 123-4567"/>
+</div>
+<div>
+<label class="block font-label-md text-label-md text-on-surface mb-xs">Timezone</label>
+<select class="input-field bg-white">
+<option>UTC-5 (Eastern Time)</option>
+<option>UTC-8 (Pacific Time)</option>
+</select>
+</div>
+</div>
+</div>
+</div>
+<div class="mt-lg flex justify-end">
+<button class="font-label-md text-label-md px-md py-sm rounded-DEFAULT border border-outline text-on-surface hover:bg-surface-container-low transition-colors">
+                                Save Profile
+                            </button>
+</div>
+</section>
+<!-- Financial Details Section -->
+<section class="card-surface scroll-mt-24" id="financials">
+<div class="border-b border-outline-variant pb-md mb-md">
+<h3 class="font-headline-sm text-headline-sm text-on-surface flex items-center gap-sm">
+<span class="material-symbols-outlined text-secondary">account_balance</span>
+                                Financial Details
+                            </h3>
+<p class="font-body-md text-body-md text-on-surface-variant mt-xs">Configure payment receiving methods.</p>
+</div>
+<div class="space-y-xl">
+<!-- PIX Configuration -->
+<div class="bg-surface-bright border border-outline-variant rounded-lg p-md">
+<h4 class="font-label-md text-label-md text-on-surface mb-md flex items-center gap-xs">
+<span class="material-symbols-outlined text-[18px]">qr_code</span>
+                                    PIX Configuration
+                                </h4>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-md">
+<div class="md:col-span-1">
+<label class="block font-label-md text-label-md text-on-surface mb-xs">Key Type</label>
+<select class="input-field bg-white">
+<option value="cnpj">CNPJ</option>
+<option value="cpf">CPF</option>
+<option value="email">Email</option>
+<option value="phone">Phone</option>
+<option value="random">Random Key</option>
+</select>
+</div>
+<div class="md:col-span-2">
+<label class="block font-label-md text-label-md text-on-surface mb-xs">PIX Key</label>
+<div class="relative">
+<input class="input-field font-data-tabular pl-10" type="text" value="12.345.678/0001-90"/>
+<span class="material-symbols-outlined absolute left-sm top-1/2 -translate-y-1/2 text-on-surface-variant">key</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Bank Details -->
+<div class="bg-surface-bright border border-outline-variant rounded-lg p-md">
+<h4 class="font-label-md text-label-md text-on-surface mb-md flex items-center gap-xs">
+<span class="material-symbols-outlined text-[18px]">account_balance_wallet</span>
+                                    Bank Details
+                                </h4>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-md">
+<div>
+<label class="block font-label-md text-label-md text-on-surface mb-xs">Bank Name</label>
+<input class="input-field" type="text" value="Corporate Bank Inc."/>
+</div>
+<div>
+<label class="block font-label-md text-label-md text-on-surface mb-xs">Account Name</label>
+<input class="input-field" type="text" value="AdPrecision Marketing LLC"/>
+</div>
+<div>
+<label class="block font-label-md text-label-md text-on-surface mb-xs">Routing Number / ISPB</label>
+<input class="input-field font-data-tabular" type="text" value="123456789"/>
+</div>
+<div>
+<label class="block font-label-md text-label-md text-on-surface mb-xs">Account Number</label>
+<input class="input-field font-data-tabular" type="text" value="987654321-0"/>
+</div>
+</div>
+</div>
+</div>
+<div class="mt-lg flex justify-end gap-sm border-t border-outline-variant pt-md">
+<button class="font-label-md text-label-md px-md py-sm rounded-DEFAULT border border-outline text-on-surface hover:bg-surface-container-low transition-colors">
+                                Cancel
+                            </button>
+<button class="btn-primary">
+<span class="material-symbols-outlined text-[18px]">check</span>
+                                Save Financials
+                            </button>
+</div>
+</section>
+</div>
+</div>
+<!-- Mobile Sticky Action Bar -->
+<div class="md:hidden fixed bottom-0 left-0 w-full bg-surface border-t border-outline-variant p-md z-30 flex justify-end">
+<button class="btn-primary w-full shadow-lg">
+<span class="material-symbols-outlined">save</span>
+                    Save All Changes
+                </button>
+</div>
+<div class="md:hidden h-20"></div> <!-- Spacer for mobile fixed bar -->
+</main>
+</div>
+</body></html>

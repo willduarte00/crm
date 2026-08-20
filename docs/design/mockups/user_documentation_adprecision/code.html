@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>AdPrecision - Help Center</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-primary": "#ffffff",
+                        "surface-tint": "#565e74",
+                        "secondary-container": "#86f2e4",
+                        "on-tertiary-fixed-variant": "#444749",
+                        "on-secondary-fixed": "#00201d",
+                        "background": "#f8f9ff",
+                        "secondary-fixed-dim": "#6bd8cb",
+                        "primary-fixed": "#dae2fd",
+                        "on-secondary-fixed-variant": "#005049",
+                        "on-primary-fixed": "#131b2e",
+                        "on-secondary": "#ffffff",
+                        "inverse-primary": "#bec6e0",
+                        "surface-container": "#e5eeff",
+                        "primary": "#000000",
+                        "on-secondary-container": "#006f66",
+                        "surface-variant": "#d3e4fe",
+                        "tertiary-fixed": "#e0e3e5",
+                        "on-primary-fixed-variant": "#3f465c",
+                        "surface-dim": "#cbdbf5",
+                        "inverse-surface": "#213145",
+                        "secondary-fixed": "#89f5e7",
+                        "outline-variant": "#c6c6cd",
+                        "surface-container-high": "#dce9ff",
+                        "primary-fixed-dim": "#bec6e0",
+                        "surface-container-lowest": "#ffffff",
+                        "on-background": "#0b1c30",
+                        "tertiary-fixed-dim": "#c4c7c9",
+                        "on-surface-variant": "#45464d",
+                        "surface-container-highest": "#d3e4fe",
+                        "tertiary-container": "#191c1e",
+                        "primary-container": "#131b2e",
+                        "secondary": "#006a61",
+                        "on-error": "#ffffff",
+                        "error": "#ba1a1a",
+                        "surface-container-low": "#eff4ff",
+                        "outline": "#76777d",
+                        "on-tertiary": "#ffffff",
+                        "surface-bright": "#f8f9ff",
+                        "on-tertiary-fixed": "#191c1e",
+                        "on-primary-container": "#7c839b",
+                        "tertiary": "#000000",
+                        "error-container": "#ffdad6",
+                        "on-error-container": "#93000a",
+                        "surface": "#f8f9ff",
+                        "on-tertiary-container": "#818486",
+                        "on-surface": "#0b1c30",
+                        "inverse-on-surface": "#eaf1ff"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "sm": "8px",
+                        "xs": "4px",
+                        "2xl": "48px",
+                        "lg": "24px",
+                        "max-width": "1440px",
+                        "xl": "32px",
+                        "base": "4px",
+                        "md": "16px",
+                        "gutter": "24px",
+                        "margin-safe": "32px"
+                    },
+                    "fontFamily": {
+                        "headline-md": ["Inter"],
+                        "display-lg-mobile": ["Inter"],
+                        "headline-sm": ["Inter"],
+                        "data-tabular": ["Inter"],
+                        "label-sm": ["Inter"],
+                        "display-lg": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "label-md": ["Inter"],
+                        "body-md": ["Inter"]
+                    },
+                    "fontSize": {
+                        "headline-md": ["24px", { "lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+                        "display-lg-mobile": ["28px", { "lineHeight": "34px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "headline-sm": ["20px", { "lineHeight": "28px", "fontWeight": "600" }],
+                        "data-tabular": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+                        "label-sm": ["12px", { "lineHeight": "16px", "fontWeight": "500" }],
+                        "display-lg": ["36px", { "lineHeight": "44px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "body-lg": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "label-md": ["13px", { "lineHeight": "18px", "letterSpacing": "0.05em", "fontWeight": "600" }],
+                        "body-md": ["14px", { "lineHeight": "20px", "fontWeight": "400" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background font-body-md min-h-screen">
+<!-- SideNavBar -->
+<nav class="bg-surface fixed h-screen w-[260px] left-0 top-0 border-r border-outline-variant flex flex-col py-lg z-20 hidden md:flex">
+<div class="px-md mb-xl flex items-center gap-md">
+<div class="w-8 h-8 rounded bg-primary flex items-center justify-center text-on-primary">
+<span class="material-symbols-outlined text-[20px]" data-icon="dashboard">dashboard</span>
+</div>
+<div>
+<h1 class="font-headline-sm text-headline-sm font-bold text-on-surface">AdPrecision</h1>
+<p class="font-label-sm text-label-sm text-on-surface-variant">Marketing CRM</p>
+</div>
+</div>
+<div class="flex flex-col gap-sm px-sm flex-1">
+<a class="flex items-center gap-md px-md py-sm rounded-lg text-on-surface-variant hover:bg-surface-container-low transition-colors duration-200 ease-in-out font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+                Dashboard
+            </a>
+<a class="flex items-center gap-md px-md py-sm rounded-lg text-on-surface-variant hover:bg-surface-container-low transition-colors duration-200 ease-in-out font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined" data-icon="groups">groups</span>
+                Clients
+            </a>
+<a class="flex items-center gap-md px-md py-sm rounded-lg text-on-surface-variant hover:bg-surface-container-low transition-colors duration-200 ease-in-out font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined" data-icon="account_tree">account_tree</span>
+                Pipeline
+            </a>
+<a class="flex items-center gap-md px-md py-sm rounded-lg text-on-surface-variant hover:bg-surface-container-low transition-colors duration-200 ease-in-out font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined" data-icon="description">description</span>
+                Contracts
+            </a>
+<a class="flex items-center gap-md px-md py-sm rounded-lg text-on-surface-variant hover:bg-surface-container-low transition-colors duration-200 ease-in-out font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined" data-icon="payments">payments</span>
+                Financials
+            </a>
+<a class="flex items-center gap-md px-md py-sm rounded-lg text-on-surface-variant hover:bg-surface-container-low transition-colors duration-200 ease-in-out font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined" data-icon="person">person</span>
+                Users
+            </a>
+<a class="flex items-center gap-md px-md py-sm rounded-lg text-on-surface-variant hover:bg-surface-container-low transition-colors duration-200 ease-in-out font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+                Settings
+            </a>
+</div>
+<div class="px-sm mt-auto">
+<a class="flex items-center gap-md px-md py-sm rounded-lg text-secondary font-bold border-r-4 border-secondary bg-surface-container-low transition-colors duration-200 ease-in-out font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined text-secondary" data-icon="help" data-weight="fill">help</span>
+                Help Center
+            </a>
+</div>
+</nav>
+<!-- TopNavBar -->
+<header class="bg-surface fixed top-0 right-0 w-full md:w-[calc(100%-260px)] h-16 border-b border-outline-variant flex items-center justify-between px-lg z-10 transition-all duration-200">
+<div class="flex items-center gap-md w-full max-w-md">
+<span class="material-symbols-outlined text-on-surface-variant md:hidden" data-icon="menu">menu</span>
+<div class="relative w-full hidden md:block">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-[20px]" data-icon="search">search</span>
+<input class="w-full bg-surface-container-lowest border border-outline-variant rounded-full py-2 pl-10 pr-4 font-body-md text-body-md focus:outline-none focus:border-secondary focus:ring-1 focus:ring-secondary/20 placeholder:text-on-surface-variant" placeholder="Search Help Center..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-lg">
+<button class="text-on-surface-variant hover:bg-surface-container-low p-2 rounded-full transition-colors duration-200">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+</button>
+<div class="w-8 h-8 rounded-full bg-surface-container-high border border-outline-variant overflow-hidden cursor-pointer">
+<img alt="User Profile" class="w-full h-full object-cover" data-alt="Professional headshot of a corporate user against a clean light background, facing slightly towards the camera." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCIe85VJE6aktl1r8FZ_KjuhZkksaQgI1fHozHzm_F-ZXa-u-sa9VTdVn05NOUbvullnjELnGwWKtprJxAPzpU9igtQCuXeA9oLXcgm_yh3yorkshdz07YVQ1UQYihSmchzVg-QEOLJ3zBW6yqaZltnnEj5rM8leD35EL1oF3GPu0Wa8SUmqFA2rHy785dkO8JZ2xTUnx7tejZUZ8QDe3VrAIFT-tUhURkPWCFEKaaW1-ONwHMy1S7hbg"/>
+</div>
+</div>
+</header>
+<!-- Main Content -->
+<main class="pt-[88px] pb-xl px-lg md:ml-[260px] max-w-max-width mx-auto w-full flex flex-col gap-2xl">
+<!-- Hero Section -->
+<section class="bg-surface-container-lowest rounded-xl border border-outline-variant p-2xl flex flex-col items-center justify-center text-center relative overflow-hidden shadow-[0px_10px_15px_-3px_rgba(0,0,0,0.05)]">
+<div class="absolute inset-0 bg-gradient-to-br from-surface-container-high/50 to-transparent pointer-events-none"></div>
+<div class="relative z-10 max-w-2xl w-full">
+<h2 class="font-display-lg text-display-lg text-on-surface mb-md">How can we help you today?</h2>
+<div class="relative w-full mb-lg shadow-sm">
+<span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-secondary text-[24px]" data-icon="search">search</span>
+<input class="w-full bg-surface border border-outline-variant rounded-lg py-4 pl-12 pr-4 font-body-lg text-body-lg focus:outline-none focus:border-secondary focus:ring-2 focus:ring-secondary/20 placeholder:text-on-surface-variant shadow-sm transition-all" placeholder="Search for articles, guides, or features..." type="text"/>
+</div>
+<div class="flex flex-wrap justify-center gap-md font-label-md text-label-md">
+<span class="text-on-surface-variant">Popular:</span>
+<a class="text-secondary hover:underline" href="#">Getting Started</a>
+<a class="text-secondary hover:underline" href="#">Financial Tracking</a>
+<a class="text-secondary hover:underline" href="#">WhatsApp Integration</a>
+</div>
+</div>
+</section>
+<!-- Category Grid -->
+<section>
+<h3 class="font-headline-md text-headline-md text-on-surface mb-lg">Browse by Category</h3>
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-lg">
+<!-- Card 1 -->
+<a class="group bg-surface-container-lowest border border-outline-variant rounded-xl p-lg hover:border-secondary transition-colors duration-200 hover:shadow-[0px_10px_15px_-3px_rgba(0,0,0,0.1)] flex flex-col gap-md h-full" href="#">
+<div class="w-12 h-12 rounded-lg bg-surface-container-low flex items-center justify-center text-secondary group-hover:bg-secondary group-hover:text-on-secondary transition-colors duration-200">
+<span class="material-symbols-outlined text-[28px]" data-icon="rocket_launch">rocket_launch</span>
+</div>
+<div>
+<h4 class="font-headline-sm text-headline-sm text-on-surface mb-sm group-hover:text-secondary transition-colors">Getting Started</h4>
+<p class="font-body-md text-body-md text-on-surface-variant">Account setup, platform navigation basics, and initial configuration steps.</p>
+</div>
+</a>
+<!-- Card 2 -->
+<a class="group bg-surface-container-lowest border border-outline-variant rounded-xl p-lg hover:border-secondary transition-colors duration-200 hover:shadow-[0px_10px_15px_-3px_rgba(0,0,0,0.1)] flex flex-col gap-md h-full" href="#">
+<div class="w-12 h-12 rounded-lg bg-surface-container-low flex items-center justify-center text-secondary group-hover:bg-secondary group-hover:text-on-secondary transition-colors duration-200">
+<span class="material-symbols-outlined text-[28px]" data-icon="view_kanban">view_kanban</span>
+</div>
+<div>
+<h4 class="font-headline-sm text-headline-sm text-on-surface mb-sm group-hover:text-secondary transition-colors">Pipeline Management</h4>
+<p class="font-body-md text-body-md text-on-surface-variant">Managing leads, stages, moving cards, and optimizing your sales workflow.</p>
+</div>
+</a>
+<!-- Card 3 -->
+<a class="group bg-surface-container-lowest border border-outline-variant rounded-xl p-lg hover:border-secondary transition-colors duration-200 hover:shadow-[0px_10px_15px_-3px_rgba(0,0,0,0.1)] flex flex-col gap-md h-full" href="#">
+<div class="w-12 h-12 rounded-lg bg-surface-container-low flex items-center justify-center text-secondary group-hover:bg-secondary group-hover:text-on-secondary transition-colors duration-200">
+<span class="material-symbols-outlined text-[28px]" data-icon="folder_open">folder_open</span>
+</div>
+<div>
+<h4 class="font-headline-sm text-headline-sm text-on-surface mb-sm group-hover:text-secondary transition-colors">Contracts &amp; Files</h4>
+<p class="font-body-md text-body-md text-on-surface-variant">Handling client agreements, document storage, and file organization.</p>
+</div>
+</a>
+<!-- Card 4 -->
+<a class="group bg-surface-container-lowest border border-outline-variant rounded-xl p-lg hover:border-secondary transition-colors duration-200 hover:shadow-[0px_10px_15px_-3px_rgba(0,0,0,0.1)] flex flex-col gap-md h-full" href="#">
+<div class="w-12 h-12 rounded-lg bg-surface-container-low flex items-center justify-center text-secondary group-hover:bg-secondary group-hover:text-on-secondary transition-colors duration-200">
+<span class="material-symbols-outlined text-[28px]" data-icon="account_balance">account_balance</span>
+</div>
+<div>
+<h4 class="font-headline-sm text-headline-sm text-on-surface mb-sm group-hover:text-secondary transition-colors">Financial &amp; Payments</h4>
+<p class="font-body-md text-body-md text-on-surface-variant">Manual billing, recording PIX keys, and tracking payment statuses.</p>
+</div>
+</a>
+<!-- Card 5 -->
+<a class="group bg-surface-container-lowest border border-outline-variant rounded-xl p-lg hover:border-secondary transition-colors duration-200 hover:shadow-[0px_10px_15px_-3px_rgba(0,0,0,0.1)] flex flex-col gap-md h-full" href="#">
+<div class="w-12 h-12 rounded-lg bg-surface-container-low flex items-center justify-center text-secondary group-hover:bg-secondary group-hover:text-on-secondary transition-colors duration-200">
+<span class="material-symbols-outlined text-[28px]" data-icon="chat">chat</span>
+</div>
+<div>
+<h4 class="font-headline-sm text-headline-sm text-on-surface mb-sm group-hover:text-secondary transition-colors">WhatsApp Messaging</h4>
+<p class="font-body-md text-body-md text-on-surface-variant">Setting up templates, sending reminders, and chat integrations.</p>
+</div>
+</a>
+<!-- Card 6 -->
+<a class="group bg-surface-container-lowest border border-outline-variant rounded-xl p-lg hover:border-secondary transition-colors duration-200 hover:shadow-[0px_10px_15px_-3px_rgba(0,0,0,0.1)] flex flex-col gap-md h-full" href="#">
+<div class="w-12 h-12 rounded-lg bg-surface-container-low flex items-center justify-center text-secondary group-hover:bg-secondary group-hover:text-on-secondary transition-colors duration-200">
+<span class="material-symbols-outlined text-[28px]" data-icon="security">security</span>
+</div>
+<div>
+<h4 class="font-headline-sm text-headline-sm text-on-surface mb-sm group-hover:text-secondary transition-colors">Account &amp; Security</h4>
+<p class="font-body-md text-body-md text-on-surface-variant">Agency settings, administrative permissions, and user management.</p>
+</div>
+</a>
+</div>
+</section>
+</main>
+</body></html>

@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Login - AdPrecision</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "on-secondary-fixed-variant": "#005049",
+                      "surface-container-high": "#dce9ff",
+                      "surface-bright": "#f8f9ff",
+                      "on-tertiary-fixed-variant": "#444749",
+                      "surface-container-highest": "#d3e4fe",
+                      "outline": "#76777d",
+                      "inverse-on-surface": "#eaf1ff",
+                      "surface-container-low": "#eff4ff",
+                      "inverse-surface": "#213145",
+                      "secondary-fixed": "#89f5e7",
+                      "error-container": "#ffdad6",
+                      "on-secondary-fixed": "#00201d",
+                      "secondary-fixed-dim": "#6bd8cb",
+                      "on-primary-fixed": "#131b2e",
+                      "primary-fixed-dim": "#bec6e0",
+                      "tertiary": "#000000",
+                      "tertiary-fixed-dim": "#c4c7c9",
+                      "surface-container": "#e5eeff",
+                      "on-primary-container": "#7c839b",
+                      "surface-dim": "#cbdbf5",
+                      "inverse-primary": "#bec6e0",
+                      "surface-container-lowest": "#ffffff",
+                      "on-tertiary-fixed": "#191c1e",
+                      "surface-variant": "#d3e4fe",
+                      "tertiary-container": "#191c1e",
+                      "primary-container": "#131b2e",
+                      "on-error": "#ffffff",
+                      "on-surface-variant": "#45464d",
+                      "on-primary-fixed-variant": "#3f465c",
+                      "on-secondary-container": "#006f66",
+                      "primary-fixed": "#dae2fd",
+                      "surface-tint": "#565e74",
+                      "secondary": "#006a61",
+                      "on-tertiary": "#ffffff",
+                      "secondary-container": "#86f2e4",
+                      "on-tertiary-container": "#818486",
+                      "on-secondary": "#ffffff",
+                      "surface": "#f8f9ff",
+                      "error": "#ba1a1a",
+                      "tertiary-fixed": "#e0e3e5",
+                      "on-background": "#0b1c30",
+                      "on-surface": "#0b1c30",
+                      "on-primary": "#ffffff",
+                      "on-error-container": "#93000a",
+                      "outline-variant": "#c6c6cd",
+                      "background": "#f8f9ff",
+                      "primary": "#000000"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.125rem",
+                      "lg": "0.25rem",
+                      "xl": "0.5rem",
+                      "full": "0.75rem"
+              },
+              "spacing": {
+                      "lg": "24px",
+                      "xl": "32px",
+                      "2xl": "48px",
+                      "margin-safe": "32px",
+                      "md": "16px",
+                      "max-width": "1440px",
+                      "sm": "8px",
+                      "gutter": "24px",
+                      "xs": "4px",
+                      "base": "4px"
+              },
+              "fontFamily": {
+                      "body-md": [
+                              "Inter"
+                      ],
+                      "headline-md": [
+                              "Inter"
+                      ],
+                      "data-tabular": [
+                              "Inter"
+                      ],
+                      "label-md": [
+                              "Inter"
+                      ],
+                      "headline-sm": [
+                              "Inter"
+                      ],
+                      "label-sm": [
+                              "Inter"
+                      ],
+                      "body-lg": [
+                              "Inter"
+                      ],
+                      "display-lg-mobile": [
+                              "Inter"
+                      ],
+                      "display-lg": [
+                              "Inter"
+                      ]
+              },
+              "fontSize": {
+                      "body-md": [
+                              "14px",
+                              {
+                                      "lineHeight": "20px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "headline-md": [
+                              "24px",
+                              {
+                                      "lineHeight": "32px",
+                                      "letterSpacing": "-0.01em",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "data-tabular": [
+                              "14px",
+                              {
+                                      "lineHeight": "20px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "label-md": [
+                              "13px",
+                              {
+                                      "lineHeight": "18px",
+                                      "letterSpacing": "0.05em",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "headline-sm": [
+                              "20px",
+                              {
+                                      "lineHeight": "28px",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "label-sm": [
+                              "12px",
+                              {
+                                      "lineHeight": "16px",
+                                      "fontWeight": "500"
+                              }
+                      ],
+                      "body-lg": [
+                              "16px",
+                              {
+                                      "lineHeight": "24px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "display-lg-mobile": [
+                              "28px",
+                              {
+                                      "lineHeight": "34px",
+                                      "letterSpacing": "-0.02em",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "display-lg": [
+                              "36px",
+                              {
+                                      "lineHeight": "44px",
+                                      "letterSpacing": "-0.02em",
+                                      "fontWeight": "700"
+                              }
+                      ]
+              }
+      },
+          },
+        }
+      </script>
+</head>
+<body class="bg-background min-h-screen flex items-center justify-center p-md font-body-md text-on-background">
+<!-- Centered Card Container -->
+<main class="w-full max-w-[400px] bg-surface-container-lowest rounded-xl border border-outline-variant p-xl shadow-[0px_10px_15px_-3px_rgba(0,0,0,0.1)] flex flex-col gap-lg">
+<!-- Header -->
+<header class="text-center flex flex-col gap-sm items-center">
+<div class="w-12 h-12 bg-primary rounded-lg flex items-center justify-center mb-sm">
+<span class="material-symbols-outlined text-on-primary text-[24px]">view_in_ar</span>
+</div>
+<h1 class="font-headline-md text-headline-md text-on-background">Sign In</h1>
+<p class="font-body-md text-body-md text-on-surface-variant">Welcome back to AdPrecision CRM</p>
+</header>
+<!-- Form -->
+<form action="#" class="flex flex-col gap-md" method="POST">
+<div class="flex flex-col gap-xs">
+<label class="font-label-md text-label-md text-on-background" for="email">Email Address</label>
+<div class="relative">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-[20px]">mail</span>
+<input class="w-full bg-surface border border-outline-variant rounded-lg pl-10 pr-md py-[10px] font-body-md text-body-md text-on-background focus:border-secondary focus:ring-2 focus:ring-secondary/20 transition-all outline-none" id="email" name="email" placeholder="name@agency.com" required="" type="email"/>
+</div>
+</div>
+<div class="flex flex-col gap-xs">
+<div class="flex justify-between items-center">
+<label class="font-label-md text-label-md text-on-background" for="password">Password</label>
+<a class="font-label-sm text-label-sm text-secondary hover:text-on-secondary-container transition-colors" href="#">Forgot password?</a>
+</div>
+<div class="relative">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-[20px]">lock</span>
+<input class="w-full bg-surface border border-outline-variant rounded-lg pl-10 pr-md py-[10px] font-body-md text-body-md text-on-background focus:border-secondary focus:ring-2 focus:ring-secondary/20 transition-all outline-none" id="password" name="password" placeholder="••••••••" required="" type="password"/>
+</div>
+</div>
+<!-- Notice for first-time login -->
+<div class="bg-surface-container-low p-sm rounded-lg flex items-start gap-sm mt-xs border border-outline-variant/50">
+<span class="material-symbols-outlined text-secondary text-[18px] mt-0.5">info</span>
+<p class="font-label-sm text-label-sm text-on-surface-variant">
+                    Security Policy: You will be required to update your password upon first successful authentication.
+                </p>
+</div>
+<!-- Submit Button -->
+<button class="w-full bg-secondary hover:bg-on-secondary-container text-on-secondary font-label-md text-label-md py-3 rounded-lg transition-colors flex items-center justify-center gap-sm mt-sm" type="submit">
+                Sign In
+                <span class="material-symbols-outlined text-[18px]">arrow_forward</span>
+</button>
+</form>
+<!-- Footer -->
+<footer class="text-center pt-md border-t border-outline-variant/50">
+<p class="font-label-sm text-label-sm text-on-surface-variant">
+                Secure access provided by AdPrecision Security
+            </p>
+</footer>
+</main>
+</body></html>

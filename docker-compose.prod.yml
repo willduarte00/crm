@@ -1,0 +1,29 @@
+services:
+  db:
+    ports: !reset []
+
+  app:
+    ports: !reset []
+    environment:
+      NODE_ENV: production
+      APP_ENV: production
+
+  proxy:
+    image: caddy:2-alpine
+    container_name: crm_proxy
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      DOMAIN: ${DOMAIN:-localhost}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - app
+
+volumes:
+  caddy_data:
+  caddy_config:

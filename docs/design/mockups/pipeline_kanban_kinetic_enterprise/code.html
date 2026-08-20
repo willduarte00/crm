@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+
+<html class="h-full" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Pipeline | AdPrecision</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-secondary-fixed-variant": "#005049",
+                        "surface-container-high": "#dce9ff",
+                        "surface-bright": "#f8f9ff",
+                        "on-tertiary-fixed-variant": "#444749",
+                        "surface-container-highest": "#d3e4fe",
+                        "outline": "#76777d",
+                        "inverse-on-surface": "#eaf1ff",
+                        "surface-container-low": "#eff4ff",
+                        "inverse-surface": "#213145",
+                        "secondary-fixed": "#89f5e7",
+                        "error-container": "#ffdad6",
+                        "on-secondary-fixed": "#00201d",
+                        "secondary-fixed-dim": "#6bd8cb",
+                        "on-primary-fixed": "#131b2e",
+                        "primary-fixed-dim": "#bec6e0",
+                        "tertiary": "#000000",
+                        "tertiary-fixed-dim": "#c4c7c9",
+                        "surface-container": "#e5eeff",
+                        "on-primary-container": "#7c839b",
+                        "surface-dim": "#cbdbf5",
+                        "inverse-primary": "#bec6e0",
+                        "surface-container-lowest": "#ffffff",
+                        "on-tertiary-fixed": "#191c1e",
+                        "surface-variant": "#d3e4fe",
+                        "tertiary-container": "#191c1e",
+                        "primary-container": "#131b2e",
+                        "on-error": "#ffffff",
+                        "on-surface-variant": "#45464d",
+                        "on-primary-fixed-variant": "#3f465c",
+                        "on-secondary-container": "#006f66",
+                        "primary-fixed": "#dae2fd",
+                        "surface-tint": "#565e74",
+                        "secondary": "#006a61",
+                        "on-tertiary": "#ffffff",
+                        "secondary-container": "#86f2e4",
+                        "on-tertiary-container": "#818486",
+                        "on-secondary": "#ffffff",
+                        "surface": "#f8f9ff",
+                        "error": "#ba1a1a",
+                        "tertiary-fixed": "#e0e3e5",
+                        "on-background": "#0b1c30",
+                        "on-surface": "#0b1c30",
+                        "on-primary": "#ffffff",
+                        "on-error-container": "#93000a",
+                        "outline-variant": "#c6c6cd",
+                        "background": "#f8f9ff",
+                        "primary": "#000000"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "lg": "24px",
+                        "xl": "32px",
+                        "2xl": "48px",
+                        "margin-safe": "32px",
+                        "md": "16px",
+                        "max-width": "1440px",
+                        "sm": "8px",
+                        "gutter": "24px",
+                        "xs": "4px",
+                        "base": "4px"
+                    },
+                    "fontFamily": {
+                        "body-md": ["Inter"],
+                        "headline-md": ["Inter"],
+                        "data-tabular": ["Inter"],
+                        "label-md": ["Inter"],
+                        "headline-sm": ["Inter"],
+                        "label-sm": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "display-lg-mobile": ["Inter"],
+                        "display-lg": ["Inter"]
+                    },
+                    "fontSize": {
+                        "body-md": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+                        "headline-md": ["24px", { "lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+                        "data-tabular": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+                        "label-md": ["13px", { "lineHeight": "18px", "letterSpacing": "0.05em", "fontWeight": "600" }],
+                        "headline-sm": ["20px", { "lineHeight": "28px", "fontWeight": "600" }],
+                        "label-sm": ["12px", { "lineHeight": "16px", "fontWeight": "500" }],
+                        "body-lg": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "display-lg-mobile": ["28px", { "lineHeight": "34px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "display-lg": ["36px", { "lineHeight": "44px", "letterSpacing": "-0.02em", "fontWeight": "700" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .kanban-scroll::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        .kanban-scroll::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .kanban-scroll::-webkit-scrollbar-thumb {
+            background-color: #cbd5e1;
+            border-radius: 4px;
+        }
+        .kanban-card {
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        .kanban-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0px 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background h-full font-sans antialiased overflow-hidden flex">
+<!-- SideNavBar -->
+<nav class="hidden md:flex flex-col p-md w-[260px] h-screen fixed left-0 top-0 border-r border-outline-variant dark:border-on-primary-container bg-surface-container-lowest dark:bg-primary-container z-20">
+<div class="flex items-center gap-sm mb-xl px-sm">
+<img alt="Marketing Agency Logo" class="w-8 h-8 rounded" data-alt="A clean, minimalist logo mark consisting of sharp geometric shapes forming an abstract 'A' and 'P', rendered in sleek corporate colors of dark navy and vibrant teal against a pristine white background. High resolution, crisp vector style." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCoi2IM9BmPMGh7VOSnoPo7PpcNb4Wo0scU1r9bPDs6F3lJcjjPmPGjZ64n_V-OY2ggLZIqd0DKDhLrcB0Db9LsYIlqUohtisAF9tOzjZAQc2uAuOkbtdVBuMqO19NPZCEupcD68qUilFDdTjwoJfnLTwAdeWEzvndZLBwT1SFJh8tTxByQVgsxcJLF5cdFiyXqinqLdPNPS1v-yKAfWALTeWsrxKhxgITDb7f-y_NYzN2xcT4LRRxS2w"/>
+<div>
+<h1 class="font-headline-sm text-headline-sm font-bold text-on-background dark:text-primary-fixed">AdPrecision</h1>
+<p class="font-label-sm text-label-sm text-on-surface-variant">Marketing CRM</p>
+</div>
+</div>
+<ul class="flex flex-col gap-xs flex-1">
+<li>
+<a class="flex items-center gap-md px-md py-sm text-on-surface-variant dark:text-on-primary-fixed-variant hover:text-secondary hover:bg-surface-container-low dark:hover:bg-on-primary-container transition-colors duration-200 ease-in-out rounded-lg font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+                    Dashboard
+                </a>
+</li>
+<li>
+<a class="flex items-center gap-md px-md py-sm text-on-surface-variant dark:text-on-primary-fixed-variant hover:text-secondary hover:bg-surface-container-low dark:hover:bg-on-primary-container transition-colors duration-200 ease-in-out rounded-lg font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined" data-icon="group">group</span>
+                    Clients
+                </a>
+</li>
+<li>
+<a class="flex items-center gap-md px-md py-sm text-secondary font-bold bg-secondary-container dark:bg-secondary-fixed-dim dark:text-on-secondary-fixed rounded-lg transition-colors duration-200 ease-in-out font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined" data-icon="view_kanban" data-weight="fill" style="font-variation-settings: 'FILL' 1;">view_kanban</span>
+                    Pipeline
+                </a>
+</li>
+<li>
+<a class="flex items-center gap-md px-md py-sm text-on-surface-variant dark:text-on-primary-fixed-variant hover:text-secondary hover:bg-surface-container-low dark:hover:bg-on-primary-container transition-colors duration-200 ease-in-out rounded-lg font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined" data-icon="description">description</span>
+                    Contracts
+                </a>
+</li>
+<li>
+<a class="flex items-center gap-md px-md py-sm text-on-surface-variant dark:text-on-primary-fixed-variant hover:text-secondary hover:bg-surface-container-low dark:hover:bg-on-primary-container transition-colors duration-200 ease-in-out rounded-lg font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined" data-icon="payments">payments</span>
+                    Financial
+                </a>
+</li>
+<li>
+<a class="flex items-center gap-md px-md py-sm text-on-surface-variant dark:text-on-primary-fixed-variant hover:text-secondary hover:bg-surface-container-low dark:hover:bg-on-primary-container transition-colors duration-200 ease-in-out rounded-lg font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined" data-icon="admin_panel_settings">admin_panel_settings</span>
+                    Users
+                </a>
+</li>
+<li>
+<a class="flex items-center gap-md px-md py-sm text-on-surface-variant dark:text-on-primary-fixed-variant hover:text-secondary hover:bg-surface-container-low dark:hover:bg-on-primary-container transition-colors duration-200 ease-in-out rounded-lg font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+                    Settings
+                </a>
+</li>
+</ul>
+<button class="mt-auto flex items-center justify-center w-full py-sm px-md bg-secondary text-on-secondary rounded-lg font-label-md text-label-md hover:opacity-90 transition-opacity">
+<span class="material-symbols-outlined mr-sm text-[18px]">add</span>
+            New Lead
+        </button>
+</nav>
+<!-- Main Content Wrapper -->
+<div class="flex-1 flex flex-col md:ml-[260px] h-screen overflow-hidden">
+<!-- TopNavBar -->
+<header class="flex justify-between items-center px-lg w-full h-16 bg-surface dark:bg-background border-b border-outline-variant dark:border-on-primary-container z-10 shrink-0">
+<div class="flex items-center gap-lg h-full">
+<nav class="hidden md:flex items-center h-full gap-lg">
+<a class="flex items-center h-full px-xs font-label-md text-label-md text-on-surface-variant dark:text-on-primary-fixed-variant hover:text-secondary transition-colors" href="#">
+                        Overview
+                    </a>
+<a class="flex items-center h-full px-xs font-label-md text-label-md text-secondary border-b-2 border-secondary" href="#">
+                        Timeline
+                    </a>
+<a class="flex items-center h-full px-xs font-label-md text-label-md text-on-surface-variant dark:text-on-primary-fixed-variant hover:text-secondary transition-colors" href="#">
+                        Financial
+                    </a>
+</nav>
+</div>
+<div class="flex items-center gap-md">
+<div class="flex items-center gap-sm mr-sm text-on-surface-variant">
+<button class="p-xs rounded hover:bg-surface-container-low transition-colors scale-95 active:scale-90 transition-transform">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+</button>
+<button class="p-xs rounded hover:bg-surface-container-low transition-colors scale-95 active:scale-90 transition-transform">
+<span class="material-symbols-outlined" data-icon="chat">chat</span>
+</button>
+<button class="p-xs rounded hover:bg-surface-container-low transition-colors scale-95 active:scale-90 transition-transform">
+<span class="material-symbols-outlined" data-icon="help_outline">help_outline</span>
+</button>
+</div>
+<button class="hidden md:flex items-center justify-center py-xs px-md border border-[#0F172A] text-[#0F172A] rounded font-label-md text-label-md hover:bg-surface-container-low transition-colors">
+                    Create Task
+                </button>
+<div class="w-8 h-8 rounded-full overflow-hidden border border-outline-variant cursor-pointer">
+<img alt="User Profile Avatar" class="w-full h-full object-cover" data-alt="A professional headshot of an executive in a modern office, soft natural lighting, sharp focus, corporate aesthetic, shallow depth of field." src="https://lh3.googleusercontent.com/aida-public/AB6AXuA_gPz4RmedGb6SoCiasV_U6-5cfPAkyqDIyUJ91YBqCKmTJryHJ-1qbrbOxxIl1l9TgISd22unxUXnoYIWXLwjBz9hxTOXuuMwU6N2GgSE7gKJOvczapNluXYBTv7PPNXjcLLhpYy_xiQUJjHxPfI2Cr6gYUSfbLfmy8uztPgjjeUBjKg-0qHx-vSTU5LEYE6fezy7fVjoNZHooAqqbx-hj5ZQJ8o1AhQXEz4j8r_ccn1H_dBXrRE3gQ"/>
+</div>
+</div>
+</header>
+<!-- Main Canvas -->
+<main class="flex-1 overflow-x-auto overflow-y-hidden bg-background p-lg kanban-scroll flex flex-col">
+<div class="flex items-center justify-between mb-lg shrink-0">
+<div>
+<h2 class="font-headline-md text-headline-md text-on-background">Sales Pipeline</h2>
+<p class="font-body-md text-body-md text-on-surface-variant mt-xs">Manage active leads and opportunities.</p>
+</div>
+<div class="flex items-center gap-md">
+<div class="relative">
+<span class="material-symbols-outlined absolute left-sm top-1/2 -translate-y-1/2 text-on-surface-variant text-[18px]">search</span>
+<input class="pl-xl pr-md py-sm rounded-lg border border-outline-variant bg-surface-container-lowest font-body-md text-body-md focus:outline-none focus:border-secondary focus:ring-2 focus:ring-secondary/20 transition-all w-64" placeholder="Search leads..." type="text"/>
+</div>
+<button class="p-sm rounded-lg border border-outline-variant bg-surface-container-lowest text-on-surface-variant hover:bg-surface-container-low transition-colors">
+<span class="material-symbols-outlined text-[20px]">filter_list</span>
+</button>
+</div>
+</div>
+<!-- Kanban Board -->
+<div class="flex-1 flex gap-gutter min-w-max pb-md h-full">
+<!-- Column: Novo Lead -->
+<div class="w-[320px] flex flex-col bg-slate-100 rounded-xl p-sm h-full max-h-full shrink-0">
+<div class="flex items-center justify-between px-xs py-sm mb-sm shrink-0">
+<div class="flex items-center gap-sm">
+<span class="w-2 h-2 rounded-full bg-[#3B82F6]"></span>
+<h3 class="font-label-md text-label-md text-on-background uppercase tracking-wider">Novo Lead</h3>
+<span class="font-label-sm text-label-sm bg-surface-container-low text-on-surface-variant px-2 py-0.5 rounded-full">3</span>
+</div>
+<button class="text-on-surface-variant hover:text-on-background"><span class="material-symbols-outlined text-[18px]">more_horiz</span></button>
+</div>
+<div class="flex-1 overflow-y-auto kanban-scroll flex flex-col gap-sm pb-sm px-xs">
+<!-- Card 1 -->
+<div class="kanban-card bg-surface-container-lowest rounded-lg border border-slate-200 p-md cursor-grab relative overflow-hidden">
+<div class="absolute left-0 top-0 bottom-0 w-1 bg-secondary"></div>
+<div class="flex justify-between items-start mb-sm">
+<span class="font-label-sm text-label-sm px-xs py-[2px] bg-emerald-50 text-emerald-700 rounded border border-emerald-100">Inbound</span>
+<span class="font-body-md text-body-md text-on-surface-variant text-[12px]">2h ago</span>
+</div>
+<h4 class="font-label-md text-label-md text-on-background mb-xs">TechCorp Industries</h4>
+<p class="font-body-md text-body-md text-on-surface-variant text-[13px] line-clamp-2 mb-md">Requires custom integration for their legacy ERP system. Budget roughly $50k.</p>
+<div class="flex items-center gap-xs mt-auto pt-sm border-t border-slate-100">
+<img alt="Assignee" class="w-5 h-5 rounded-full" data-alt="Small circular avatar showing a professional smiling headshot, well-lit, simple background." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCJZh0CCZfjaibffZr5M9CEN4a7WkRlve-RLyENVP4I-JwEcln-H7CrPMF8aDvtscCaR4FS2_SfzrFiUNOmLwsFQYXtjz5wju49S3AQ2F5D9KcGsjMum_9Y_rJpVszh-1NnAlOCJCylmU8lGw_b2f4A_tdJqNoI3XJh5bVgk51y74sFdKopMTVWQ9JBl51xUuylyHNDMa3fjtQIT7TgjI-GHb-MgLO6wjZpQCFI792GqB_oGVZ_tA-Gmw"/>
+<span class="font-label-sm text-label-sm text-on-surface-variant ml-xs">JD</span>
+</div>
+</div>
+<!-- Card 2 -->
+<div class="kanban-card bg-surface-container-lowest rounded-lg border border-slate-200 p-md cursor-grab relative overflow-hidden">
+<div class="absolute left-0 top-0 bottom-0 w-1 bg-amber-500"></div>
+<div class="flex justify-between items-start mb-sm">
+<span class="font-label-sm text-label-sm px-xs py-[2px] bg-blue-50 text-blue-700 rounded border border-blue-100">Referral</span>
+<span class="font-body-md text-body-md text-on-surface-variant text-[12px]">5h ago</span>
+</div>
+<h4 class="font-label-md text-label-md text-on-background mb-xs">Acme Global</h4>
+<p class="font-body-md text-body-md text-on-surface-variant text-[13px] line-clamp-2 mb-md">Interested in the Enterprise tier. Looking to migrate next quarter.</p>
+<div class="flex items-center gap-xs mt-auto pt-sm border-t border-slate-100">
+<img alt="Assignee" class="w-5 h-5 rounded-full" data-alt="Small circular avatar of a modern professional, corporate attire, neutral background." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDUVDGfd1s2LE64wHq4NraMRLp4wKdF4zFIYsRqYnv4DlA5YRTn7w10dk1lqkP30EDN_qv98IQdpce3rsaKs3PU4GzqdiWY-lDSTn7ruPoYOjM3mikgFku7VKtpzJiO-prCUN5FIW5IVZDmIaND5MeAIZI-UfabNWxRY94Ow4IUSPliwVSAv9Idw7aoFZI2nEGUTEvO6AWxoXXJ0kvppA7C6cI5PC8ey99Qzd1dxX_d9OTtvLhqQrzUZw"/>
+<span class="font-label-sm text-label-sm text-on-surface-variant ml-xs">Sarah M.</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Column: Contato/Qualificação -->
+<div class="w-[320px] flex flex-col bg-slate-100 rounded-xl p-sm h-full max-h-full shrink-0">
+<div class="flex items-center justify-between px-xs py-sm mb-sm shrink-0">
+<div class="flex items-center gap-sm">
+<span class="w-2 h-2 rounded-full bg-amber-500"></span>
+<h3 class="font-label-md text-label-md text-on-background uppercase tracking-wider">Contato/Qualificação</h3>
+<span class="font-label-sm text-label-sm bg-surface-container-low text-on-surface-variant px-2 py-0.5 rounded-full">2</span>
+</div>
+<button class="text-on-surface-variant hover:text-on-background"><span class="material-symbols-outlined text-[18px]">more_horiz</span></button>
+</div>
+<div class="flex-1 overflow-y-auto kanban-scroll flex flex-col gap-sm pb-sm px-xs">
+<!-- Card 3 -->
+<div class="kanban-card bg-surface-container-lowest rounded-lg border border-slate-200 p-md cursor-grab relative overflow-hidden">
+<div class="absolute left-0 top-0 bottom-0 w-1 bg-red-500"></div>
+<div class="flex justify-between items-start mb-sm">
+<span class="font-label-sm text-label-sm px-xs py-[2px] bg-purple-50 text-purple-700 rounded border border-purple-100">Webinar</span>
+<span class="font-body-md text-body-md text-on-surface-variant text-[12px]">1d ago</span>
+</div>
+<h4 class="font-label-md text-label-md text-on-background mb-xs">Nexo Logistics</h4>
+<p class="font-body-md text-body-md text-on-surface-variant text-[13px] line-clamp-2 mb-md">Had initial discovery call. They need custom SLA terms. Follow up required by Friday.</p>
+<div class="flex items-center gap-xs mt-auto pt-sm border-t border-slate-100">
+<div class="w-5 h-5 rounded-full bg-secondary-container flex items-center justify-center text-on-secondary-container font-label-sm text-[10px]">JD</div>
+<span class="font-label-sm text-label-sm text-on-surface-variant ml-xs">JD</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Column: Proposta Enviada -->
+<div class="w-[320px] flex flex-col bg-slate-100 rounded-xl p-sm h-full max-h-full shrink-0">
+<div class="flex items-center justify-between px-xs py-sm mb-sm shrink-0">
+<div class="flex items-center gap-sm">
+<span class="w-2 h-2 rounded-full bg-purple-500"></span>
+<h3 class="font-label-md text-label-md text-on-background uppercase tracking-wider">Proposta Enviada</h3>
+<span class="font-label-sm text-label-sm bg-surface-container-low text-on-surface-variant px-2 py-0.5 rounded-full">1</span>
+</div>
+<button class="text-on-surface-variant hover:text-on-background"><span class="material-symbols-outlined text-[18px]">more_horiz</span></button>
+</div>
+<div class="flex-1 overflow-y-auto kanban-scroll flex flex-col gap-sm pb-sm px-xs">
+<!-- Card 4 -->
+<div class="kanban-card bg-surface-container-lowest rounded-lg border border-slate-200 p-md cursor-grab relative overflow-hidden">
+<div class="absolute left-0 top-0 bottom-0 w-1 bg-secondary"></div>
+<div class="flex justify-between items-start mb-sm">
+<span class="font-label-sm text-label-sm px-xs py-[2px] bg-emerald-50 text-emerald-700 rounded border border-emerald-100">Inbound</span>
+<span class="font-body-md text-body-md text-on-surface-variant text-[12px]">3d ago</span>
+</div>
+<h4 class="font-label-md text-label-md text-on-background mb-xs">Stellar Health</h4>
+<p class="font-body-md text-body-md text-on-surface-variant text-[13px] line-clamp-2 mb-md">Sent standard proposal for 50 seats. Awaiting feedback from their procurement team.</p>
+<div class="flex items-center gap-xs mt-auto pt-sm border-t border-slate-100">
+<img alt="Assignee" class="w-5 h-5 rounded-full" data-alt="Small circular avatar of a smiling young professional woman, soft studio lighting." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDF-DQRMaByRDirHY43J6Pyfz6aQx47TbP2DB5HiAdcVEovIz9WkYEYRt5EXwkby4umbBmhRnR0S3zIOnoI0cyRKn48v6INRlis0CEL2YSrZeFRm9NTbd_2FkNqxLUFTyD3stIqMboLVKbqSz5IfjazQttPsyWAPzOzNwIX0ijvxOyCtD7a_WTmX8Qy931sA9XKgjieRmCIp0txa5_pXwLxmi4QzXL77hIcYxGQEF_2acLtm8sryuuTcQ"/>
+<span class="font-label-sm text-label-sm text-on-surface-variant ml-xs">Anna K.</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Column: Em Negociação -->
+<div class="w-[320px] flex flex-col bg-slate-100 rounded-xl p-sm h-full max-h-full shrink-0">
+<div class="flex items-center justify-between px-xs py-sm mb-sm shrink-0">
+<div class="flex items-center gap-sm">
+<span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+<h3 class="font-label-md text-label-md text-on-background uppercase tracking-wider">Em Negociação</h3>
+<span class="font-label-sm text-label-sm bg-surface-container-low text-on-surface-variant px-2 py-0.5 rounded-full">0</span>
+</div>
+<button class="text-on-surface-variant hover:text-on-background"><span class="material-symbols-outlined text-[18px]">more_horiz</span></button>
+</div>
+<div class="flex-1 flex flex-col items-center justify-center p-md text-center opacity-60">
+<div class="w-12 h-12 rounded-full bg-surface-container flex items-center justify-center mb-sm">
+<span class="material-symbols-outlined text-on-surface-variant">inbox</span>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant">No deals currently in negotiation</p>
+</div>
+</div>
+</div>
+</main>
+</div>
+</body></html>

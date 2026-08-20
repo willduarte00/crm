@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>WhatsApp Message Center - AdPrecision</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "on-secondary-fixed-variant": "#005049",
+                      "on-background": "#0b1c30",
+                      "surface-container-highest": "#d3e4fe",
+                      "primary-container": "#131b2e",
+                      "error": "#ba1a1a",
+                      "surface-container-high": "#dce9ff",
+                      "tertiary-fixed": "#e0e3e5",
+                      "on-primary": "#ffffff",
+                      "surface-container-lowest": "#ffffff",
+                      "inverse-primary": "#bec6e0",
+                      "primary-fixed": "#dae2fd",
+                      "error-container": "#ffdad6",
+                      "secondary-fixed": "#89f5e7",
+                      "inverse-on-surface": "#eaf1ff",
+                      "surface-bright": "#f8f9ff",
+                      "outline": "#76777d",
+                      "secondary": "#006a61",
+                      "surface-variant": "#d3e4fe",
+                      "on-tertiary": "#ffffff",
+                      "surface-container": "#e5eeff",
+                      "tertiary-fixed-dim": "#c4c7c9",
+                      "tertiary": "#000000",
+                      "inverse-surface": "#213145",
+                      "surface-container-low": "#eff4ff",
+                      "tertiary-container": "#191c1e",
+                      "on-tertiary-fixed-variant": "#444749",
+                      "on-error-container": "#93000a",
+                      "on-primary-container": "#7c839b",
+                      "on-tertiary-fixed": "#191c1e",
+                      "on-secondary-fixed": "#00201d",
+                      "on-secondary": "#ffffff",
+                      "outline-variant": "#c6c6cd",
+                      "on-surface-variant": "#45464d",
+                      "primary-fixed-dim": "#bec6e0",
+                      "surface": "#f8f9ff",
+                      "on-primary-fixed": "#131b2e",
+                      "on-tertiary-container": "#818486",
+                      "on-primary-fixed-variant": "#3f465c",
+                      "on-surface": "#0b1c30",
+                      "on-secondary-container": "#006f66",
+                      "background": "#f8f9ff",
+                      "surface-tint": "#565e74",
+                      "secondary-container": "#86f2e4",
+                      "primary": "#000000",
+                      "on-error": "#ffffff",
+                      "surface-dim": "#cbdbf5",
+                      "secondary-fixed-dim": "#6bd8cb"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.125rem",
+                      "lg": "0.25rem",
+                      "xl": "0.5rem",
+                      "full": "0.75rem"
+              },
+              "spacing": {
+                      "lg": "24px",
+                      "xl": "32px",
+                      "base": "4px",
+                      "xs": "4px",
+                      "md": "16px",
+                      "sm": "8px",
+                      "margin-safe": "32px",
+                      "max-width": "1440px",
+                      "gutter": "24px",
+                      "2xl": "48px"
+              },
+              "fontFamily": {
+                      "label-sm": [
+                              "Inter"
+                      ],
+                      "display-lg-mobile": [
+                              "Inter"
+                      ],
+                      "label-md": [
+                              "Inter"
+                      ],
+                      "headline-sm": [
+                              "Inter"
+                      ],
+                      "data-tabular": [
+                              "Inter"
+                      ],
+                      "display-lg": [
+                              "Inter"
+                      ],
+                      "headline-md": [
+                              "Inter"
+                      ],
+                      "body-md": [
+                              "Inter"
+                      ],
+                      "body-lg": [
+                              "Inter"
+                      ]
+              },
+              "fontSize": {
+                      "label-sm": [
+                              "12px",
+                              {
+                                      "lineHeight": "16px",
+                                      "fontWeight": "500"
+                              }
+                      ],
+                      "display-lg-mobile": [
+                              "28px",
+                              {
+                                      "lineHeight": "34px",
+                                      "letterSpacing": "-0.02em",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "label-md": [
+                              "13px",
+                              {
+                                      "lineHeight": "18px",
+                                      "letterSpacing": "0.05em",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "headline-sm": [
+                              "20px",
+                              {
+                                      "lineHeight": "28px",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "data-tabular": [
+                              "14px",
+                              {
+                                      "lineHeight": "20px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "display-lg": [
+                              "36px",
+                              {
+                                      "lineHeight": "44px",
+                                      "letterSpacing": "-0.02em",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "headline-md": [
+                              "24px",
+                              {
+                                      "lineHeight": "32px",
+                                      "letterSpacing": "-0.01em",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "body-md": [
+                              "14px",
+                              {
+                                      "lineHeight": "20px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "body-lg": [
+                              "16px",
+                              {
+                                      "lineHeight": "24px",
+                                      "fontWeight": "400"
+                              }
+                      ]
+              }
+      },
+          },
+        }
+      </script>
+</head>
+<body class="bg-background text-on-background font-body-md min-h-screen flex flex-col md:flex-row">
+<!-- SideNavBar -->
+<nav class="hidden md:flex bg-surface fixed left-0 top-0 h-full w-[260px] border-r border-outline-variant flex-col p-md overflow-y-auto z-10">
+<div class="mb-lg px-4 pt-sm">
+<h1 class="text-headline-md font-bold text-on-surface">AdPrecision</h1>
+<p class="font-body-md text-body-md text-on-surface-variant">Marketing CRM</p>
+</div>
+<div class="flex flex-col gap-sm">
+<a class="flex items-center gap-sm text-on-surface-variant hover:bg-surface-container-high transition-colors duration-200 rounded-lg px-4 py-3" href="#">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+<span class="font-label-md text-label-md">Dashboard</span>
+</a>
+<a class="flex items-center gap-sm bg-secondary-container text-on-secondary-container rounded-lg px-4 py-3 scale-[0.99] transition-transform duration-150" href="#">
+<span class="material-symbols-outlined" data-icon="groups" style="font-variation-settings: 'FILL' 1;">groups</span>
+<span class="font-label-md text-label-md">Clients</span>
+</a>
+<a class="flex items-center gap-sm text-on-surface-variant hover:bg-surface-container-high transition-colors duration-200 rounded-lg px-4 py-3" href="#">
+<span class="material-symbols-outlined" data-icon="account_tree">account_tree</span>
+<span class="font-label-md text-label-md">Pipeline</span>
+</a>
+<a class="flex items-center gap-sm text-on-surface-variant hover:bg-surface-container-high transition-colors duration-200 rounded-lg px-4 py-3" href="#">
+<span class="material-symbols-outlined" data-icon="description">description</span>
+<span class="font-label-md text-label-md">Contracts</span>
+</a>
+<a class="flex items-center gap-sm text-on-surface-variant hover:bg-surface-container-high transition-colors duration-200 rounded-lg px-4 py-3" href="#">
+<span class="material-symbols-outlined" data-icon="payments">payments</span>
+<span class="font-label-md text-label-md">Financials</span>
+</a>
+<a class="flex items-center gap-sm text-on-surface-variant hover:bg-surface-container-high transition-colors duration-200 rounded-lg px-4 py-3" href="#">
+<span class="material-symbols-outlined" data-icon="person">person</span>
+<span class="font-label-md text-label-md">Users</span>
+</a>
+<a class="flex items-center gap-sm text-on-surface-variant hover:bg-surface-container-high transition-colors duration-200 rounded-lg px-4 py-3" href="#">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+<span class="font-label-md text-label-md">Settings</span>
+</a>
+</div>
+</nav>
+<!-- TopNavBar -->
+<header class="hidden md:flex fixed top-0 right-0 w-[calc(100%-260px)] h-16 bg-surface border-b border-outline-variant justify-between items-center px-lg z-10 ml-[260px]">
+<div class="flex-1"></div>
+<div class="flex items-center gap-sm text-primary">
+<button class="hover:bg-surface-container-low rounded-full p-2 transition-colors duration-200 text-on-surface-variant">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+</button>
+<button class="hover:bg-surface-container-low rounded-full p-2 transition-colors duration-200 text-on-surface-variant">
+<span class="material-symbols-outlined" data-icon="help">help</span>
+</button>
+<button class="hover:bg-surface-container-low rounded-full p-2 transition-colors duration-200 text-on-surface-variant">
+<span class="material-symbols-outlined" data-icon="apps">apps</span>
+</button>
+<div class="ml-sm h-8 w-8 rounded-full bg-surface-variant overflow-hidden border border-outline-variant cursor-pointer">
+<img alt="User Profile" class="object-cover w-full h-full" data-alt="A small, professional headshot photo of a business user in an office setting. Corporate modern aesthetic, soft daylight, sharp focus on the face." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCwiQiW5qpeSvR8d5zKShMYvp_c_3prlm0o_2bwPkAeAYKJ97NX6T676kUU8WgwiIJbN-SFwPIMEpcRQtELG3xXY1F8sSKxHorc1xDxtU1nnRV445vVaq-kaaJgYz3luVH62flddrYKUw5x8MI3hizA4oe2p3QVoFtAQ61Mau6xARjDyrVmKIzOrhrh38EJhO0WlJsjhkYaq4sBqbZ1MrLRrLPashB-zrAK9YbcMDtvHxopTFZxZa9gGw"/>
+</div>
+</div>
+</header>
+<!-- Main Content Area -->
+<main class="flex-1 md:ml-[260px] md:mt-16 p-md md:p-lg lg:p-xl max-w-max-width mx-auto w-full flex items-center justify-center min-h-[calc(100vh-64px)] bg-slate-50 relative">
+<!-- Underlying Content (Simulated Client View) -->
+<div class="absolute inset-0 opacity-50 pointer-events-none p-lg hidden md:block">
+<div class="bg-white rounded-lg border border-slate-200 p-lg shadow-sm w-full max-w-4xl mx-auto h-full max-h-[800px]">
+<div class="h-8 bg-slate-200 rounded w-1/3 mb-md"></div>
+<div class="h-4 bg-slate-100 rounded w-1/4 mb-xl"></div>
+<div class="grid grid-cols-3 gap-md mb-xl">
+<div class="h-24 bg-slate-100 rounded-lg border border-slate-200"></div>
+<div class="h-24 bg-slate-100 rounded-lg border border-slate-200"></div>
+<div class="h-24 bg-slate-100 rounded-lg border border-slate-200"></div>
+</div>
+<div class="space-y-sm">
+<div class="h-12 bg-slate-100 rounded border border-slate-200 w-full"></div>
+<div class="h-12 bg-slate-100 rounded border border-slate-200 w-full"></div>
+<div class="h-12 bg-slate-100 rounded border border-slate-200 w-full"></div>
+</div>
+</div>
+</div>
+<!-- WhatsApp Modal Overlay -->
+<div class="bg-white rounded-xl border border-slate-200 w-full max-w-2xl shadow-[0px_10px_15px_-3px_rgba(0,0,0,0.1)] relative z-20 overflow-hidden flex flex-col pointer-events-auto">
+<!-- Modal Header -->
+<div class="flex items-center justify-between p-lg border-b border-slate-200 bg-slate-50">
+<div class="flex items-center gap-sm">
+<div class="w-10 h-10 rounded-full bg-[#25D366]/10 flex items-center justify-center text-[#25D366]">
+<svg class="w-6 h-6 fill-current" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51a12.8 12.8 0 0 0-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413Z"></path></svg>
+</div>
+<div>
+<h2 class="font-headline-sm text-headline-sm text-on-surface m-0">Send WhatsApp Message</h2>
+<p class="font-body-md text-body-md text-on-surface-variant m-0">To: Acme Corp (+55 11 99999-9999)</p>
+</div>
+</div>
+<button class="text-on-surface-variant hover:text-on-surface p-2 rounded-full hover:bg-slate-200 transition-colors">
+<span class="material-symbols-outlined" data-icon="close">close</span>
+</button>
+</div>
+<!-- Modal Body -->
+<div class="p-lg flex flex-col md:flex-row gap-lg bg-white">
+<!-- Left Column: Controls -->
+<div class="flex-1 flex flex-col gap-md">
+<div>
+<label class="block font-label-md text-label-md text-on-surface mb-xs">Template</label>
+<div class="relative">
+<select class="w-full appearance-none bg-white border border-slate-300 text-on-surface font-body-md text-body-md rounded-md px-3 py-2 pr-8 focus:outline-none focus:border-[#0D9488] focus:ring-2 focus:ring-[#0D9488]/20 transition-all cursor-pointer">
+<option>Onboarding / Welcome</option>
+<option selected="">Payment Reminder</option>
+<option>Invoice / NF Delivery</option>
+<option>Custom Message</option>
+</select>
+<div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-on-surface-variant">
+<span class="material-symbols-outlined text-lg" data-icon="expand_more">expand_more</span>
+</div>
+</div>
+</div>
+<div class="bg-slate-50 border border-slate-200 rounded-lg p-sm">
+<div class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider mb-sm pl-1">Variables</div>
+<div class="grid grid-cols-2 gap-2">
+<div class="bg-white border border-slate-200 rounded px-2 py-1 text-xs text-on-surface-variant font-mono truncate">[Client Name]</div>
+<div class="bg-white border border-slate-200 rounded px-2 py-1 text-xs text-on-surface-variant font-mono truncate">[Value]</div>
+<div class="bg-white border border-slate-200 rounded px-2 py-1 text-xs text-on-surface-variant font-mono truncate">[Due Date]</div>
+<div class="bg-white border border-slate-200 rounded px-2 py-1 text-xs text-on-surface-variant font-mono truncate">[PIX Key]</div>
+</div>
+<p class="text-xs text-on-surface-variant mt-2 italic px-1">Variables are automatically populated from the client record.</p>
+</div>
+</div>
+<!-- Right Column: Preview -->
+<div class="flex-[1.5] flex flex-col h-full min-h-[300px]">
+<label class="block font-label-md text-label-md text-on-surface mb-xs">Message Preview</label>
+<div class="flex-1 bg-[#EFEAE2] rounded-lg border border-slate-200 p-md flex flex-col overflow-hidden relative" style="background-image: url('data:image/svg+xml,%3Csvg width=\'20\' height=\'20\' viewBox=\'0 0 20 20\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cg fill=\'%23000000\' fill-opacity=\'0.03\' fill-rule=\'evenodd\'%3E%3Ccircle cx=\'3\' cy=\'3\' r=\'3\'/%3E%3Ccircle cx=\'13\' cy=\'13\' r=\'3\'/%3E%3C/g%3E%3C/svg%3E');">
+<!-- Simulated Chat Bubble -->
+<div class="bg-[#D9FDD3] rounded-lg rounded-tr-none p-3 max-w-[90%] self-end shadow-sm relative text-[14px] leading-relaxed text-[#111B21]">
+                            Hello <span class="font-semibold bg-[#25D366]/20 px-1 rounded">Acme Corp</span>,
+                            <br/><br/>
+                            This is a friendly reminder from AdPrecision that invoice #INV-2023-089 for <span class="font-semibold bg-[#25D366]/20 px-1 rounded">R$ 5.400,00</span> is due on <span class="font-semibold bg-[#25D366]/20 px-1 rounded">25/10/2023</span>.
+                            <br/><br/>
+                            You can easily pay via PIX using this key:
+                            <br/>
+<span class="font-mono bg-[#25D366]/20 px-1 rounded">34.123.456/0001-00</span>
+<br/><br/>
+                            Please let us know if you need any assistance!
+                            
+                            <!-- Timestamp -->
+<div class="text-[11px] text-gray-500 text-right mt-1 flex items-center justify-end gap-1">
+<span>Preview</span>
+<span class="material-symbols-outlined text-[14px]" data-icon="done_all">done_all</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Modal Footer -->
+<div class="p-lg border-t border-slate-200 bg-slate-50 flex flex-col sm:flex-row items-center justify-between gap-md">
+<div class="flex items-center gap-2 text-amber-700 bg-amber-50 px-3 py-2 rounded-md border border-amber-200 w-full sm:w-auto">
+<span class="material-symbols-outlined text-lg" data-icon="info">info</span>
+<span class="text-xs font-medium">Invoices/NFs must be attached manually in WhatsApp.</span>
+</div>
+<div class="flex items-center gap-sm w-full sm:w-auto justify-end">
+<button class="px-4 py-2 text-[#0F172A] font-label-md text-label-md border border-[#0F172A] rounded-md hover:bg-slate-100 transition-colors w-full sm:w-auto">Cancel</button>
+<a class="px-4 py-2 bg-[#25D366] text-white font-label-md text-label-md rounded-md hover:bg-[#1EBE5D] transition-colors flex items-center justify-center gap-2 shadow-sm w-full sm:w-auto" href="https://wa.me/" target="_blank">
+<span class="material-symbols-outlined text-lg" data-icon="send">send</span>
+                        Send via WhatsApp
+                    </a>
+</div>
+</div>
+</div>
+</main>
+</body></html>

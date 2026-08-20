@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Sales Pipeline - Kinetic Enterprise</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "inverse-on-surface": "#eaf1ff",
+                        "primary-container": "#131b2e",
+                        "on-error": "#ffffff",
+                        "on-secondary-container": "#006f66",
+                        "outline": "#76777d",
+                        "on-secondary": "#ffffff",
+                        "surface-dim": "#cbdbf5",
+                        "on-tertiary": "#ffffff",
+                        "on-primary": "#ffffff",
+                        "secondary-container": "#86f2e4",
+                        "secondary-fixed": "#89f5e7",
+                        "on-tertiary-container": "#818486",
+                        "error": "#ba1a1a",
+                        "surface-container": "#e5eeff",
+                        "surface-container-high": "#dce9ff",
+                        "on-surface": "#0b1c30",
+                        "primary-fixed-dim": "#bec6e0",
+                        "primary": "#000000",
+                        "on-tertiary-fixed-variant": "#444749",
+                        "tertiary": "#000000",
+                        "surface-container-lowest": "#ffffff",
+                        "surface": "#f8f9ff",
+                        "on-primary-fixed": "#131b2e",
+                        "tertiary-fixed": "#e0e3e5",
+                        "secondary": "#006a61",
+                        "on-secondary-fixed": "#00201d",
+                        "surface-bright": "#f8f9ff",
+                        "inverse-primary": "#bec6e0",
+                        "background": "#f8f9ff",
+                        "on-background": "#0b1c30",
+                        "on-primary-fixed-variant": "#3f465c",
+                        "error-container": "#ffdad6",
+                        "on-error-container": "#93000a",
+                        "secondary-fixed-dim": "#6bd8cb",
+                        "tertiary-fixed-dim": "#c4c7c9",
+                        "on-tertiary-fixed": "#191c1e",
+                        "surface-container-low": "#eff4ff",
+                        "on-surface-variant": "#45464d",
+                        "primary-fixed": "#dae2fd",
+                        "tertiary-container": "#191c1e",
+                        "outline-variant": "#c6c6cd",
+                        "surface-tint": "#565e74",
+                        "surface-variant": "#d3e4fe",
+                        "on-secondary-fixed-variant": "#005049",
+                        "on-primary-container": "#7c839b",
+                        "surface-container-highest": "#d3e4fe",
+                        "inverse-surface": "#213145"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "max-width": "1440px",
+                        "base": "4px",
+                        "xs": "4px",
+                        "sm": "8px",
+                        "2xl": "48px",
+                        "margin-safe": "32px",
+                        "lg": "24px",
+                        "xl": "32px",
+                        "gutter": "24px",
+                        "md": "16px"
+                    },
+                    "fontFamily": {
+                        "data-tabular": ["Inter"],
+                        "headline-sm": ["Inter"],
+                        "display-lg-mobile": ["Inter"],
+                        "body-md": ["Inter"],
+                        "headline-md": ["Inter"],
+                        "display-lg": ["Inter"],
+                        "label-md": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "label-sm": ["Inter"]
+                    },
+                    "fontSize": {
+                        "data-tabular": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+                        "headline-sm": ["20px", { "lineHeight": "28px", "fontWeight": "600" }],
+                        "display-lg-mobile": ["28px", { "lineHeight": "34px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "body-md": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+                        "headline-md": ["24px", { "lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+                        "display-lg": ["36px", { "lineHeight": "44px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "label-md": ["13px", { "lineHeight": "18px", "letterSpacing": "0.05em", "fontWeight": "600" }],
+                        "body-lg": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "label-sm": ["12px", { "lineHeight": "16px", "fontWeight": "500" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body { font-family: 'Inter', sans-serif; }
+        .kanban-scroll::-webkit-scrollbar { width: 6px; height: 6px; }
+        .kanban-scroll::-webkit-scrollbar-track { background: transparent; }
+        .kanban-scroll::-webkit-scrollbar-thumb { background-color: #c6c6cd; border-radius: 20px; }
+        .drag-handle { cursor: grab; }
+        .drag-handle:active { cursor: grabbing; }
+        .kanban-card { transition: transform 0.2s, box-shadow 0.2s; }
+        .kanban-card:hover { transform: translateY(-2px); box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); }
+    </style>
+</head>
+<body class="bg-background text-on-background h-screen overflow-hidden flex font-body-md">
+<!-- SideNavBar (Pipeline Active) -->
+<aside class="fixed h-screen w-[260px] left-0 top-0 bg-surface dark:bg-surface-container-lowest border-r border-outline-variant dark:border-outline flex flex-col py-lg z-20">
+<div class="px-lg mb-8">
+<h1 class="font-headline-md text-headline-md font-bold text-on-surface dark:text-on-primary-fixed flex items-center gap-2">
+<span class="material-symbols-outlined text-secondary" style="font-variation-settings: 'FILL' 1;">analytics</span>
+                AdPrecision
+            </h1>
+<p class="font-label-sm text-label-sm text-on-surface-variant mt-1">Marketing CRM</p>
+</div>
+<nav class="flex-1 flex flex-col gap-2 px-md">
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg font-label-md text-label-md text-on-surface-variant dark:text-on-tertiary-container hover:bg-surface-container-low dark:hover:bg-surface-container transition-colors duration-200 ease-in-out" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+                Dashboard
+            </a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg font-label-md text-label-md text-on-surface-variant dark:text-on-tertiary-container hover:bg-surface-container-low dark:hover:bg-surface-container transition-colors duration-200 ease-in-out" href="#">
+<span class="material-symbols-outlined">groups</span>
+                Clients
+            </a>
+<!-- Active State -->
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg font-label-md text-label-md text-secondary dark:text-secondary-fixed-dim font-bold border-r-4 border-secondary bg-surface-container-low dark:bg-surface-container transition-colors duration-200 ease-in-out" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">account_tree</span>
+                Pipeline
+            </a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg font-label-md text-label-md text-on-surface-variant dark:text-on-tertiary-container hover:bg-surface-container-low dark:hover:bg-surface-container transition-colors duration-200 ease-in-out" href="#">
+<span class="material-symbols-outlined">description</span>
+                Contracts
+            </a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg font-label-md text-label-md text-on-surface-variant dark:text-on-tertiary-container hover:bg-surface-container-low dark:hover:bg-surface-container transition-colors duration-200 ease-in-out" href="#">
+<span class="material-symbols-outlined">payments</span>
+                Financials
+            </a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg font-label-md text-label-md text-on-surface-variant dark:text-on-tertiary-container hover:bg-surface-container-low dark:hover:bg-surface-container transition-colors duration-200 ease-in-out" href="#">
+<span class="material-symbols-outlined">person</span>
+                Users
+            </a>
+<div class="mt-auto">
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg font-label-md text-label-md text-on-surface-variant dark:text-on-tertiary-container hover:bg-surface-container-low dark:hover:bg-surface-container transition-colors duration-200 ease-in-out" href="#">
+<span class="material-symbols-outlined">settings</span>
+                    Settings
+                </a>
+</div>
+</nav>
+</aside>
+<!-- Main Content Area -->
+<div class="flex-1 ml-[260px] flex flex-col h-screen overflow-hidden">
+<!-- TopNavBar -->
+<header class="h-16 bg-surface dark:bg-surface-container-lowest border-b border-outline-variant dark:border-outline flex items-center justify-between px-lg shrink-0 z-10">
+<div class="flex-1 flex items-center max-w-md">
+<div class="relative w-full">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-[20px]">search</span>
+<input class="w-full pl-10 pr-4 py-2 bg-surface-container-lowest border border-outline-variant rounded-lg font-body-md text-body-md text-on-surface focus:outline-none focus:border-secondary focus:ring-2 focus:ring-secondary/20 transition-all" placeholder="Search leads..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<button class="p-2 text-on-surface-variant hover:bg-surface-container-low rounded-full transition-colors duration-200">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="p-2 text-on-surface-variant hover:bg-surface-container-low rounded-full transition-colors duration-200">
+<span class="material-symbols-outlined">help_outline</span>
+</button>
+<div class="w-8 h-8 rounded-full bg-secondary-container flex items-center justify-center text-on-secondary-container font-label-md font-bold ml-2">
+                    JD
+                </div>
+</div>
+</header>
+<!-- Page Content: Kanban Board -->
+<main class="flex-1 flex flex-col p-lg overflow-hidden bg-background">
+<!-- Page Header -->
+<div class="flex items-center justify-between mb-lg shrink-0">
+<div>
+<h2 class="font-headline-md text-headline-md font-bold text-on-background">Sales Pipeline</h2>
+<p class="font-body-md text-body-md text-on-surface-variant mt-1">Manage active leads and opportunities.</p>
+</div>
+<div class="flex items-center gap-3">
+<button class="flex items-center gap-2 px-4 py-2 border border-outline-variant text-on-background bg-surface-container-lowest rounded-lg font-label-md hover:bg-surface-container-low transition-colors">
+<span class="material-symbols-outlined text-[18px]">filter_list</span>
+                        Filter
+                    </button>
+<button class="flex items-center gap-2 px-4 py-2 bg-secondary text-on-secondary rounded-lg font-label-md hover:bg-on-secondary-fixed transition-colors">
+<span class="material-symbols-outlined text-[18px]">add</span>
+                        New Lead
+                    </button>
+</div>
+</div>
+<!-- Kanban Columns Container -->
+<div class="flex-1 flex gap-gutter overflow-x-auto pb-4 kanban-scroll items-start">
+<!-- Column 1: Novo Lead -->
+<div class="w-[320px] shrink-0 bg-surface-container-low rounded-xl p-4 flex flex-col max-h-full border border-surface-variant">
+<div class="flex items-center justify-between mb-4 px-1">
+<h3 class="font-label-md text-label-md font-bold text-on-surface flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-secondary"></span>
+                            Novo Lead
+                        </h3>
+<span class="font-label-sm text-on-surface-variant bg-surface-container-highest px-2 py-0.5 rounded-full">3</span>
+</div>
+<div class="flex-1 overflow-y-auto kanban-scroll flex flex-col gap-3 pr-1 pb-1">
+<!-- Card 1 -->
+<div class="kanban-card bg-surface-container-lowest border border-outline-variant rounded-lg p-3 cursor-grab drag-handle relative overflow-hidden group">
+<div class="absolute left-0 top-0 bottom-0 w-1 bg-error"></div>
+<div class="pl-2">
+<div class="flex justify-between items-start mb-2">
+<span class="font-label-sm px-2 py-0.5 bg-surface-variant text-on-surface rounded text-[10px] uppercase font-bold tracking-wider">Inbound</span>
+<button class="text-on-surface-variant opacity-0 group-hover:opacity-100 transition-opacity"><span class="material-symbols-outlined text-[16px]">more_horiz</span></button>
+</div>
+<h4 class="font-label-md text-on-surface font-bold mb-1">TechCorp Industries</h4>
+<p class="font-body-md text-body-md text-on-surface-variant text-sm line-clamp-2 mb-3">Interested in Q3 SaaS implementation for regional offices.</p>
+<div class="flex items-center justify-between mt-auto">
+<span class="font-label-sm text-on-surface-variant flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">calendar_today</span> Oct 12</span>
+<div class="w-6 h-6 rounded-full bg-primary-fixed flex items-center justify-center text-on-primary-fixed-variant text-xs font-bold">AS</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Column 2: Contato/Qualificação -->
+<div class="w-[320px] shrink-0 bg-surface-container-low rounded-xl p-4 flex flex-col max-h-full border border-surface-variant">
+<div class="flex items-center justify-between mb-4 px-1">
+<h3 class="font-label-md text-label-md font-bold text-on-surface flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-secondary-fixed-dim"></span>
+                            Contato/Qualificação
+                        </h3>
+<span class="font-label-sm text-on-surface-variant bg-surface-container-highest px-2 py-0.5 rounded-full">2</span>
+</div>
+<div class="flex-1 overflow-y-auto kanban-scroll flex flex-col gap-3 pr-1 pb-1">
+<!-- Card 2 -->
+<div class="kanban-card bg-surface-container-lowest border border-outline-variant rounded-lg p-3 cursor-grab drag-handle relative overflow-hidden group">
+<div class="absolute left-0 top-0 bottom-0 w-1 bg-secondary"></div>
+<div class="pl-2">
+<div class="flex justify-between items-start mb-2">
+<span class="font-label-sm px-2 py-0.5 bg-secondary-container text-on-secondary-container rounded text-[10px] uppercase font-bold tracking-wider">Referral</span>
+<button class="text-on-surface-variant opacity-0 group-hover:opacity-100 transition-opacity"><span class="material-symbols-outlined text-[16px]">more_horiz</span></button>
+</div>
+<h4 class="font-label-md text-on-surface font-bold mb-1">Nexo Logistics</h4>
+<p class="font-body-md text-body-md text-on-surface-variant text-sm line-clamp-2 mb-3">Initial call completed. Requested case studies for logistics sector.</p>
+<div class="flex items-center justify-between mt-auto">
+<span class="font-label-sm text-on-surface-variant flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">call</span> Oct 10</span>
+<div class="w-6 h-6 rounded-full bg-primary-fixed flex items-center justify-center text-on-primary-fixed-variant text-xs font-bold">JD</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Column 3: Proposta Enviada -->
+<div class="w-[320px] shrink-0 bg-surface-container-low rounded-xl p-4 flex flex-col max-h-full border border-surface-variant">
+<div class="flex items-center justify-between mb-4 px-1">
+<h3 class="font-label-md text-label-md font-bold text-on-surface flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-primary-fixed-dim"></span>
+                            Proposta Enviada
+                        </h3>
+<span class="font-label-sm text-on-surface-variant bg-surface-container-highest px-2 py-0.5 rounded-full">1</span>
+</div>
+<div class="flex-1 overflow-y-auto kanban-scroll flex flex-col gap-3 pr-1 pb-1">
+<!-- Card 3 -->
+<div class="kanban-card bg-surface-container-lowest border border-outline-variant rounded-lg p-3 cursor-grab drag-handle relative overflow-hidden group">
+<div class="absolute left-0 top-0 bottom-0 w-1 bg-tertiary-fixed-dim"></div>
+<div class="pl-2">
+<div class="flex justify-between items-start mb-2">
+<span class="font-label-sm px-2 py-0.5 bg-surface-variant text-on-surface rounded text-[10px] uppercase font-bold tracking-wider">Outbound</span>
+<button class="text-on-surface-variant opacity-0 group-hover:opacity-100 transition-opacity"><span class="material-symbols-outlined text-[16px]">more_horiz</span></button>
+</div>
+<h4 class="font-label-md text-on-surface font-bold mb-1">Stellar Health</h4>
+<p class="font-body-md text-body-md text-on-surface-variant text-sm line-clamp-2 mb-3">Proposal sent for full suite integration. Waiting for board approval.</p>
+<div class="flex items-center justify-between mt-auto">
+<span class="font-label-sm text-on-surface-variant flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">mail</span> Oct 08</span>
+<img class="w-6 h-6 rounded-full object-cover" data-alt="A small circular avatar portrait of a professional woman with dark hair in a corporate setting, soft lighting, neutral background, modern CRM ui style." src="https://lh3.googleusercontent.com/aida-public/AB6AXuATDB9TNptOCbrVFUIVoOxX1VWBerxL3I1n18g0MaSUI2B-PjgDF2BrfMq0QO3_9lBCUhnsBIdxEk9wbD-slU9MNjBaCVgiDRVevva7RVcJIghZjILo8UVbXtAx56FKr1hHpWvfFWFVdH7t_esvoY9lLaHZjsNoX93El9ht2KtzQBIbxvVlCxZZIm29DasXlwB49zF9Uyk_gHdVi1vBcyeVr2ciFSfWkAQ7gYmpndyJOnjPfU5KlcKb3Q"/>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Column 4: Em Negociação -->
+<div class="w-[320px] shrink-0 bg-surface-container-low rounded-xl p-4 flex flex-col max-h-full border border-surface-variant">
+<div class="flex items-center justify-between mb-4 px-1">
+<h3 class="font-label-md text-label-md font-bold text-on-surface flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-outline"></span>
+                            Em Negociação
+                        </h3>
+<span class="font-label-sm text-on-surface-variant bg-surface-container-highest px-2 py-0.5 rounded-full">0</span>
+</div>
+<div class="flex-1 overflow-y-auto kanban-scroll flex flex-col gap-3 pr-1 pb-1">
+<!-- Empty State -->
+<div class="flex flex-col items-center justify-center h-24 text-on-surface-variant border-2 border-dashed border-outline-variant rounded-lg">
+<span class="font-label-sm">Drop cards here</span>
+</div>
+</div>
+</div>
+</div>
+</main>
+</div>
+</body></html>

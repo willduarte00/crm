@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Payment Record - AdPrecision</title>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Google Fonts -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Tailwind Config from Guidelines -->
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                            "primary-fixed-dim": "#bec6e0",
+                            "on-secondary": "#ffffff",
+                            "surface-container-lowest": "#ffffff",
+                            "on-tertiary-container": "#818486",
+                            "tertiary-fixed": "#e0e3e5",
+                            "inverse-on-surface": "#eaf1ff",
+                            "surface-container": "#e5eeff",
+                            "secondary-fixed": "#89f5e7",
+                            "on-surface": "#0b1c30",
+                            "surface-tint": "#565e74",
+                            "secondary": "#006a61",
+                            "secondary-fixed-dim": "#6bd8cb",
+                            "surface-bright": "#f8f9ff",
+                            "background": "#f8f9ff",
+                            "surface-container-highest": "#d3e4fe",
+                            "on-secondary-fixed-variant": "#005049",
+                            "secondary-container": "#86f2e4",
+                            "on-secondary-fixed": "#00201d",
+                            "inverse-surface": "#213145",
+                            "error-container": "#ffdad6",
+                            "on-tertiary": "#ffffff",
+                            "on-background": "#0b1c30",
+                            "on-primary": "#ffffff",
+                            "on-tertiary-fixed-variant": "#444749",
+                            "on-primary-fixed-variant": "#3f465c",
+                            "inverse-primary": "#bec6e0",
+                            "on-error-container": "#93000a",
+                            "on-secondary-container": "#006f66",
+                            "primary-container": "#131b2e",
+                            "outline-variant": "#c6c6cd",
+                            "outline": "#76777d",
+                            "primary": "#000000",
+                            "tertiary-container": "#191c1e",
+                            "tertiary-fixed-dim": "#c4c7c9",
+                            "error": "#ba1a1a",
+                            "surface-container-low": "#eff4ff",
+                            "on-primary-container": "#7c839b",
+                            "on-tertiary-fixed": "#191c1e",
+                            "surface": "#f8f9ff",
+                            "on-surface-variant": "#45464d",
+                            "surface-variant": "#d3e4fe",
+                            "on-primary-fixed": "#131b2e",
+                            "on-error": "#ffffff",
+                            "surface-container-high": "#dce9ff",
+                            "surface-dim": "#cbdbf5",
+                            "primary-fixed": "#dae2fd",
+                            "tertiary": "#000000"
+                    },
+                    "borderRadius": {
+                            "DEFAULT": "0.125rem",
+                            "lg": "0.25rem",
+                            "xl": "0.5rem",
+                            "full": "0.75rem"
+                    },
+                    "spacing": {
+                            "base": "4px",
+                            "lg": "24px",
+                            "margin-safe": "32px",
+                            "max-width": "1440px",
+                            "md": "16px",
+                            "2xl": "48px",
+                            "xl": "32px",
+                            "sm": "8px",
+                            "xs": "4px",
+                            "gutter": "24px"
+                    },
+                    "fontFamily": {
+                            "headline-sm": ["Inter"],
+                            "label-md": ["Inter"],
+                            "body-lg": ["Inter"],
+                            "display-lg": ["Inter"],
+                            "display-lg-mobile": ["Inter"],
+                            "body-md": ["Inter"],
+                            "headline-md": ["Inter"],
+                            "label-sm": ["Inter"],
+                            "data-tabular": ["Inter"]
+                    },
+                    "fontSize": {
+                            "headline-sm": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                            "label-md": ["13px", {"lineHeight": "18px", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                            "body-lg": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                            "display-lg": ["36px", {"lineHeight": "44px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                            "display-lg-mobile": ["28px", {"lineHeight": "34px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                            "body-md": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                            "headline-md": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                            "label-sm": ["12px", {"lineHeight": "16px", "fontWeight": "500"}],
+                            "data-tabular": ["14px", {"lineHeight": "20px", "fontWeight": "400"}]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .material-symbols-outlined.fill {
+            font-variation-settings: 'FILL' 1;
+        }
+        
+        /* Utility styles for scrollbars */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+    </style>
+</head>
+<body class="bg-surface text-on-surface font-body-md min-h-screen flex">
+<!-- JSON Component: SideNavBar (Semantic Intent: Financial is active based on Payment Record) -->
+<nav class="hidden md:flex w-[260px] h-screen fixed left-0 top-0 border-r border-outline-variant bg-surface-container-lowest flex-col p-md z-40">
+<div class="mb-xl flex items-center gap-3 pl-2">
+<div class="w-8 h-8 rounded bg-primary text-on-primary flex items-center justify-center font-bold text-lg">A</div>
+<div>
+<h1 class="font-headline-sm text-headline-sm font-bold text-on-background">AdPrecision</h1>
+<p class="font-label-sm text-label-sm text-on-surface-variant">Marketing CRM</p>
+</div>
+</div>
+<button class="w-full bg-secondary text-on-secondary font-label-md text-label-md py-3 rounded-lg mb-lg flex items-center justify-center gap-2 hover:bg-opacity-90 transition-colors">
+<span class="material-symbols-outlined">add</span>
+            New Lead
+        </button>
+<ul class="flex-1 space-y-2">
+<li>
+<a class="flex items-center gap-3 px-3 py-2 text-on-surface-variant hover:text-secondary hover:bg-surface-container-low transition-colors duration-200 ease-in-out rounded-lg font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+                    Dashboard
+                </a>
+</li>
+<li>
+<a class="flex items-center gap-3 px-3 py-2 text-on-surface-variant hover:text-secondary hover:bg-surface-container-low transition-colors duration-200 ease-in-out rounded-lg font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined">group</span>
+                    Clients
+                </a>
+</li>
+<li>
+<a class="flex items-center gap-3 px-3 py-2 text-on-surface-variant hover:text-secondary hover:bg-surface-container-low transition-colors duration-200 ease-in-out rounded-lg font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined">view_kanban</span>
+                    Pipeline
+                </a>
+</li>
+<li>
+<a class="flex items-center gap-3 px-3 py-2 text-on-surface-variant hover:text-secondary hover:bg-surface-container-low transition-colors duration-200 ease-in-out rounded-lg font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined">description</span>
+                    Contracts
+                </a>
+</li>
+<!-- Active State -->
+<li>
+<a class="flex items-center gap-3 px-3 py-2 text-secondary font-bold bg-secondary-container rounded-lg font-label-md text-label-md transition-colors duration-200 ease-in-out" href="#">
+<span class="material-symbols-outlined fill" style="font-variation-settings: 'FILL' 1;">payments</span>
+                    Financial
+                </a>
+</li>
+<li>
+<a class="flex items-center gap-3 px-3 py-2 text-on-surface-variant hover:text-secondary hover:bg-surface-container-low transition-colors duration-200 ease-in-out rounded-lg font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined">admin_panel_settings</span>
+                    Users
+                </a>
+</li>
+<li>
+<a class="flex items-center gap-3 px-3 py-2 text-on-surface-variant hover:text-secondary hover:bg-surface-container-low transition-colors duration-200 ease-in-out rounded-lg font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined">settings</span>
+                    Settings
+                </a>
+</li>
+</ul>
+</nav>
+<!-- Main Content Area -->
+<main class="w-full md:ml-[260px] min-h-screen flex flex-col relative">
+<!-- JSON Component: TopNavBar -->
+<header class="hidden md:flex justify-between items-center px-lg w-full h-16 bg-surface border-b border-outline-variant sticky top-0 z-30">
+<div class="flex items-center gap-4">
+<div class="relative hidden lg:block">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-sm">search</span>
+<input class="pl-10 pr-4 py-1.5 bg-surface-container-low border border-outline-variant rounded-full font-body-md text-body-md focus:outline-none focus:border-secondary focus:ring-1 focus:ring-secondary/20 transition-all w-64 text-on-surface placeholder:text-on-surface-variant" placeholder="Search..." type="text"/>
+</div>
+</div>
+<nav class="hidden lg:flex items-center gap-8 font-label-md text-label-md">
+<a class="text-secondary border-b-2 border-secondary pb-1" href="#">Overview</a>
+<a class="text-on-surface-variant hover:text-secondary transition-colors" href="#">Timeline</a>
+<a class="text-on-surface-variant hover:text-secondary transition-colors" href="#">Financial</a>
+</nav>
+<div class="flex items-center gap-4">
+<button class="text-on-surface-variant hover:text-secondary transition-colors w-8 h-8 flex items-center justify-center rounded-full hover:bg-surface-container-low">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="text-on-surface-variant hover:text-secondary transition-colors w-8 h-8 flex items-center justify-center rounded-full hover:bg-surface-container-low">
+<span class="material-symbols-outlined">chat</span>
+</button>
+<button class="text-on-surface-variant hover:text-secondary transition-colors w-8 h-8 flex items-center justify-center rounded-full hover:bg-surface-container-low">
+<span class="material-symbols-outlined">help_outline</span>
+</button>
+<div class="w-8 h-8 rounded-full overflow-hidden border border-outline-variant">
+<img alt="User Profile Avatar" class="w-full h-full object-cover" data-alt="A professional headshot of a corporate user against a clean, light studio background. The lighting is soft and flattering, reinforcing a modern business aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBxEmOmu6WiXgZXjspqkyBo-R9avjxL3kr5Cm1a96NT4cPowc8aT7OqA6ar6QX7w-Y64f63ymAjI508xCAz5gX5RlFODFnxnYW0sS3sxupZQPmwWNi63L34MkT9eQqoWo1Q2NR3ENog8qHD1wck7cv7I1xb3Mx1i1b-c4Ugo-sN48F1kfHSBUEyrYkc2qMmmd3hIuYOGtvE1DR6XoTQqqycbTkL_l6iEfDDQuxVGS_F1IELIDAwYuEC9w"/>
+</div>
+<button class="bg-secondary text-on-secondary font-label-md text-label-md px-4 py-2 rounded scale-95 active:scale-90 transition-transform hidden lg:block">
+                    Create Task
+                </button>
+</div>
+</header>
+<!-- Page Content -->
+<div class="flex-1 p-lg pb-margin-safe max-w-max-width mx-auto w-full">
+<!-- Breadcrumbs -->
+<nav class="flex text-on-surface-variant font-label-sm text-label-sm mb-lg items-center whitespace-nowrap overflow-x-auto pb-2">
+<a class="hover:text-secondary transition-colors" href="#">Clients</a>
+<span class="material-symbols-outlined text-[16px] mx-1">chevron_right</span>
+<a class="hover:text-secondary transition-colors" href="#">TechCorp Industries</a>
+<span class="material-symbols-outlined text-[16px] mx-1">chevron_right</span>
+<a class="hover:text-secondary transition-colors" href="#">Contracts</a>
+<span class="material-symbols-outlined text-[16px] mx-1">chevron_right</span>
+<a class="hover:text-secondary transition-colors" href="#">Social Media</a>
+<span class="material-symbols-outlined text-[16px] mx-1">chevron_right</span>
+<span class="text-on-surface font-semibold">Payment Record May 2024</span>
+</nav>
+<!-- Header Section -->
+<div class="flex flex-col lg:flex-row lg:items-start justify-between gap-md mb-xl">
+<div>
+<div class="flex items-center gap-3 mb-2">
+<h2 class="font-display-lg-mobile md:font-display-lg text-display-lg-mobile md:text-display-lg text-on-surface">May 2024 Payment</h2>
+<span class="inline-flex items-center px-2.5 py-0.5 rounded-full font-label-sm text-label-sm bg-[#fff8e1] text-[#f57f17] border border-[#ffe082]">
+                            Pending
+                        </span>
+</div>
+<div class="flex flex-wrap items-center gap-x-6 gap-y-2 text-on-surface-variant font-body-md text-body-md">
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-sm">business</span>
+<span class="font-semibold text-on-surface">TechCorp Industries</span>
+</div>
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-sm">assignment</span>
+<span>Social Media Retainer</span>
+</div>
+<div class="flex items-center gap-1.5 text-secondary">
+<span class="material-symbols-outlined text-sm">calendar_today</span>
+<span class="font-medium">Due: May 15, 2024</span>
+</div>
+</div>
+</div>
+<div class="flex items-center gap-3 self-start">
+<button class="flex items-center gap-2 px-4 py-2 border border-outline-variant bg-surface-container-lowest hover:bg-surface-container-low text-on-surface font-label-md text-label-md rounded transition-colors shadow-sm">
+<span class="material-symbols-outlined text-[18px]">open_in_new</span>
+                        Go to Contract
+                    </button>
+<button class="flex items-center gap-2 px-4 py-2 bg-[#25D366] hover:bg-[#128C7E] text-white font-label-md text-label-md rounded transition-colors shadow-sm">
+<span class="material-symbols-outlined text-[18px]">chat</span>
+                        WhatsApp Reminder
+                    </button>
+</div>
+</div>
+<!-- Bento Grid Layout for Main Content -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-lg">
+<!-- Left Column: Primary Entry -->
+<div class="lg:col-span-8 flex flex-col gap-lg">
+<!-- Payment Details Card (Manual Entry) -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-lg shadow-sm">
+<div class="flex items-center gap-2 mb-6 border-b border-outline-variant pb-4">
+<span class="material-symbols-outlined text-secondary">edit_document</span>
+<h3 class="font-headline-sm text-headline-sm text-on-surface">Payment Details Entry</h3>
+</div>
+<form class="grid grid-cols-1 md:grid-cols-2 gap-x-gutter gap-y-6">
+<!-- Amount Field (Prominent) -->
+<div class="md:col-span-2 bg-surface-container-low p-4 rounded-lg border border-outline-variant/50">
+<label class="block font-label-sm text-label-sm text-on-surface-variant mb-1 uppercase tracking-wider">Final Amount Received</label>
+<div class="relative flex items-center">
+<span class="absolute left-4 font-display-lg text-on-surface-variant">$</span>
+<input class="w-full bg-transparent pl-12 pr-4 py-2 font-display-lg text-display-lg text-on-surface border-b-2 border-outline-variant focus:border-secondary focus:ring-0 transition-colors shadow-none rounded-none focus:outline-none" placeholder="0.00" type="text" value="3,500.00"/>
+</div>
+<p class="text-xs text-on-surface-variant mt-2 font-body-md">Expected amount: $3,500.00. Edit for partial payments or discounts.</p>
+</div>
+<!-- Date Field -->
+<div>
+<label class="block font-label-sm text-label-sm text-on-surface mb-1.5">Paid Date</label>
+<div class="relative">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-[20px]">calendar_month</span>
+<input class="w-full pl-10 pr-3 py-2 bg-surface-container-lowest border border-outline-variant rounded font-body-md text-body-md text-on-surface focus:border-secondary focus:ring-1 focus:ring-secondary/20 transition-all outline-none" type="date"/>
+</div>
+</div>
+<!-- Payment Method -->
+<div>
+<label class="block font-label-sm text-label-sm text-on-surface mb-1.5">Payment Method</label>
+<div class="relative">
+<select class="w-full pl-3 pr-10 py-2 bg-surface-container-lowest border border-outline-variant rounded font-body-md text-body-md text-on-surface focus:border-secondary focus:ring-1 focus:ring-secondary/20 transition-all outline-none appearance-none">
+<option disabled="" selected="" value="">Select method...</option>
+<option value="pix">PIX</option>
+<option value="boleto">Boleto</option>
+<option value="transfer">Bank Transfer (TED/DOC)</option>
+<option value="card">Credit Card</option>
+</select>
+<span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant pointer-events-none">expand_more</span>
+</div>
+</div>
+<!-- Notes -->
+<div class="md:col-span-2">
+<label class="block font-label-sm text-label-sm text-on-surface mb-1.5">Internal Notes</label>
+<textarea class="w-full p-3 bg-surface-container-lowest border border-outline-variant rounded font-body-md text-body-md text-on-surface focus:border-secondary focus:ring-1 focus:ring-secondary/20 transition-all outline-none resize-none" placeholder="Add any details about this transaction..." rows="3"></textarea>
+</div>
+<div class="md:col-span-2 flex justify-end gap-3 pt-4 border-t border-outline-variant">
+<button class="px-4 py-2 font-label-md text-label-md text-on-surface-variant border border-transparent hover:bg-surface-container-low rounded transition-colors" type="button">Cancel</button>
+<button class="px-6 py-2 bg-secondary text-on-secondary font-label-md text-label-md rounded shadow-sm hover:bg-opacity-90 transition-colors flex items-center gap-2" type="button">
+<span class="material-symbols-outlined text-[18px]">check</span>
+                                    Mark as Paid
+                                </button>
+</div>
+</form>
+</div>
+</div>
+<!-- Right Column: Supporting Info -->
+<div class="lg:col-span-4 flex flex-col gap-lg">
+<!-- Invoice Attachment Section -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-lg shadow-sm">
+<div class="flex items-center justify-between mb-4">
+<h3 class="font-headline-sm text-headline-sm text-on-surface flex items-center gap-2">
+<span class="material-symbols-outlined text-on-surface-variant">receipt_long</span>
+                                Invoice (NF)
+                            </h3>
+</div>
+<!-- Upload Dropzone -->
+<div class="border-2 border-dashed border-outline-variant rounded-lg p-6 flex flex-col items-center justify-center text-center hover:bg-surface-container-low hover:border-secondary transition-colors cursor-pointer mb-4 group">
+<div class="w-12 h-12 rounded-full bg-surface-variant flex items-center justify-center mb-3 group-hover:bg-secondary-container transition-colors">
+<span class="material-symbols-outlined text-on-surface-variant group-hover:text-secondary transition-colors">upload_file</span>
+</div>
+<p class="font-label-sm text-label-sm text-on-surface mb-1">Click to upload or drag and drop</p>
+<p class="font-body-md text-xs text-on-surface-variant">PDF, XML up to 10MB</p>
+</div>
+<!-- File List (Empty State currently, showing example if one was uploaded) -->
+<div class="space-y-2">
+<div class="flex items-center justify-between p-3 border border-outline-variant rounded bg-surface-bright">
+<div class="flex items-center gap-3 overflow-hidden">
+<span class="material-symbols-outlined text-red-500">picture_as_pdf</span>
+<div class="truncate">
+<p class="font-label-sm text-label-sm text-on-surface truncate">NF_May2024_TechCorp.pdf</p>
+<p class="text-xs text-on-surface-variant">1.2 MB • Uploaded May 10</p>
+</div>
+</div>
+<div class="flex items-center gap-1">
+<button class="w-8 h-8 rounded flex items-center justify-center text-on-surface-variant hover:bg-surface-container-low hover:text-secondary transition-colors">
+<span class="material-symbols-outlined text-[18px]">download</span>
+</button>
+<button class="w-8 h-8 rounded flex items-center justify-center text-on-surface-variant hover:bg-surface-container-low hover:text-error transition-colors">
+<span class="material-symbols-outlined text-[18px]">delete</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Quick Context -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-lg shadow-sm">
+<h3 class="font-headline-sm text-headline-sm text-on-surface mb-4">Billing Context</h3>
+<div class="space-y-4 font-body-md text-body-md">
+<div class="flex justify-between border-b border-outline-variant pb-2">
+<span class="text-on-surface-variant">Client ID</span>
+<span class="font-medium text-on-surface">CLI-0842</span>
+</div>
+<div class="flex justify-between border-b border-outline-variant pb-2">
+<span class="text-on-surface-variant">Previous Month</span>
+<span class="font-medium text-green-600 flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">check_circle</span> Paid
+                                </span>
+</div>
+<div class="flex justify-between pb-1">
+<span class="text-on-surface-variant">Contract Value</span>
+<span class="font-medium text-on-surface">$3,500.00 / mo</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+</body></html>

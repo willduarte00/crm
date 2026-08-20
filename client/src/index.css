@@ -1,0 +1,13 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-slate-50 text-navy-900;
+  }
+}
+
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}

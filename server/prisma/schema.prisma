@@ -1,0 +1,165 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
+}
+
+model User {
+  id                 String           @id @default(uuid())
+  email              String           @unique
+  passwordHash       String
+  name               String
+  role               String           @default("membro") // admin | membro
+  active             Boolean          @default(true)
+  mustChangePassword Boolean          @default(false)
+  tokenVersion       Int              @default(0)
+  createdAt          DateTime         @default(now())
+  ownedClients       Client[]
+  interactionLogs    InteractionLog[]
+
+  @@map("users")
+}
+
+model Client {
+  id              String           @id @default(uuid())
+  name            String
+  tradeName       String?
+  documentType    String           // CPF | CNPJ
+  documentNumber  String
+  email           String?
+  phone           String?
+  leadSource      String
+  stage           String
+  priority        String           @default("media") // alta | media | baixa
+  ownerId         String?
+  notes           String?
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  deletedAt       DateTime?
+  owner           User?            @relation(fields: [ownerId], references: [id])
+  contracts       Contract[]
+  interactionLogs InteractionLog[]
+
+  @@map("clients")
+}
+
+model Contract {
+  id                  String          @id @default(uuid())
+  clientId            String
+  serviceType         String
+  description         String?
+  billingType         String          // recorrente | pontual
+  valueCents          Int
+  billingDay          Int?
+  billingPeriodMonths Int?            @default(1)
+  installments        Int?
+  startDate           String          // YYYY-MM-DD
+  endDate             String?         // YYYY-MM-DD
+  status              String          @default("ativo") // ativo | pausado | encerrado
+  createdAt           DateTime        @default(now())
+  updatedAt           DateTime        @updatedAt
+  deletedAt           DateTime?
+  client              Client          @relation(fields: [clientId], references: [id])
+  files               ContractFile[]
+  paymentRecords      PaymentRecord[]
+
+  @@map("contracts")
+}
+
+model PaymentRecord {
+  id             String        @id @default(uuid())
+  contractId     String
+  number         String        @unique // COB-AAAA-NNNN
+  referenceMonth String        // YYYY-MM
+  dueDate        String        // YYYY-MM-DD
+  paidDate       String?       // YYYY-MM-DD
+  amountCents    Int
+  status         String        @default("Pendente") // Pendente | Pago | Cancelado
+  paymentMethod  String?       // PIX | Boleto | Cartao | Transferencia
+  notes          String?
+  createdAt      DateTime      @default(now())
+  contract       Contract      @relation(fields: [contractId], references: [id])
+  invoices       InvoiceFile[]
+
+  @@unique([contractId, referenceMonth])
+  @@map("payment_records")
+}
+
+model InvoiceFile {
+  id              String        @id @default(uuid())
+  paymentRecordId String
+  storedName      String
+  originalName    String
+  fileSize        Int
+  mimeType        String
+  uploadedAt      DateTime      @default(now())
+  paymentRecord   PaymentRecord @relation(fields: [paymentRecordId], references: [id], onDelete: Cascade)
+
+  @@map("invoice_files")
+}
+
+model ContractFile {
+  id           String   @id @default(uuid())
+  contractId   String
+  storedName   String
+  originalName String
+  fileSize     Int
+  mimeType     String
+  uploadedAt   DateTime @default(now())
+  contract     Contract @relation(fields: [contractId], references: [id], onDelete: Cascade)
+
+  @@map("contract_files")
+}
+
+model InteractionLog {
+  id        String   @id @default(uuid())
+  clientId  String
+  userId    String
+  type      String
+  content   String
+  createdAt DateTime @default(now())
+  client    Client   @relation(fields: [clientId], references: [id])
+  user      User     @relation(fields: [userId], references: [id])
+
+  @@map("interaction_logs")
+}
+
+model Settings {
+  id           String   @id @default(uuid())
+  agencyName   String
+  contactEmail String?
+  phone        String?
+  pixKey       String?
+  pixKeyType   String?
+  bankName     String?
+  bankBranch   String?
+  bankAccount  String?
+  updatedAt    DateTime @updatedAt
+
+  @@map("settings")
+}
+
+model MetricSnapshot {
+  id             String   @id @default(uuid())
+  referenceMonth String   @unique // YYYY-MM
+  mrrCents       Int
+  invoicedCents  Int
+  receivedCents  Int
+  overdueCents   Int
+  overdueCount   Int
+  activeClients  Int
+  capturedAt     DateTime @default(now())
+
+  @@map("metric_snapshots")
+}
+
+model PaymentSequence {
+  year       Int @id
+  lastNumber Int @default(0)
+
+  @@map("payment_sequences")
+}

@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Contract Details - AdPrecision</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "on-secondary-fixed-variant": "#005049",
+                      "surface-bright": "#f8f9ff",
+                      "on-tertiary": "#ffffff",
+                      "surface-dim": "#cbdbf5",
+                      "on-surface-variant": "#45464d",
+                      "on-primary-container": "#7c839b",
+                      "surface-container": "#e5eeff",
+                      "on-secondary-container": "#006f66",
+                      "surface-container-low": "#eff4ff",
+                      "surface": "#f8f9ff",
+                      "on-secondary": "#ffffff",
+                      "surface-variant": "#d3e4fe",
+                      "tertiary-fixed-dim": "#c4c7c9",
+                      "surface-container-lowest": "#ffffff",
+                      "inverse-primary": "#bec6e0",
+                      "secondary-fixed-dim": "#6bd8cb",
+                      "surface-container-high": "#dce9ff",
+                      "on-tertiary-fixed": "#191c1e",
+                      "on-surface": "#0b1c30",
+                      "on-background": "#0b1c30",
+                      "surface-container-highest": "#d3e4fe",
+                      "inverse-surface": "#213145",
+                      "outline": "#76777d",
+                      "tertiary-fixed": "#e0e3e5",
+                      "on-tertiary-fixed-variant": "#444749",
+                      "background": "#f8f9ff",
+                      "secondary": "#006a61",
+                      "inverse-on-surface": "#eaf1ff",
+                      "surface-tint": "#565e74",
+                      "on-error": "#ffffff",
+                      "tertiary": "#000000",
+                      "primary-container": "#131b2e",
+                      "error-container": "#ffdad6",
+                      "primary-fixed-dim": "#bec6e0",
+                      "secondary-container": "#86f2e4",
+                      "primary-fixed": "#dae2fd",
+                      "on-tertiary-container": "#818486",
+                      "outline-variant": "#c6c6cd",
+                      "error": "#ba1a1a",
+                      "tertiary-container": "#191c1e",
+                      "on-primary": "#ffffff",
+                      "on-primary-fixed-variant": "#3f465c",
+                      "on-primary-fixed": "#131b2e",
+                      "primary": "#000000",
+                      "on-secondary-fixed": "#00201d",
+                      "secondary-fixed": "#89f5e7",
+                      "on-error-container": "#93000a"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.125rem",
+                      "lg": "0.25rem",
+                      "xl": "0.5rem",
+                      "full": "0.75rem"
+              },
+              "spacing": {
+                      "gutter": "24px",
+                      "xs": "4px",
+                      "lg": "24px",
+                      "md": "16px",
+                      "margin-safe": "32px",
+                      "sm": "8px",
+                      "max-width": "1440px",
+                      "base": "4px",
+                      "2xl": "48px",
+                      "xl": "32px"
+              },
+              "fontFamily": {
+                      "body-md": [
+                              "Inter"
+                      ],
+                      "display-lg-mobile": [
+                              "Inter"
+                      ],
+                      "headline-md": [
+                              "Inter"
+                      ],
+                      "label-sm": [
+                              "Inter"
+                      ],
+                      "body-lg": [
+                              "Inter"
+                      ],
+                      "data-tabular": [
+                              "Inter"
+                      ],
+                      "display-lg": [
+                              "Inter"
+                      ],
+                      "headline-sm": [
+                              "Inter"
+                      ],
+                      "label-md": [
+                              "Inter"
+                      ]
+              },
+              "fontSize": {
+                      "body-md": [
+                              "14px",
+                              {
+                                      "lineHeight": "20px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "display-lg-mobile": [
+                              "28px",
+                              {
+                                      "lineHeight": "34px",
+                                      "letterSpacing": "-0.02em",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "headline-md": [
+                              "24px",
+                              {
+                                      "lineHeight": "32px",
+                                      "letterSpacing": "-0.01em",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "label-sm": [
+                              "12px",
+                              {
+                                      "lineHeight": "16px",
+                                      "fontWeight": "500"
+                              }
+                      ],
+                      "body-lg": [
+                              "16px",
+                              {
+                                      "lineHeight": "24px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "data-tabular": [
+                              "14px",
+                              {
+                                      "lineHeight": "20px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "display-lg": [
+                              "36px",
+                              {
+                                      "lineHeight": "44px",
+                                      "letterSpacing": "-0.02em",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "headline-sm": [
+                              "20px",
+                              {
+                                      "lineHeight": "28px",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "label-md": [
+                              "13px",
+                              {
+                                      "lineHeight": "18px",
+                                      "letterSpacing": "0.05em",
+                                      "fontWeight": "600"
+                              }
+                      ]
+              }
+      },
+          },
+        }
+      </script>
+</head>
+<body class="bg-background text-on-background font-body-md min-h-screen flex">
+<!-- SideNavBar (Shared Component) -->
+<nav class="hidden md:flex flex-col p-md w-[260px] h-screen fixed left-0 top-0 bg-surface-container-lowest dark:bg-primary-container border-r border-outline-variant dark:border-on-primary-container z-50">
+<div class="mb-xl flex items-center gap-sm px-sm">
+<img alt="Marketing Agency Logo" class="w-8 h-8 rounded" data-alt="A clean, minimalist logo mark for a marketing agency named AdPrecision, featuring sharp geometric shapes in deep teal and slate grey, set against a crisp white background. The style is modern corporate, emphasizing precision and professionalism." src="https://lh3.googleusercontent.com/aida-public/AB6AXuArMgntBxiuXn3pmgGW_FNnGzelRAc9Y1GzPtwRepqwCJubjB-Dcd8sc_xlcUThpOTRZiIfa_ZO25-0_tOVsiqvgt7WSPPoxx-_irBOUhmFwsWju0cgBoAOyUB4lEI3E0FOPa1DgO1_NRejhyNQa_2-Ni8kBiidpKkv81LzaHoTyxjKYQef4_5H7kfouKZ9435jScnrV9UjN7HPXSLS0WPdPXpywBxkVqZT7ZkpnVVj9YnvAdgwelafhg"/>
+<div>
+<h1 class="font-headline-sm text-headline-sm font-bold text-on-background dark:text-primary-fixed">AdPrecision</h1>
+<p class="font-label-sm text-label-sm text-on-surface-variant">Marketing CRM</p>
+</div>
+</div>
+<div class="flex-1 space-y-sm">
+<a class="flex items-center gap-md px-md py-sm rounded-lg text-on-surface-variant dark:text-on-primary-fixed-variant hover:text-secondary hover:bg-surface-container-low dark:hover:bg-on-primary-container transition-colors duration-200 ease-in-out font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">dashboard</span>
+                Dashboard
+            </a>
+<a class="flex items-center gap-md px-md py-sm rounded-lg text-on-surface-variant dark:text-on-primary-fixed-variant hover:text-secondary hover:bg-surface-container-low dark:hover:bg-on-primary-container transition-colors duration-200 ease-in-out font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">group</span>
+                Clients
+            </a>
+<a class="flex items-center gap-md px-md py-sm rounded-lg text-on-surface-variant dark:text-on-primary-fixed-variant hover:text-secondary hover:bg-surface-container-low dark:hover:bg-on-primary-container transition-colors duration-200 ease-in-out font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">view_kanban</span>
+                Pipeline
+            </a>
+<a class="flex items-center gap-md px-md py-sm rounded-lg text-secondary font-bold bg-secondary-container dark:bg-secondary-fixed-dim dark:text-on-secondary-fixed transition-colors duration-200 ease-in-out font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">description</span>
+                Contracts
+            </a>
+<a class="flex items-center gap-md px-md py-sm rounded-lg text-on-surface-variant dark:text-on-primary-fixed-variant hover:text-secondary hover:bg-surface-container-low dark:hover:bg-on-primary-container transition-colors duration-200 ease-in-out font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">payments</span>
+                Financial
+            </a>
+<a class="flex items-center gap-md px-md py-sm rounded-lg text-on-surface-variant dark:text-on-primary-fixed-variant hover:text-secondary hover:bg-surface-container-low dark:hover:bg-on-primary-container transition-colors duration-200 ease-in-out font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">admin_panel_settings</span>
+                Users
+            </a>
+<a class="flex items-center gap-md px-md py-sm rounded-lg text-on-surface-variant dark:text-on-primary-fixed-variant hover:text-secondary hover:bg-surface-container-low dark:hover:bg-on-primary-container transition-colors duration-200 ease-in-out font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">settings</span>
+                Settings
+            </a>
+</div>
+<button class="mt-auto w-full bg-secondary hover:bg-on-secondary-container text-on-secondary py-sm rounded-lg font-label-md text-label-md transition-colors flex items-center justify-center gap-xs shadow-sm">
+<span class="material-symbols-outlined text-[18px]">add</span>
+            New Lead
+        </button>
+</nav>
+<!-- Main Content Area -->
+<div class="flex-1 md:ml-[260px] flex flex-col min-h-screen">
+<!-- TopNavBar (Shared Component) -->
+<header class="hidden md:flex justify-between items-center px-lg h-16 w-full bg-surface dark:bg-background border-b border-outline-variant dark:border-on-primary-container sticky top-0 z-40">
+<div class="flex items-center gap-lg">
+<!-- Search -->
+<div class="relative w-64">
+<span class="material-symbols-outlined absolute left-sm top-1/2 -translate-y-1/2 text-on-surface-variant">search</span>
+<input class="w-full pl-xl pr-sm py-xs bg-surface-container-low border-outline-variant rounded focus:border-secondary focus:ring-1 focus:ring-secondary/20 font-body-md text-body-md transition-colors text-on-surface placeholder:text-on-surface-variant" placeholder="Search..." type="text"/>
+</div>
+</div>
+<nav class="flex gap-md font-label-md text-label-md">
+<a class="text-on-surface-variant dark:text-on-primary-fixed-variant hover:text-secondary transition-colors py-sm" href="#">Overview</a>
+<a class="text-on-surface-variant dark:text-on-primary-fixed-variant hover:text-secondary transition-colors py-sm" href="#">Timeline</a>
+<a class="text-on-surface-variant dark:text-on-primary-fixed-variant hover:text-secondary transition-colors py-sm" href="#">Financial</a>
+</nav>
+<div class="flex items-center gap-md">
+<div class="flex items-center text-on-surface-variant gap-sm">
+<button class="p-xs rounded hover:bg-surface-container-low hover:text-secondary transition-colors">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">notifications</span>
+</button>
+<button class="p-xs rounded hover:bg-surface-container-low hover:text-secondary transition-colors">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">chat</span>
+</button>
+<button class="p-xs rounded hover:bg-surface-container-low hover:text-secondary transition-colors">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">help_outline</span>
+</button>
+</div>
+<div class="w-[1px] h-6 bg-outline-variant mx-xs"></div>
+<button class="bg-primary text-on-primary px-md py-xs rounded font-label-md text-label-md hover:bg-surface-tint transition-colors scale-95 active:scale-90">
+                    Create Task
+                </button>
+<img alt="User Profile Avatar" class="w-8 h-8 rounded-full border border-outline-variant object-cover ml-xs" data-alt="A small, circular avatar portrait of a professional in a modern office setting. The lighting is soft and flattering, suitable for a corporate CRM application." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDZcwH9LQj-fw55gr09giQDek3M_MNw6w3qQH7WUeqgskgZDeRAX975_vkvRX1i0AgbFRCTPBZIPvKUP40qarJHG3_uxKc1Te87zAvXIVwUp-c-q0b-Y54bDITD1emdBONdv9vKFUiudYk9PVd2GlM0x7F9RIUO4Evqj-FZ1ZfEFEFyMoDav3NoZMI9k9fEZtZLJjljyt-t9vxAUY2P01Oym5VT100nQIOkffb7qSgIlN3ZJ5r0bu7o6Q"/>
+</div>
+</header>
+<!-- Page Content -->
+<main class="flex-1 p-lg bg-background overflow-y-auto">
+<div class="max-w-[1440px] mx-auto space-y-lg">
+<!-- Breadcrumbs & Header -->
+<div class="flex flex-col gap-sm">
+<nav aria-label="Breadcrumb" class="flex text-on-surface-variant font-label-sm text-label-sm">
+<ol class="inline-flex items-center space-x-1 md:space-x-2">
+<li class="inline-flex items-center">
+<a class="hover:text-secondary transition-colors" href="#">Clients</a>
+</li>
+<li>
+<div class="flex items-center">
+<span class="material-symbols-outlined text-[16px] mx-1">chevron_right</span>
+<a class="hover:text-secondary transition-colors" href="#">TechCorp Industries</a>
+</div>
+</li>
+<li>
+<div class="flex items-center">
+<span class="material-symbols-outlined text-[16px] mx-1">chevron_right</span>
+<a class="hover:text-secondary transition-colors" href="#">Contracts</a>
+</div>
+</li>
+<li aria-current="page">
+<div class="flex items-center">
+<span class="material-symbols-outlined text-[16px] mx-1">chevron_right</span>
+<span class="text-on-surface">Social Media &amp; Content</span>
+</div>
+</li>
+</ol>
+</nav>
+<div class="flex justify-between items-end">
+<h2 class="font-headline-md text-headline-md text-on-surface">Contract Details: Social Media &amp; Content</h2>
+<div class="flex gap-sm">
+<button class="px-md py-xs border border-outline text-on-surface rounded hover:bg-surface-container-low font-label-md text-label-md transition-colors flex items-center gap-xs">
+<span class="material-symbols-outlined text-[18px]">edit</span>
+                                Edit
+                            </button>
+<button class="px-md py-xs bg-secondary text-on-secondary rounded hover:bg-on-secondary-container font-label-md text-label-md transition-colors flex items-center gap-xs">
+<span class="material-symbols-outlined text-[18px]">download</span>
+                                Export
+                            </button>
+</div>
+</div>
+</div>
+<!-- Bento Grid Layout -->
+<div class="grid grid-cols-1 xl:grid-cols-12 gap-gutter items-start">
+<!-- Left Column: Contract Info -->
+<div class="xl:col-span-7 flex flex-col gap-gutter">
+<div class="bg-surface-container-lowest border border-outline-variant rounded-lg p-lg shadow-sm">
+<div class="flex justify-between items-center mb-md border-b border-outline-variant pb-sm">
+<h3 class="font-headline-sm text-headline-sm text-on-surface">Overview</h3>
+<span class="px-sm py-xs rounded bg-surface-container text-on-secondary-container font-label-sm text-label-sm flex items-center gap-xs">
+<div class="w-2 h-2 rounded-full bg-secondary"></div>
+                                    Ativo
+                                </span>
+</div>
+<div class="grid grid-cols-2 gap-y-md gap-x-lg">
+<div class="flex flex-col gap-xs">
+<span class="font-label-sm text-label-sm text-on-surface-variant">Service Type</span>
+<span class="font-body-md text-body-md text-on-surface font-medium">Social Media &amp; Content Creation</span>
+</div>
+<div class="flex flex-col gap-xs">
+<span class="font-label-sm text-label-sm text-on-surface-variant">Contract Value</span>
+<span class="font-body-md text-body-md text-secondary font-semibold">R$ 5.000,00</span>
+</div>
+<div class="flex flex-col gap-xs">
+<span class="font-label-sm text-label-sm text-on-surface-variant">Billing Period</span>
+<span class="font-body-md text-body-md text-on-surface">Monthly</span>
+</div>
+<div class="flex flex-col gap-xs">
+<span class="font-label-sm text-label-sm text-on-surface-variant">Billing Day</span>
+<span class="font-body-md text-body-md text-on-surface">10th of every month</span>
+</div>
+<div class="flex flex-col gap-xs">
+<span class="font-label-sm text-label-sm text-on-surface-variant">Start Date</span>
+<span class="font-data-tabular text-data-tabular text-on-surface">2024-01-10</span>
+</div>
+<div class="flex flex-col gap-xs">
+<span class="font-label-sm text-label-sm text-on-surface-variant">End Date</span>
+<span class="font-data-tabular text-data-tabular text-on-surface-variant">Open-ended</span>
+</div>
+</div>
+</div>
+<!-- Timeline/Notes -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-lg p-lg shadow-sm">
+<h3 class="font-headline-sm text-headline-sm text-on-surface mb-md">Timeline &amp; Notes</h3>
+<div class="space-y-md relative before:absolute before:inset-0 before:ml-[11px] before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-outline-variant">
+<div class="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group is-active">
+<div class="flex items-center justify-center w-6 h-6 rounded-full border-2 border-secondary bg-surface-container-lowest text-secondary shadow shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 z-10">
+<div class="w-2 h-2 rounded-full bg-secondary"></div>
+</div>
+<div class="w-[calc(100%-2rem)] md:w-[calc(50%-1.5rem)] p-sm rounded border border-outline-variant bg-surface-container-lowest shadow-sm">
+<div class="flex items-center justify-between mb-xs">
+<span class="font-label-sm text-label-sm text-on-surface font-semibold">Scope Amendment</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">15/04/2024</span>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant">Added extra deliverables for Q2 campaign.</p>
+</div>
+</div>
+<div class="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group is-active">
+<div class="flex items-center justify-center w-6 h-6 rounded-full border-2 border-outline-variant bg-surface-container-lowest text-on-surface-variant shadow shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 z-10">
+</div>
+<div class="w-[calc(100%-2rem)] md:w-[calc(50%-1.5rem)] p-sm rounded border border-outline-variant bg-surface-container-lowest shadow-sm">
+<div class="flex items-center justify-between mb-xs">
+<span class="font-label-sm text-label-sm text-on-surface font-semibold">Contract Signed</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">10/01/2024</span>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant">Initial agreement executed.</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Right Column: Files -->
+<div class="xl:col-span-5 flex flex-col gap-gutter">
+<div class="bg-surface-container-lowest border border-outline-variant rounded-lg p-lg shadow-sm flex flex-col h-full">
+<div class="flex justify-between items-center mb-md border-b border-outline-variant pb-sm">
+<h3 class="font-headline-sm text-headline-sm text-on-surface">Files &amp; Attachments</h3>
+<span class="material-symbols-outlined text-on-surface-variant">folder_zip</span>
+</div>
+<!-- Dropzone -->
+<div class="border-2 border-dashed border-outline-variant rounded-lg p-lg flex flex-col items-center justify-center text-center hover:border-secondary hover:bg-surface-container-low transition-colors cursor-pointer mb-lg bg-surface-bright">
+<span class="material-symbols-outlined text-[32px] text-on-surface-variant mb-sm">cloud_upload</span>
+<p class="font-body-md text-body-md text-on-surface font-medium mb-xs">Drag and drop files here</p>
+<p class="font-label-sm text-label-sm text-on-surface-variant mb-md">or click to browse (Max 10MB)</p>
+<button class="px-sm py-xs bg-surface-container-highest text-on-surface rounded font-label-sm text-label-sm border border-outline-variant hover:bg-surface-variant transition-colors">Select Files</button>
+</div>
+<!-- File List -->
+<div class="space-y-sm flex-1">
+<!-- File Item -->
+<div class="flex items-center justify-between p-sm border border-outline-variant rounded hover:bg-surface-container-low transition-colors group">
+<div class="flex items-center gap-sm overflow-hidden">
+<div class="p-xs bg-error-container text-on-error-container rounded shrink-0">
+<span class="material-symbols-outlined">picture_as_pdf</span>
+</div>
+<div class="min-w-0">
+<p class="font-label-md text-label-md text-on-surface truncate">Contrato_Assinado_V1.pdf</p>
+<p class="font-label-sm text-label-sm text-on-surface-variant">2.4MB • 10/01/2024</p>
+</div>
+</div>
+<div class="flex items-center gap-xs opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="p-xs text-on-surface-variant hover:text-secondary rounded hover:bg-surface-container-high transition-colors">
+<span class="material-symbols-outlined text-[20px]">download</span>
+</button>
+<button class="p-xs text-on-surface-variant hover:text-error rounded hover:bg-surface-container-high transition-colors">
+<span class="material-symbols-outlined text-[20px]">delete</span>
+</button>
+</div>
+</div>
+<!-- File Item -->
+<div class="flex items-center justify-between p-sm border border-outline-variant rounded hover:bg-surface-container-low transition-colors group">
+<div class="flex items-center gap-sm overflow-hidden">
+<div class="p-xs bg-error-container text-on-error-container rounded shrink-0">
+<span class="material-symbols-outlined">picture_as_pdf</span>
+</div>
+<div class="min-w-0">
+<p class="font-label-md text-label-md text-on-surface truncate">Aditivo_Escopo_Q2.pdf</p>
+<p class="font-label-sm text-label-sm text-on-surface-variant">1.1MB • 15/04/2024</p>
+</div>
+</div>
+<div class="flex items-center gap-xs opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="p-xs text-on-surface-variant hover:text-secondary rounded hover:bg-surface-container-high transition-colors">
+<span class="material-symbols-outlined text-[20px]">download</span>
+</button>
+<button class="p-xs text-on-surface-variant hover:text-error rounded hover:bg-surface-container-high transition-colors">
+<span class="material-symbols-outlined text-[20px]">delete</span>
+</button>
+</div>
+</div>
+</div>
+<button class="mt-md w-full py-xs border border-outline text-on-surface font-label-md text-label-md rounded hover:bg-surface-container-low transition-colors">View All Files</button>
+</div>
+</div>
+</div>
+</div>
+</main>
+</div>
+</body></html>

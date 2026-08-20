@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>AdPrecision - CRM Dashboard</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-secondary-fixed-variant": "#005049",
+                        "surface-container-high": "#dce9ff",
+                        "surface-bright": "#f8f9ff",
+                        "on-tertiary-fixed-variant": "#444749",
+                        "surface-container-highest": "#d3e4fe",
+                        "outline": "#76777d",
+                        "inverse-on-surface": "#eaf1ff",
+                        "surface-container-low": "#eff4ff",
+                        "inverse-surface": "#213145",
+                        "secondary-fixed": "#89f5e7",
+                        "error-container": "#ffdad6",
+                        "on-secondary-fixed": "#00201d",
+                        "secondary-fixed-dim": "#6bd8cb",
+                        "on-primary-fixed": "#131b2e",
+                        "primary-fixed-dim": "#bec6e0",
+                        "tertiary": "#000000",
+                        "tertiary-fixed-dim": "#c4c7c9",
+                        "surface-container": "#e5eeff",
+                        "on-primary-container": "#7c839b",
+                        "surface-dim": "#cbdbf5",
+                        "inverse-primary": "#bec6e0",
+                        "surface-container-lowest": "#ffffff",
+                        "on-tertiary-fixed": "#191c1e",
+                        "surface-variant": "#d3e4fe",
+                        "tertiary-container": "#191c1e",
+                        "primary-container": "#131b2e",
+                        "on-error": "#ffffff",
+                        "on-surface-variant": "#45464d",
+                        "on-primary-fixed-variant": "#3f465c",
+                        "on-secondary-container": "#006f66",
+                        "primary-fixed": "#dae2fd",
+                        "surface-tint": "#565e74",
+                        "secondary": "#006a61",
+                        "on-tertiary": "#ffffff",
+                        "secondary-container": "#86f2e4",
+                        "on-tertiary-container": "#818486",
+                        "on-secondary": "#ffffff",
+                        "surface": "#f8f9ff",
+                        "error": "#ba1a1a",
+                        "tertiary-fixed": "#e0e3e5",
+                        "on-background": "#0b1c30",
+                        "on-surface": "#0b1c30",
+                        "on-primary": "#ffffff",
+                        "on-error-container": "#93000a",
+                        "outline-variant": "#c6c6cd",
+                        "background": "#f8f9ff",
+                        "primary": "#000000"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "lg": "24px",
+                        "xl": "32px",
+                        "2xl": "48px",
+                        "margin-safe": "32px",
+                        "md": "16px",
+                        "max-width": "1440px",
+                        "sm": "8px",
+                        "gutter": "24px",
+                        "xs": "4px",
+                        "base": "4px"
+                    },
+                    "fontFamily": {
+                        "body-md": ["Inter"],
+                        "headline-md": ["Inter"],
+                        "data-tabular": ["Inter"],
+                        "label-md": ["Inter"],
+                        "headline-sm": ["Inter"],
+                        "label-sm": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "display-lg-mobile": ["Inter"],
+                        "display-lg": ["Inter"]
+                    },
+                    "fontSize": {
+                        "body-md": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+                        "headline-md": ["24px", { "lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+                        "data-tabular": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+                        "label-md": ["13px", { "lineHeight": "18px", "letterSpacing": "0.05em", "fontWeight": "600" }],
+                        "headline-sm": ["20px", { "lineHeight": "28px", "fontWeight": "600" }],
+                        "label-sm": ["12px", { "lineHeight": "16px", "fontWeight": "500" }],
+                        "body-lg": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "display-lg-mobile": ["28px", { "lineHeight": "34px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "display-lg": ["36px", { "lineHeight": "44px", "letterSpacing": "-0.02em", "fontWeight": "700" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body { font-family: 'Inter', sans-serif; }
+    </style>
+</head>
+<body class="bg-background text-on-background antialiased flex">
+<!-- SideNavBar -->
+<aside class="w-[260px] h-screen fixed left-0 top-0 bg-surface-container-lowest dark:bg-primary-container border-r border-outline-variant dark:border-on-primary-container flex flex-col p-md hidden md:flex z-20">
+<div class="flex items-center gap-sm mb-lg">
+<img class="w-8 h-8 rounded-full object-cover" data-alt="A minimalist, modern geometric logo design for a marketing agency named AdPrecision. The logo should use a sophisticated corporate color palette, perhaps deep navy and teal, and convey a sense of efficiency, systematic order, and precision. It should be presented on a clean white background in a light-mode aesthetic, suitable for a professional SaaS CRM product." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCivd8te8PRcJcZbnZ_3Ahtnc_8gwqSKRS8eT53Lqztf7Igy36r6XgYCxCo3Z00K4SBeJ9jywFOltofRTT_Hc7eonpKJj0FhkyigfT-uLh0Z6qAI3G_i6TPFS0ddrKXf4Vim-D4H7PG7K2_CAvQuKpqQnzmRhLK3aXSwswVNMdwVgIsAq3akHR4ffGltmjiGxIBpY3ALfgv3jVUGzBgvZv-CznCqbpadA3yhoiHx2Lj-lAyg5msf0UXYg"/>
+<div>
+<h1 class="font-headline-sm text-headline-sm font-bold text-on-background dark:text-primary-fixed">AdPrecision</h1>
+<p class="font-label-sm text-label-sm text-on-surface-variant">Marketing CRM</p>
+</div>
+</div>
+<button class="bg-secondary text-on-secondary font-label-md text-label-md py-sm px-md rounded-lg mb-lg hover:bg-on-secondary-fixed-variant transition-colors flex items-center justify-center gap-xs">
+<span class="material-symbols-outlined text-[18px]">add</span>
+            New Lead
+        </button>
+<nav class="flex-1 flex flex-col gap-xs">
+<!-- Dashboard (Active) -->
+<a class="flex items-center gap-sm p-sm text-secondary font-bold bg-secondary-container dark:bg-secondary-fixed-dim dark:text-on-secondary-fixed rounded-lg transition-colors duration-200 ease-in-out" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">dashboard</span>
+<span class="font-label-md text-label-md">Dashboard</span>
+</a>
+<a class="flex items-center gap-sm p-sm text-on-surface-variant dark:text-on-primary-fixed-variant hover:text-secondary hover:bg-surface-container-low dark:hover:bg-on-primary-container transition-colors duration-200 ease-in-out rounded-lg" href="#">
+<span class="material-symbols-outlined">group</span>
+<span class="font-label-md text-label-md">Clients</span>
+</a>
+<a class="flex items-center gap-sm p-sm text-on-surface-variant dark:text-on-primary-fixed-variant hover:text-secondary hover:bg-surface-container-low dark:hover:bg-on-primary-container transition-colors duration-200 ease-in-out rounded-lg" href="#">
+<span class="material-symbols-outlined">view_kanban</span>
+<span class="font-label-md text-label-md">Pipeline</span>
+</a>
+<a class="flex items-center gap-sm p-sm text-on-surface-variant dark:text-on-primary-fixed-variant hover:text-secondary hover:bg-surface-container-low dark:hover:bg-on-primary-container transition-colors duration-200 ease-in-out rounded-lg" href="#">
+<span class="material-symbols-outlined">description</span>
+<span class="font-label-md text-label-md">Contracts</span>
+</a>
+<a class="flex items-center gap-sm p-sm text-on-surface-variant dark:text-on-primary-fixed-variant hover:text-secondary hover:bg-surface-container-low dark:hover:bg-on-primary-container transition-colors duration-200 ease-in-out rounded-lg" href="#">
+<span class="material-symbols-outlined">payments</span>
+<span class="font-label-md text-label-md">Financial</span>
+</a>
+<a class="flex items-center gap-sm p-sm text-on-surface-variant dark:text-on-primary-fixed-variant hover:text-secondary hover:bg-surface-container-low dark:hover:bg-on-primary-container transition-colors duration-200 ease-in-out rounded-lg" href="#">
+<span class="material-symbols-outlined">admin_panel_settings</span>
+<span class="font-label-md text-label-md">Users</span>
+</a>
+</nav>
+<div class="mt-auto">
+<a class="flex items-center gap-sm p-sm text-on-surface-variant dark:text-on-primary-fixed-variant hover:text-secondary hover:bg-surface-container-low dark:hover:bg-on-primary-container transition-colors duration-200 ease-in-out rounded-lg" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span class="font-label-md text-label-md">Settings</span>
+</a>
+</div>
+</aside>
+<!-- Main Content Wrapper -->
+<div class="flex-1 md:ml-[260px] flex flex-col min-h-screen">
+<!-- TopNavBar -->
+<header class="docked full-width top-0 h-16 bg-surface dark:bg-background border-b border-outline-variant dark:border-on-primary-container flex justify-between items-center px-lg sticky z-10">
+<div class="flex items-center gap-md h-full">
+<button class="md:hidden text-on-surface-variant">
+<span class="material-symbols-outlined">menu</span>
+</button>
+<div class="relative hidden sm:block">
+<span class="material-symbols-outlined absolute left-sm top-1/2 -translate-y-1/2 text-on-surface-variant text-[20px]">search</span>
+<input class="pl-xl pr-sm py-xs border border-outline-variant rounded-lg bg-surface-container-lowest text-body-md font-body-md focus:border-secondary focus:ring-2 focus:ring-secondary/20 transition-all w-64 outline-none" placeholder="Search..." type="text"/>
+</div>
+<nav class="hidden md:flex items-center gap-md h-full ml-lg">
+<a class="text-secondary border-b-2 border-secondary pb-1 h-full flex items-center font-label-md text-label-md font-bold mt-1" href="#">Overview</a>
+<a class="text-on-surface-variant dark:text-on-primary-fixed-variant hover:text-secondary transition-colors h-full flex items-center font-label-md text-label-md" href="#">Timeline</a>
+<a class="text-on-surface-variant dark:text-on-primary-fixed-variant hover:text-secondary transition-colors h-full flex items-center font-label-md text-label-md" href="#">Financial</a>
+</nav>
+</div>
+<div class="flex items-center gap-sm">
+<button class="bg-secondary text-on-secondary font-label-md text-label-md py-xs px-sm rounded-lg hover:bg-on-secondary-fixed-variant transition-colors hidden sm:block">Create Task</button>
+<div class="flex items-center gap-xs ml-sm border-l border-outline-variant pl-sm">
+<button class="p-xs text-on-surface-variant hover:text-secondary transition-colors rounded-full hover:bg-surface-container-low"><span class="material-symbols-outlined text-[20px]">notifications</span></button>
+<button class="p-xs text-on-surface-variant hover:text-secondary transition-colors rounded-full hover:bg-surface-container-low"><span class="material-symbols-outlined text-[20px]">chat</span></button>
+<button class="p-xs text-on-surface-variant hover:text-secondary transition-colors rounded-full hover:bg-surface-container-low hidden sm:block"><span class="material-symbols-outlined text-[20px]">help_outline</span></button>
+</div>
+<img class="w-8 h-8 rounded-full object-cover ml-sm cursor-pointer border border-outline-variant" data-alt="A professional headshot of a confident, diverse individual, suitable for a user profile avatar in a corporate SaaS application. The lighting should be soft and flattering, with a neutral, light-colored background. The image should convey professionalism and trustworthiness." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAUiE-WMjaInyxjIWdq3wf_z7ggAEZivOzdjx3qkM-_qgr5hSM77_XS1vJck2P_JjJdlzjWJM5PCV5A7rwylGzcg2bo6Ruk3b6j3W-K4LjFY8-B_M08QswByssCm42PhMetNiLiYYO8XdoOlfX3WX-Jhklf2Oenk7RxNNtEyKY8i5wQuGsINn0-RxNJ8xLZIn7W_Aqhdnae_VpnwLVmVugJzOWly2-8M4qC8IOyB4uqhSFE-MrOLjJbAQ"/>
+</div>
+</header>
+<!-- Main Dashboard Canvas -->
+<main class="flex-1 p-lg max-w-[max-width] mx-auto w-full">
+<div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-lg gap-sm">
+<div>
+<h2 class="font-headline-md text-headline-md text-on-background">Dashboard Overview</h2>
+<p class="font-body-md text-body-md text-on-surface-variant mt-xs">Welcome back. Here is your agency's performance snapshot.</p>
+</div>
+<div class="flex items-center gap-sm">
+<select class="border border-outline-variant rounded-lg bg-surface-container-lowest text-body-md font-body-md py-xs px-sm outline-none focus:border-secondary focus:ring-2 focus:ring-secondary/20">
+<option>Last 30 Days</option>
+<option>This Quarter</option>
+<option>This Year</option>
+</select>
+</div>
+</div>
+<!-- KPI Bento Grid -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-md mb-lg">
+<!-- MRR -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-md flex flex-col justify-between">
+<div class="flex justify-between items-start mb-sm">
+<p class="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">MRR</p>
+<span class="material-symbols-outlined text-secondary text-[20px]">monitoring</span>
+</div>
+<div>
+<h3 class="font-display-lg text-display-lg text-on-background">$42,500</h3>
+<p class="font-label-sm text-label-sm text-secondary mt-xs flex items-center gap-xs">
+<span class="material-symbols-outlined text-[14px]">arrow_upward</span> +5.2% vs last month
+                        </p>
+</div>
+</div>
+<!-- Received This Month -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-md flex flex-col justify-between">
+<div class="flex justify-between items-start mb-sm">
+<p class="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">Received</p>
+<span class="material-symbols-outlined text-secondary text-[20px]">account_balance_wallet</span>
+</div>
+<div>
+<h3 class="font-display-lg text-display-lg text-on-background">$38,200</h3>
+<p class="font-label-sm text-label-sm text-secondary mt-xs flex items-center gap-xs">
+<span class="material-symbols-outlined text-[14px]">arrow_upward</span> +2.1% vs last month
+                        </p>
+</div>
+</div>
+<!-- Invoiced This Month -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-md flex flex-col justify-between">
+<div class="flex justify-between items-start mb-sm">
+<p class="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">Invoiced</p>
+<span class="material-symbols-outlined text-outline text-[20px]">receipt_long</span>
+</div>
+<div>
+<h3 class="font-display-lg text-display-lg text-on-background">$45,000</h3>
+<p class="font-label-sm text-label-sm text-on-surface-variant mt-xs flex items-center gap-xs">
+<span class="material-symbols-outlined text-[14px]">horizontal_rule</span> 0% vs last month
+                        </p>
+</div>
+</div>
+<!-- Delinquency -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-md flex flex-col justify-between">
+<div class="flex justify-between items-start mb-sm">
+<p class="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">Delinquency</p>
+<span class="material-symbols-outlined text-error text-[20px]">warning</span>
+</div>
+<div>
+<h3 class="font-display-lg text-display-lg text-on-background">4.8%</h3>
+<p class="font-label-sm text-label-sm text-error mt-xs flex items-center gap-xs">
+<span class="material-symbols-outlined text-[14px]">arrow_upward</span> +1.2% vs last month
+                        </p>
+</div>
+</div>
+<!-- Active Clients -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-md flex flex-col justify-between md:col-span-2 lg:col-span-4 xl:col-span-1">
+<div class="flex justify-between items-start mb-sm">
+<p class="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">Active Clients</p>
+<span class="material-symbols-outlined text-secondary text-[20px]">groups</span>
+</div>
+<div>
+<h3 class="font-display-lg text-display-lg text-on-background">124</h3>
+<p class="font-label-sm text-label-sm text-secondary mt-xs flex items-center gap-xs">
+<span class="material-symbols-outlined text-[14px]">arrow_upward</span> +3 new this month
+                        </p>
+</div>
+</div>
+</div>
+<!-- Complex Layout Area -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-md">
+<!-- Charts Section (Left 2 columns) -->
+<div class="lg:col-span-2 flex flex-col gap-md">
+<!-- Billing Chart -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-md w-full">
+<div class="flex justify-between items-center mb-md">
+<h3 class="font-headline-sm text-headline-sm text-on-background">Billing History (6 Months)</h3>
+<button class="text-on-surface-variant hover:text-secondary"><span class="material-symbols-outlined">more_vert</span></button>
+</div>
+<div class="h-[300px] w-full relative">
+<canvas id="billingChart"></canvas>
+</div>
+</div>
+<!-- Services Distribution -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-md w-full flex flex-col sm:flex-row gap-lg items-center">
+<div class="w-full sm:w-1/2">
+<h3 class="font-headline-sm text-headline-sm text-on-background mb-md">Client Distribution by Service</h3>
+<div class="h-[200px] w-full relative">
+<canvas id="servicesChart"></canvas>
+</div>
+</div>
+<div class="w-full sm:w-1/2 flex flex-col gap-sm">
+<div class="flex justify-between items-center p-sm bg-surface-container-low rounded-lg border border-outline-variant/50">
+<div class="flex items-center gap-xs"><div class="w-3 h-3 rounded-full bg-secondary"></div><span class="font-data-tabular text-data-tabular text-on-background">Tráfego Pago</span></div>
+<span class="font-label-md text-label-md font-bold">45%</span>
+</div>
+<div class="flex justify-between items-center p-sm bg-surface-container-low rounded-lg border border-outline-variant/50">
+<div class="flex items-center gap-xs"><div class="w-3 h-3 rounded-full bg-surface-tint"></div><span class="font-data-tabular text-data-tabular text-on-background">Social Media</span></div>
+<span class="font-label-md text-label-md font-bold">30%</span>
+</div>
+<div class="flex justify-between items-center p-sm bg-surface-container-low rounded-lg border border-outline-variant/50">
+<div class="flex items-center gap-xs"><div class="w-3 h-3 rounded-full bg-outline"></div><span class="font-data-tabular text-data-tabular text-on-background">SEO</span></div>
+<span class="font-label-md text-label-md font-bold">15%</span>
+</div>
+<div class="flex justify-between items-center p-sm bg-surface-container-low rounded-lg border border-outline-variant/50">
+<div class="flex items-center gap-xs"><div class="w-3 h-3 rounded-full bg-surface-variant"></div><span class="font-data-tabular text-data-tabular text-on-background">Web Design</span></div>
+<span class="font-label-md text-label-md font-bold">10%</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Alerts Widget (Right column) -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-md flex flex-col">
+<div class="flex justify-between items-center mb-md">
+<h3 class="font-headline-sm text-headline-sm text-on-background flex items-center gap-xs">
+<span class="material-symbols-outlined text-error">campaign</span>
+                            Payment Alerts
+                        </h3>
+</div>
+<div class="flex flex-col gap-sm overflow-y-auto pr-xs">
+<h4 class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider mt-xs mb-xs">Overdue</h4>
+<!-- Alert Item -->
+<div class="p-sm border border-error-container bg-[#fff5f5] rounded-lg flex flex-col gap-xs relative overflow-hidden group hover:border-error transition-colors">
+<div class="absolute left-0 top-0 bottom-0 w-1 bg-error"></div>
+<div class="flex justify-between items-start pl-xs">
+<span class="font-label-md text-label-md text-on-background font-bold">Acme Corp</span>
+<span class="font-data-tabular text-data-tabular text-error font-bold">$1,200</span>
+</div>
+<div class="flex justify-between items-end pl-xs">
+<span class="font-label-sm text-label-sm text-on-surface-variant">Inv #1042</span>
+<span class="font-label-sm text-label-sm text-error flex items-center gap-xs"><span class="material-symbols-outlined text-[14px]">schedule</span> 5 days late</span>
+</div>
+</div>
+<!-- Alert Item -->
+<div class="p-sm border border-error-container bg-[#fff5f5] rounded-lg flex flex-col gap-xs relative overflow-hidden group hover:border-error transition-colors">
+<div class="absolute left-0 top-0 bottom-0 w-1 bg-error"></div>
+<div class="flex justify-between items-start pl-xs">
+<span class="font-label-md text-label-md text-on-background font-bold">TechStart Inc</span>
+<span class="font-data-tabular text-data-tabular text-error font-bold">$850</span>
+</div>
+<div class="flex justify-between items-end pl-xs">
+<span class="font-label-sm text-label-sm text-on-surface-variant">Inv #1038</span>
+<span class="font-label-sm text-label-sm text-error flex items-center gap-xs"><span class="material-symbols-outlined text-[14px]">schedule</span> 12 days late</span>
+</div>
+</div>
+<h4 class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider mt-md mb-xs">Upcoming (Next 7 Days)</h4>
+<!-- Alert Item -->
+<div class="p-sm border border-outline-variant bg-surface-bright rounded-lg flex flex-col gap-xs relative overflow-hidden group hover:border-secondary transition-colors">
+<div class="absolute left-0 top-0 bottom-0 w-1 bg-secondary"></div>
+<div class="flex justify-between items-start pl-xs">
+<span class="font-label-md text-label-md text-on-background font-bold">Global Retail</span>
+<span class="font-data-tabular text-data-tabular text-on-background font-bold">$3,400</span>
+</div>
+<div class="flex justify-between items-end pl-xs">
+<span class="font-label-sm text-label-sm text-on-surface-variant">Inv #1055</span>
+<span class="font-label-sm text-label-sm text-secondary flex items-center gap-xs"><span class="material-symbols-outlined text-[14px]">event</span> Tomorrow</span>
+</div>
+</div>
+<!-- Alert Item -->
+<div class="p-sm border border-outline-variant bg-surface-bright rounded-lg flex flex-col gap-xs relative overflow-hidden group hover:border-secondary transition-colors">
+<div class="absolute left-0 top-0 bottom-0 w-1 bg-secondary"></div>
+<div class="flex justify-between items-start pl-xs">
+<span class="font-label-md text-label-md text-on-background font-bold">Local Bakery</span>
+<span class="font-data-tabular text-data-tabular text-on-background font-bold">$400</span>
+</div>
+<div class="flex justify-between items-end pl-xs">
+<span class="font-label-sm text-label-sm text-on-surface-variant">Inv #1056</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant flex items-center gap-xs"><span class="material-symbols-outlined text-[14px]">event</span> In 3 days</span>
+</div>
+</div>
+<!-- Alert Item -->
+<div class="p-sm border border-outline-variant bg-surface-bright rounded-lg flex flex-col gap-xs relative overflow-hidden group hover:border-secondary transition-colors">
+<div class="absolute left-0 top-0 bottom-0 w-1 bg-secondary"></div>
+<div class="flex justify-between items-start pl-xs">
+<span class="font-label-md text-label-md text-on-background font-bold">Zenith Corp</span>
+<span class="font-data-tabular text-data-tabular text-on-background font-bold">$5,000</span>
+</div>
+<div class="flex justify-between items-end pl-xs">
+<span class="font-label-sm text-label-sm text-on-surface-variant">Inv #1057</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant flex items-center gap-xs"><span class="material-symbols-outlined text-[14px]">event</span> In 5 days</span>
+</div>
+</div>
+</div>
+<button class="mt-auto pt-sm w-full text-center text-secondary font-label-md text-label-md hover:underline">View All Invoices</button>
+</div>
+</div>
+</main>
+</div>
+<script>
+        // Chart.js Configuration
+        document.addEventListener('DOMContentLoaded', function() {
+            // Colors from Tailwind config
+            const colorSecondary = '#006a61';
+            const colorSurfaceTint = '#565e74';
+            const colorOutline = '#76777d';
+            const colorSurfaceVariant = '#d3e4fe';
+            const colorGrid = '#e2e8f0';
+            const colorText = '#45464d';
+
+            // Billing Chart (Bar)
+            const ctxBilling = document.getElementById('billingChart').getContext('2d');
+            new Chart(ctxBilling, {
+                type: 'bar',
+                data: {
+                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+                    datasets: [{
+                        label: 'Invoiced',
+                        data: [35000, 38000, 36500, 41000, 42000, 45000],
+                        backgroundColor: colorSecondary,
+                        borderRadius: 4,
+                        barPercentage: 0.6
+                    },
+                    {
+                        label: 'Received',
+                        data: [34000, 37500, 36000, 39000, 41000, 38200],
+                        type: 'line',
+                        borderColor: colorSurfaceTint,
+                        borderWidth: 2,
+                        fill: false,
+                        tension: 0.4,
+                        pointBackgroundColor: colorSurfaceTint
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                font: { family: 'Inter', size: 12 },
+                                color: colorText
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: { color: colorGrid, drawBorder: false },
+                            ticks: {
+                                font: { family: 'Inter', size: 12 },
+                                color: colorText,
+                                callback: function(value) {
+                                    return '$' + value / 1000 + 'k';
+                                }
+                            }
+                        },
+                        x: {
+                            grid: { display: false },
+                            ticks: {
+                                font: { family: 'Inter', size: 12 },
+                                color: colorText
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Services Chart (Donut)
+            const ctxServices = document.getElementById('servicesChart').getContext('2d');
+            new Chart(ctxServices, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Tráfego Pago', 'Social Media', 'SEO', 'Web Design'],
+                    datasets: [{
+                        data: [45, 30, 15, 10],
+                        backgroundColor: [
+                            colorSecondary,
+                            colorSurfaceTint,
+                            colorOutline,
+                            colorSurfaceVariant
+                        ],
+                        borderWidth: 0,
+                        hoverOffset: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '70%',
+                    plugins: {
+                        legend: {
+                            display: false // Using custom legend in HTML
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return ' ' + context.label + ': ' + context.raw + '%';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        });
+    </script>
+</body></html>

@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Deployment &amp; System Status - AdPrecision</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-error-container": "#93000a",
+                        "error-container": "#ffdad6",
+                        "surface-dim": "#cbdbf5",
+                        "on-surface": "#0b1c30",
+                        "surface-variant": "#d3e4fe",
+                        "surface-container-low": "#eff4ff",
+                        "secondary-fixed": "#89f5e7",
+                        "surface-container-highest": "#d3e4fe",
+                        "tertiary-fixed": "#e0e3e5",
+                        "on-surface-variant": "#45464d",
+                        "inverse-primary": "#bec6e0",
+                        "on-secondary-container": "#006f66",
+                        "primary": "#000000",
+                        "tertiary-fixed-dim": "#c4c7c9",
+                        "inverse-on-surface": "#eaf1ff",
+                        "on-primary-fixed-variant": "#3f465c",
+                        "primary-container": "#131b2e",
+                        "tertiary": "#000000",
+                        "outline": "#76777d",
+                        "error": "#ba1a1a",
+                        "on-tertiary-fixed": "#191c1e",
+                        "on-secondary-fixed-variant": "#005049",
+                        "on-primary-container": "#7c839b",
+                        "on-primary-fixed": "#131b2e",
+                        "on-tertiary-container": "#818486",
+                        "outline-variant": "#c6c6cd",
+                        "inverse-surface": "#213145",
+                        "primary-fixed-dim": "#bec6e0",
+                        "surface-bright": "#f8f9ff",
+                        "on-tertiary": "#ffffff",
+                        "background": "#f8f9ff",
+                        "surface-tint": "#565e74",
+                        "on-tertiary-fixed-variant": "#444749",
+                        "primary-fixed": "#dae2fd",
+                        "on-primary": "#ffffff",
+                        "surface-container-high": "#dce9ff",
+                        "on-secondary-fixed": "#00201d",
+                        "surface": "#f8f9ff",
+                        "surface-container": "#e5eeff",
+                        "secondary": "#006a61",
+                        "secondary-fixed-dim": "#6bd8cb",
+                        "on-error": "#ffffff",
+                        "secondary-container": "#86f2e4",
+                        "tertiary-container": "#191c1e",
+                        "on-secondary": "#ffffff",
+                        "surface-container-lowest": "#ffffff",
+                        "on-background": "#0b1c30"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "max-width": "1440px",
+                        "sm": "8px",
+                        "md": "16px",
+                        "gutter": "24px",
+                        "margin-safe": "32px",
+                        "xs": "4px",
+                        "lg": "24px",
+                        "2xl": "48px",
+                        "base": "4px",
+                        "xl": "32px"
+                    },
+                    "fontFamily": {
+                        "label-md": ["Inter"],
+                        "label-sm": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "headline-md": ["Inter"],
+                        "display-lg": ["Inter"],
+                        "data-tabular": ["Inter"],
+                        "headline-sm": ["Inter"],
+                        "body-md": ["Inter"],
+                        "display-lg-mobile": ["Inter"]
+                    },
+                    "fontSize": {
+                        "label-md": ["13px", { "lineHeight": "18px", "letterSpacing": "0.05em", "fontWeight": "600" }],
+                        "label-sm": ["12px", { "lineHeight": "16px", "fontWeight": "500" }],
+                        "body-lg": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "headline-md": ["24px", { "lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+                        "display-lg": ["36px", { "lineHeight": "44px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "data-tabular": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+                        "headline-sm": ["20px", { "lineHeight": "28px", "fontWeight": "600" }],
+                        "body-md": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+                        "display-lg-mobile": ["28px", { "lineHeight": "34px", "letterSpacing": "-0.02em", "fontWeight": "700" }]
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-background text-on-background antialiased flex">
+<!-- SideNavBar -->
+<nav class="w-[260px] h-screen fixed left-0 top-0 border-r border-outline-variant bg-surface-container-lowest flex flex-col p-md transition-colors duration-200 ease-in-out hidden md:flex z-50">
+<div class="flex items-center gap-sm mb-lg">
+<img class="w-8 h-8 rounded object-cover" data-alt="A minimalist, geometric logo representing marketing data flow and precision. The logo is rendered in stark black and white with a solitary teal accent, emphasizing efficiency and institutional trust. High-resolution, vector art style, perfectly centered on a clean white background, exuding professional corporate identity." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCbKPSmKBjGoijZuldImZlll04oXgSisKA4Kepe6Y2p7yNcCaowSsHMYOXW7C9ziH-pyysZjiZZrXdmJaJAQNcGjbMd9IAQKQKImkgGnnk8GEnXFPFzQ24ZXaBJaEJ0Ld4OZ9PNwBWebfFYw2YBgyLaSfM62rzfiE0-2Q6Jd8Hn9mUiGoDSKxTyVRWlLFmcmZWW4Nbi_XY9gMWEcFxDOoESWTHFNOlv-1ZFoE9r2bF1ndFbkuLM_ljeGw"/>
+<div>
+<h1 class="font-headline-sm text-headline-sm font-bold text-on-background">AdPrecision</h1>
+<p class="font-label-sm text-label-sm text-on-surface-variant">Marketing CRM</p>
+</div>
+</div>
+<button class="w-full bg-[#0D9488] hover:bg-[#0F766E] text-white font-label-md text-label-md py-sm px-md rounded flex items-center justify-center gap-xs mb-lg transition-colors">
+<span class="material-symbols-outlined text-[18px]">add</span> New Lead
+        </button>
+<ul class="flex flex-col gap-xs flex-1">
+<li>
+<a class="flex items-center gap-sm px-sm py-sm text-on-surface-variant hover:text-secondary hover:bg-surface-container-low transition-colors duration-200 ease-in-out rounded-lg font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined text-[20px]">dashboard</span> Dashboard
+                </a>
+</li>
+<li>
+<a class="flex items-center gap-sm px-sm py-sm text-on-surface-variant hover:text-secondary hover:bg-surface-container-low transition-colors duration-200 ease-in-out rounded-lg font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined text-[20px]">group</span> Clients
+                </a>
+</li>
+<li>
+<a class="flex items-center gap-sm px-sm py-sm text-on-surface-variant hover:text-secondary hover:bg-surface-container-low transition-colors duration-200 ease-in-out rounded-lg font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined text-[20px]">view_kanban</span> Pipeline
+                </a>
+</li>
+<li>
+<a class="flex items-center gap-sm px-sm py-sm text-on-surface-variant hover:text-secondary hover:bg-surface-container-low transition-colors duration-200 ease-in-out rounded-lg font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined text-[20px]">description</span> Contracts
+                </a>
+</li>
+<li>
+<a class="flex items-center gap-sm px-sm py-sm text-on-surface-variant hover:text-secondary hover:bg-surface-container-low transition-colors duration-200 ease-in-out rounded-lg font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined text-[20px]">payments</span> Financial
+                </a>
+</li>
+<li>
+<a class="flex items-center gap-sm px-sm py-sm text-on-surface-variant hover:text-secondary hover:bg-surface-container-low transition-colors duration-200 ease-in-out rounded-lg font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined text-[20px]">admin_panel_settings</span> Users
+                </a>
+</li>
+<li>
+<a class="flex items-center gap-sm px-sm py-sm text-secondary font-bold bg-secondary-container rounded-lg transition-colors duration-200 ease-in-out font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined text-[20px]">settings</span> Settings
+                </a>
+</li>
+</ul>
+</nav>
+<!-- Main Content Area -->
+<div class="flex-1 ml-0 md:ml-[260px] min-h-screen flex flex-col">
+<!-- TopNavBar -->
+<header class="docked full-width top-0 h-16 bg-surface border-b border-outline-variant flex justify-between items-center px-lg z-40 sticky">
+<div class="flex items-center gap-md">
+<span class="material-symbols-outlined text-on-surface-variant md:hidden">menu</span>
+<nav class="hidden md:flex gap-md">
+<a class="text-on-surface-variant hover:text-secondary transition-colors font-label-md text-label-md" href="#">Overview</a>
+<a class="text-on-surface-variant hover:text-secondary transition-colors font-label-md text-label-md" href="#">Timeline</a>
+<a class="text-on-surface-variant hover:text-secondary transition-colors font-label-md text-label-md" href="#">Financial</a>
+</nav>
+</div>
+<div class="flex items-center gap-md">
+<div class="flex gap-sm text-on-surface-variant">
+<button class="hover:text-secondary transition-colors scale-95 active:scale-90 transition-transform"><span class="material-symbols-outlined">notifications</span></button>
+<button class="hover:text-secondary transition-colors scale-95 active:scale-90 transition-transform"><span class="material-symbols-outlined">chat</span></button>
+<button class="hover:text-secondary transition-colors scale-95 active:scale-90 transition-transform"><span class="material-symbols-outlined">help_outline</span></button>
+</div>
+<button class="hidden md:flex bg-transparent border border-[#0F172A] text-[#0F172A] hover:bg-surface-container-low font-label-md text-label-md py-xs px-sm rounded items-center justify-center transition-colors scale-95 active:scale-90 transition-transform">
+                    Create Task
+                </button>
+<img class="w-8 h-8 rounded-full border border-outline-variant object-cover" data-alt="A professional headshot of a corporate user, clean lighting, smiling slightly. The photo is set against a neutral pale background, conveying a sense of corporate professionalism and efficiency, suitable for a business SaaS application avatar." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAbYcmgjz8EAQ9hEOHLVLbD72BfCbUKQwKEs6qZU6EfTKdAP2kYqBfF-9prDaZL0iOH0sZcmezIMNSkjW-Y-QYcACEwx3k7-ge_KhzAjcj-z4iG_doF5C3R9MkWuXQ0-9g38d7nKQLZaJYYD9gVBYAYpvUtc1tC6SQi6dzUWPnv-yim4Ztp4NPYdshsRpN30Q4Q-48CFCM_jjcYiIIQtFG9tEiSbPwCBWxHRjsOnOdBPraD163xmkrYuw"/>
+</div>
+</header>
+<!-- Page Content -->
+<main class="flex-1 p-md md:p-lg max-w-[max-width] w-full mx-auto overflow-x-hidden">
+<div class="flex flex-col md:flex-row justify-between items-start md:items-end mb-gutter gap-md">
+<div>
+<h2 class="font-display-lg text-display-lg text-on-background mb-xs">Deployment &amp; System Status</h2>
+<p class="font-body-lg text-body-lg text-on-surface-variant">Fatia 7 (Deploy Prep): System is primed for VPS deployment with HTTPS.</p>
+</div>
+<div class="flex gap-sm">
+<button class="bg-surface-container-lowest border border-outline-variant text-[#0F172A] hover:bg-surface-container-low font-label-md text-label-md py-sm px-md rounded flex items-center gap-xs transition-colors">
+<span class="material-symbols-outlined text-[18px]">download</span> Export Logs
+                    </button>
+<button class="bg-[#0D9488] hover:bg-[#0F766E] text-white font-label-md text-label-md py-sm px-md rounded flex items-center gap-xs transition-colors shadow-sm">
+<span class="material-symbols-outlined text-[18px]">rocket_launch</span> Initiate Deployment
+                    </button>
+</div>
+</div>
+<!-- Bento Grid Layout -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-gutter">
+<!-- Left Column: Readiness & Env -->
+<div class="lg:col-span-7 flex flex-col gap-gutter">
+<!-- Deployment Readiness Checklist -->
+<section class="bg-surface-container-lowest border border-[#E2E8F0] rounded-xl p-lg shadow-sm">
+<div class="flex items-center justify-between mb-md">
+<h3 class="font-headline-sm text-headline-sm text-on-background flex items-center gap-sm">
+<span class="material-symbols-outlined text-secondary">checklist</span> Deployment Readiness
+                            </h3>
+<span class="bg-[#dcfce7] text-[#166534] px-sm py-xs rounded font-label-sm text-label-sm flex items-center gap-xs">
+<span class="material-symbols-outlined text-[14px]">check_circle</span> All Checks Passed
+                            </span>
+</div>
+<div class="flex flex-col gap-sm">
+<div class="flex items-start gap-md p-sm hover:bg-slate-50 transition-colors rounded">
+<span class="material-symbols-outlined text-secondary mt-xs">verified</span>
+<div>
+<h4 class="font-label-md text-label-md text-on-background">Dockerfile Configured</h4>
+<p class="font-body-md text-body-md text-on-surface-variant mt-xs">Optimized for production environments with minimal image footprint.</p>
+</div>
+</div>
+<div class="h-px bg-outline-variant/30 w-full"></div>
+<div class="flex items-start gap-md p-sm hover:bg-slate-50 transition-colors rounded">
+<span class="material-symbols-outlined text-secondary mt-xs">verified</span>
+<div>
+<h4 class="font-label-md text-label-md text-on-background">Multi-stage Build Ready</h4>
+<p class="font-body-md text-body-md text-on-surface-variant mt-xs">Assets compiled and separated from runtime dependencies successfully.</p>
+</div>
+</div>
+<div class="h-px bg-outline-variant/30 w-full"></div>
+<div class="flex items-start gap-md p-sm hover:bg-slate-50 transition-colors rounded">
+<span class="material-symbols-outlined text-secondary mt-xs">verified</span>
+<div>
+<h4 class="font-label-md text-label-md text-on-background">Caddy Configuration</h4>
+<p class="font-body-md text-body-md text-on-surface-variant mt-xs">Reverse proxy configured with automatic HTTPS via Let's Encrypt.</p>
+</div>
+</div>
+</div>
+</section>
+<!-- Environment Variables -->
+<section class="bg-surface-container-lowest border border-[#E2E8F0] rounded-xl p-lg shadow-sm">
+<div class="flex items-center justify-between mb-md">
+<h3 class="font-headline-sm text-headline-sm text-on-background flex items-center gap-sm">
+<span class="material-symbols-outlined text-[#0F172A]">vpn_key</span> Environment Variables
+                            </h3>
+<button class="text-secondary hover:text-[#0F766E] font-label-md text-label-md flex items-center gap-xs transition-colors">
+<span class="material-symbols-outlined text-[16px]">edit</span> Edit Config
+                            </button>
+</div>
+<div class="bg-surface-container-low rounded-lg p-md font-data-tabular text-data-tabular overflow-x-auto border border-outline-variant/50">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="border-b border-outline-variant/50">
+<th class="py-xs font-label-md text-label-md text-on-surface-variant">KEY</th>
+<th class="py-xs font-label-md text-label-md text-on-surface-variant">VALUE</th>
+<th class="py-xs font-label-md text-label-md text-on-surface-variant w-16 text-right">STATUS</th>
+</tr>
+</thead>
+<tbody>
+<tr class="border-b border-outline-variant/30 hover:bg-surface-container transition-colors">
+<td class="py-sm text-[#0F172A] font-medium">NODE_ENV</td>
+<td class="py-sm text-on-surface-variant">production</td>
+<td class="py-sm text-right"><span class="material-symbols-outlined text-secondary text-[16px]">check</span></td>
+</tr>
+<tr class="border-b border-outline-variant/30 hover:bg-surface-container transition-colors">
+<td class="py-sm text-[#0F172A] font-medium">JWT_SECRET</td>
+<td class="py-sm text-on-surface-variant tracking-widest">••••••••••••••••</td>
+<td class="py-sm text-right"><span class="material-symbols-outlined text-secondary text-[16px]">check</span></td>
+</tr>
+<tr class="border-b border-outline-variant/30 hover:bg-surface-container transition-colors">
+<td class="py-sm text-[#0F172A] font-medium">DATABASE_URL</td>
+<td class="py-sm text-on-surface-variant">postgres://user:••••@db:5432/adprecision</td>
+<td class="py-sm text-right"><span class="material-symbols-outlined text-secondary text-[16px]">check</span></td>
+</tr>
+<tr class="hover:bg-surface-container transition-colors">
+<td class="py-sm text-[#0F172A] font-medium">REDIS_URL</td>
+<td class="py-sm text-on-surface-variant">redis://cache:6379</td>
+<td class="py-sm text-right"><span class="material-symbols-outlined text-[#d97706] text-[16px]">warning</span></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant mt-sm flex items-center gap-xs">
+<span class="material-symbols-outlined text-[16px] text-[#d97706]">info</span> Redis URL is optional but recommended for production caching.
+                        </p>
+</section>
+</div>
+<!-- Right Column: Infrastructure & Backups -->
+<div class="lg:col-span-5 flex flex-col gap-gutter">
+<!-- Infrastructure Overview -->
+<section class="bg-surface-container-lowest border border-[#E2E8F0] rounded-xl p-lg shadow-sm h-full">
+<h3 class="font-headline-sm text-headline-sm text-on-background flex items-center gap-sm mb-md">
+<span class="material-symbols-outlined text-[#0F172A]">architecture</span> Infrastructure Topology
+                        </h3>
+<!-- Simple visual topology representation using flex/borders -->
+<div class="flex flex-col gap-md mt-lg relative">
+<!-- Connection Line (visual hack) -->
+<div class="absolute left-6 top-8 bottom-8 w-px bg-outline-variant/50 -z-10"></div>
+<!-- Proxy Node -->
+<div class="flex items-center gap-md bg-surface border border-[#E2E8F0] p-sm rounded-lg relative bg-white">
+<div class="w-12 h-12 rounded bg-surface-container-low flex items-center justify-center border border-outline-variant/30 shrink-0">
+<span class="material-symbols-outlined text-secondary">security</span>
+</div>
+<div>
+<h4 class="font-label-md text-label-md text-on-background">Caddy Proxy</h4>
+<p class="font-label-sm text-label-sm text-on-surface-variant mt-xs">Ports 80/443 (HTTPS)</p>
+</div>
+</div>
+<!-- App Server Node -->
+<div class="flex items-center gap-md bg-surface border border-[#E2E8F0] p-sm rounded-lg relative bg-white ml-lg">
+<div class="w-12 h-12 rounded bg-surface-container-low flex items-center justify-center border border-outline-variant/30 shrink-0">
+<span class="material-symbols-outlined text-[#0F172A]">terminal</span>
+</div>
+<div>
+<h4 class="font-label-md text-label-md text-on-background">Node.js App Server</h4>
+<p class="font-label-sm text-label-sm text-on-surface-variant mt-xs">Containerized Instance</p>
+</div>
+</div>
+<!-- DB Node -->
+<div class="flex items-center gap-md bg-surface border border-[#E2E8F0] p-sm rounded-lg relative bg-white ml-2xl">
+<div class="w-12 h-12 rounded bg-surface-container-low flex items-center justify-center border border-outline-variant/30 shrink-0">
+<span class="material-symbols-outlined text-[#0F172A]">database</span>
+</div>
+<div>
+<h4 class="font-label-md text-label-md text-on-background">PostgreSQL DB</h4>
+<p class="font-label-sm text-label-sm text-on-surface-variant mt-xs">Persistent Volume</p>
+</div>
+</div>
+</div>
+</section>
+<!-- Backup Status -->
+<section class="bg-[#0F172A] rounded-xl p-lg shadow-sm text-white">
+<div class="flex items-center justify-between mb-md">
+<h3 class="font-headline-sm text-headline-sm flex items-center gap-sm">
+<span class="material-symbols-outlined text-secondary-fixed">backup</span> Backup Automation
+                            </h3>
+<label class="relative inline-flex items-center cursor-pointer">
+<input checked="" class="sr-only peer" type="checkbox" value=""/>
+<div class="w-9 h-5 bg-outline-variant/30 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-secondary"></div>
+</label>
+</div>
+<div class="grid grid-cols-2 gap-sm mb-md">
+<div class="bg-white/10 p-sm rounded">
+<p class="font-label-sm text-label-sm text-tertiary-fixed-dim uppercase tracking-wider">Last Backup</p>
+<p class="font-label-md text-label-md mt-xs">Today, 04:00 UTC</p>
+</div>
+<div class="bg-white/10 p-sm rounded">
+<p class="font-label-sm text-label-sm text-tertiary-fixed-dim uppercase tracking-wider">Next Scheduled</p>
+<p class="font-label-md text-label-md mt-xs">Tmrw, 04:00 UTC</p>
+</div>
+</div>
+<p class="font-body-md text-body-md text-tertiary-fixed">Daily automated pg_dump directed to secure S3 storage bucket. Retention policy: 30 days.</p>
+</section>
+<!-- Documentation Links -->
+<section class="bg-surface-container-lowest border border-[#E2E8F0] rounded-xl p-sm shadow-sm flex flex-col gap-xs">
+<a class="flex items-center justify-between p-sm hover:bg-slate-50 transition-colors rounded group" href="#">
+<div class="flex items-center gap-sm">
+<span class="material-symbols-outlined text-on-surface-variant group-hover:text-[#0F172A]">menu_book</span>
+<span class="font-label-md text-label-md text-on-background">Deployment Runbook</span>
+</div>
+<span class="material-symbols-outlined text-outline-variant group-hover:text-secondary">arrow_forward</span>
+</a>
+<a class="flex items-center justify-between p-sm hover:bg-slate-50 transition-colors rounded group" href="#">
+<div class="flex items-center gap-sm">
+<span class="material-symbols-outlined text-on-surface-variant group-hover:text-[#0F172A]">api</span>
+<span class="font-label-md text-label-md text-on-background">API Documentation</span>
+</div>
+<span class="material-symbols-outlined text-outline-variant group-hover:text-secondary">arrow_forward</span>
+</a>
+</section>
+</div>
+</div>
+</main>
+</div>
+</body></html>
