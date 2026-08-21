@@ -53,6 +53,34 @@ export function cleanDigits(value: string | null | undefined): string {
 }
 
 /**
+ * Remove tudo que não for letra ou dígito e normaliza para maiúsculas.
+ * Base do CNPJ alfanumérico (IN RFB nº 2.229/2024).
+ */
+export function cleanAlphanumeric(value: string | null | undefined): string {
+  if (!value) return '';
+  return value.replace(/[^0-9A-Za-z]/g, '').toUpperCase();
+}
+
+/**
+ * Normaliza o documento conforme o tipo, antes de validar ou persistir:
+ * CPF mantém apenas dígitos; CNPJ aceita letras e dígitos, em maiúsculas.
+ */
+export function normalizeDocument(
+  value: string | null | undefined,
+  type: DocumentType | string
+): string {
+  return String(type || '').toUpperCase() === 'CNPJ' ? cleanAlphanumeric(value) : cleanDigits(value);
+}
+
+/**
+ * Valor do caractere no cálculo do DV: código ASCII menos 48.
+ * Dígitos mantêm o próprio valor; A=17, B=18, ..., Z=42.
+ */
+function documentCharValue(char: string): number {
+  return char.charCodeAt(0) - 48;
+}
+
+/**
  * Validação de CPF com cálculo dos dois dígitos verificadores (RF-01).
  */
 export function validateCPF(cpf: string): boolean {
@@ -85,33 +113,41 @@ export function validateCPF(cpf: string): boolean {
 
 /**
  * Validação de CNPJ com cálculo dos dois dígitos verificadores (RF-01).
+ *
+ * Aceita o formato alfanumérico da IN RFB nº 2.229/2024, em vigor desde 31/07/2026:
+ * 12 posições em [A-Z0-9] (raiz + ordem do estabelecimento) seguidas de 2 dígitos
+ * verificadores numéricos. CNPJs totalmente numéricos continuam válidos, com o
+ * mesmo cálculo e o mesmo DV de antes.
  */
 export function validateCNPJ(cnpj: string): boolean {
-  const digits = cleanDigits(cnpj);
-  if (digits.length !== 14) return false;
+  const value = cleanAlphanumeric(cnpj);
+  if (!/^[A-Z0-9]{12}[0-9]{2}$/.test(value)) return false;
 
-  // Rejeita sequências repetidas (ex: 00000000000000)
-  if (/^(\d)\1{13}$/.test(digits)) return false;
+  // Rejeita sequências com o mesmo caractere repetido (ex: 00000000000000)
+  if (value.split('').every((char) => char === value[0])) return false;
+
+  // Módulo 11 sobre o valor ASCII de cada caractere menos 48.
+  const values = value.split('').map(documentCharValue);
 
   // Primeiro dígito verificador
   const weights1 = [5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2];
   let sum = 0;
   for (let i = 0; i < 12; i++) {
-    sum += parseInt(digits[i], 10) * weights1[i];
+    sum += values[i] * weights1[i];
   }
   let remainder = sum % 11;
   const firstDigit = remainder < 2 ? 0 : 11 - remainder;
-  if (firstDigit !== parseInt(digits[12], 10)) return false;
+  if (firstDigit !== values[12]) return false;
 
   // Segundo dígito verificador
   const weights2 = [6, 5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2];
   sum = 0;
   for (let i = 0; i < 13; i++) {
-    sum += parseInt(digits[i], 10) * weights2[i];
+    sum += values[i] * weights2[i];
   }
   remainder = sum % 11;
   const secondDigit = remainder < 2 ? 0 : 11 - remainder;
-  if (secondDigit !== parseInt(digits[13], 10)) return false;
+  if (secondDigit !== values[13]) return false;
 
   return true;
 }
@@ -140,25 +176,28 @@ export function formatCPF(cpf: string): string {
 }
 
 /**
- * Formata CNPJ para exibição: 00.000.000/0000-00
+ * Formata CNPJ para exibição: 00.000.000/0000-00 ou LH.ILR.C2X/0001-88
  */
 export function formatCNPJ(cnpj: string): string {
-  const digits = cleanDigits(cnpj);
-  if (digits.length !== 14) return cnpj;
-  return digits.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, '$1.$2.$3/$4-$5');
+  const value = cleanAlphanumeric(cnpj);
+  if (value.length !== 14) return cnpj;
+  return value.replace(
+    /^([A-Z0-9]{2})([A-Z0-9]{3})([A-Z0-9]{3})([A-Z0-9]{4})([0-9]{2})$/,
+    '$1.$2.$3/$4-$5'
+  );
 }
 
 /**
  * Formata documento (CPF ou CNPJ) para exibição.
  */
 export function formatDocument(number: string, type?: string): string {
-  const digits = cleanDigits(number);
-  if (type?.toUpperCase() === 'CPF' || digits.length === 11) {
-    return formatCPF(digits);
-  }
-  if (type?.toUpperCase() === 'CNPJ' || digits.length === 14) {
-    return formatCNPJ(digits);
-  }
+  const normalizedType = type?.toUpperCase();
+  if (normalizedType === 'CPF') return formatCPF(number);
+  if (normalizedType === 'CNPJ') return formatCNPJ(number);
+
+  // Sem tipo explícito, infere pelo tamanho do valor normalizado.
+  if (cleanDigits(number).length === 11) return formatCPF(number);
+  if (cleanAlphanumeric(number).length === 14) return formatCNPJ(number);
   return number;
 }
 

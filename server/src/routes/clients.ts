@@ -3,6 +3,8 @@ import { z } from 'zod';
 import { prisma } from '../prisma.js';
 import {
   cleanDigits,
+  cleanAlphanumeric,
+  normalizeDocument,
   validateDocument,
   normalizePhoneE164,
   isValidPhoneBR,
@@ -86,6 +88,7 @@ clientsRouter.get('/', async (req: Request, res: Response) => {
   if (search && typeof search === 'string' && search.trim()) {
     const term = search.trim();
     const cleanTerm = cleanDigits(term);
+    const alphanumericTerm = cleanAlphanumeric(term);
 
     where.OR = [
       { name: { contains: term, mode: 'insensitive' } },
@@ -94,11 +97,14 @@ clientsRouter.get('/', async (req: Request, res: Response) => {
       { notes: { contains: term, mode: 'insensitive' } },
     ];
 
+    if (alphanumericTerm) {
+      where.OR.push({
+        documentNumber: { contains: alphanumericTerm, mode: 'insensitive' },
+      });
+    }
+
     if (cleanTerm) {
-      where.OR.push(
-        { documentNumber: { contains: cleanTerm } },
-        { phone: { contains: cleanTerm } }
-      );
+      where.OR.push({ phone: { contains: cleanTerm } });
     }
   }
 
@@ -183,7 +189,7 @@ clientsRouter.get('/', async (req: Request, res: Response) => {
 clientsRouter.post('/', async (req: Request, res: Response) => {
   const data = createClientSchema.parse(req.body);
 
-  const cleanDoc = cleanDigits(data.documentNumber);
+  const cleanDoc = normalizeDocument(data.documentNumber, data.documentType);
   if (!validateDocument(cleanDoc, data.documentType)) {
     return res.status(400).json({
       error: `Número de ${data.documentType} inválido (falha na validação de dígitos verificadores)`,
@@ -363,7 +369,10 @@ clientsRouter.patch('/:id', async (req: Request, res: Response) => {
 
   // Validação de documento se alterado
   const newDocType = data.documentType || existingClient.documentType;
-  const newDocNumber = data.documentNumber !== undefined ? cleanDigits(data.documentNumber) : existingClient.documentNumber;
+  const newDocNumber =
+    data.documentNumber !== undefined
+      ? normalizeDocument(data.documentNumber, newDocType)
+      : normalizeDocument(existingClient.documentNumber, newDocType);
 
   if (data.documentType !== undefined || data.documentNumber !== undefined) {
     if (!validateDocument(newDocNumber, newDocType)) {

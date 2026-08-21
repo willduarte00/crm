@@ -156,6 +156,35 @@ describe('Clientes e Leads — Testes de Integração (RF-01 a RF-06c)', () => {
     );
   });
 
+  it('2b. POST /api/clients cria lead com CNPJ alfanumérico, persistindo em maiúsculas sem máscara (RF-01)', async () => {
+    const token = createToken(activeUser);
+    vi.mocked(prisma.user.findUnique).mockResolvedValueOnce(activeUser); // auth
+
+    vi.mocked(prisma.client.create).mockResolvedValue(mockClient);
+
+    const res = await request(app)
+      .post('/api/clients')
+      .set('Cookie', [`token=${token}`])
+      .send({
+        name: 'Empresa Alfanumérica LTDA',
+        documentType: 'CNPJ',
+        documentNumber: 'lh.ilr.c2x/0001-88',
+        leadSource: 'Instagram',
+        stage: 'Novo Lead',
+        priority: 'alta',
+      });
+
+    expect(res.status).toBe(201);
+    expect(prisma.client.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          documentType: 'CNPJ',
+          documentNumber: 'LHILRC2X000188',
+        }),
+      })
+    );
+  });
+
   it('3. POST /api/clients rejeita CNPJ com dígito verificador inválido com 400 (RF-01)', async () => {
     const token = createToken(activeUser);
     vi.mocked(prisma.user.findUnique).mockResolvedValue(activeUser);
@@ -167,6 +196,42 @@ describe('Clientes e Leads — Testes de Integração (RF-01 a RF-06c)', () => {
         name: 'Empresa Inválida',
         documentType: 'CNPJ',
         documentNumber: '11.222.333/0001-00', // DV inválido
+        leadSource: 'Google Ads',
+      });
+
+    expect(res.status).toBe(400);
+    expect(res.body.error).toContain('inválido');
+  });
+
+  it('3b. POST /api/clients rejeita CNPJ alfanumérico com DV incorreto com 400 (RF-01)', async () => {
+    const token = createToken(activeUser);
+    vi.mocked(prisma.user.findUnique).mockResolvedValue(activeUser);
+
+    const res = await request(app)
+      .post('/api/clients')
+      .set('Cookie', [`token=${token}`])
+      .send({
+        name: 'Empresa Alfanumérica Inválida',
+        documentType: 'CNPJ',
+        documentNumber: 'LH.ILR.C2X/0001-00',
+        leadSource: 'Google Ads',
+      });
+
+    expect(res.status).toBe(400);
+    expect(res.body.error).toContain('inválido');
+  });
+
+  it('3c. POST /api/clients rejeita CPF com letras com 400 (RF-01)', async () => {
+    const token = createToken(activeUser);
+    vi.mocked(prisma.user.findUnique).mockResolvedValue(activeUser);
+
+    const res = await request(app)
+      .post('/api/clients')
+      .set('Cookie', [`token=${token}`])
+      .send({
+        name: 'Pessoa Física Inválida',
+        documentType: 'CPF',
+        documentNumber: '529.98A.247-25',
         leadSource: 'Google Ads',
       });
 

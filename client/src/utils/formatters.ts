@@ -8,6 +8,34 @@ export function cleanDigits(value: string | null | undefined): string {
 }
 
 /**
+ * Remove tudo que não for letra ou dígito e normaliza para maiúsculas.
+ * Base do CNPJ alfanumérico (IN RFB nº 2.229/2024).
+ */
+export function cleanAlphanumeric(value: string | null | undefined): string {
+  if (!value) return '';
+  return value.replace(/[^0-9A-Za-z]/g, '').toUpperCase();
+}
+
+/**
+ * Normaliza o documento conforme o tipo, antes de validar ou enviar à API:
+ * CPF mantém apenas dígitos; CNPJ aceita letras e dígitos, em maiúsculas.
+ */
+export function normalizeDocument(
+  value: string | null | undefined,
+  type: 'CPF' | 'CNPJ' | string
+): string {
+  return String(type || '').toUpperCase() === 'CNPJ' ? cleanAlphanumeric(value) : cleanDigits(value);
+}
+
+/**
+ * Valor do caractere no cálculo do DV: código ASCII menos 48.
+ * Dígitos mantêm o próprio valor; A=17, B=18, ..., Z=42.
+ */
+function documentCharValue(char: string): number {
+  return char.charCodeAt(0) - 48;
+}
+
+/**
  * Validação de CPF com cálculo de dígitos verificadores.
  */
 export function validateCPF(cpf: string): boolean {
@@ -36,29 +64,35 @@ export function validateCPF(cpf: string): boolean {
 
 /**
  * Validação de CNPJ com cálculo de dígitos verificadores.
+ *
+ * Aceita o formato alfanumérico da IN RFB nº 2.229/2024, em vigor desde 31/07/2026:
+ * 12 posições em [A-Z0-9] seguidas de 2 dígitos verificadores numéricos.
+ * CNPJs totalmente numéricos continuam válidos, com o mesmo cálculo.
  */
 export function validateCNPJ(cnpj: string): boolean {
-  const digits = cleanDigits(cnpj);
-  if (digits.length !== 14) return false;
-  if (/^(\d)\1{13}$/.test(digits)) return false;
+  const value = cleanAlphanumeric(cnpj);
+  if (!/^[A-Z0-9]{12}[0-9]{2}$/.test(value)) return false;
+  if (value.split('').every((char) => char === value[0])) return false;
+
+  const values = value.split('').map(documentCharValue);
 
   const weights1 = [5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2];
   let sum = 0;
   for (let i = 0; i < 12; i++) {
-    sum += parseInt(digits[i], 10) * weights1[i];
+    sum += values[i] * weights1[i];
   }
   let remainder = sum % 11;
   const firstDigit = remainder < 2 ? 0 : 11 - remainder;
-  if (firstDigit !== parseInt(digits[12], 10)) return false;
+  if (firstDigit !== values[12]) return false;
 
   const weights2 = [6, 5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2];
   sum = 0;
   for (let i = 0; i < 13; i++) {
-    sum += parseInt(digits[i], 10) * weights2[i];
+    sum += values[i] * weights2[i];
   }
   remainder = sum % 11;
   const secondDigit = remainder < 2 ? 0 : 11 - remainder;
-  if (secondDigit !== parseInt(digits[13], 10)) return false;
+  if (secondDigit !== values[13]) return false;
 
   return true;
 }
@@ -76,42 +110,52 @@ export function formatCPF(cpf: string | null | undefined): string {
 }
 
 export function formatCNPJ(cnpj: string | null | undefined): string {
-  const digits = cleanDigits(cnpj);
-  if (digits.length !== 14) return cnpj || '';
-  return digits.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, '$1.$2.$3/$4-$5');
+  const value = cleanAlphanumeric(cnpj);
+  if (value.length !== 14) return cnpj || '';
+  return value.replace(
+    /^([A-Z0-9]{2})([A-Z0-9]{3})([A-Z0-9]{3})([A-Z0-9]{4})([0-9]{2})$/,
+    '$1.$2.$3/$4-$5'
+  );
 }
 
 export function formatDocument(number: string | null | undefined, type?: string): string {
   if (!number) return '';
-  const digits = cleanDigits(number);
-  if (type?.toUpperCase() === 'CPF' || digits.length === 11) {
-    return formatCPF(digits);
-  }
-  if (type?.toUpperCase() === 'CNPJ' || digits.length === 14) {
-    return formatCNPJ(digits);
-  }
+  const normalizedType = type?.toUpperCase();
+  if (normalizedType === 'CPF') return formatCPF(number);
+  if (normalizedType === 'CNPJ') return formatCNPJ(number);
+
+  // Sem tipo explícito, infere pelo tamanho do valor normalizado.
+  if (cleanDigits(number).length === 11) return formatCPF(number);
+  if (cleanAlphanumeric(number).length === 14) return formatCNPJ(number);
   return number;
 }
 
 /**
  * Máscara dinâmica em tempo real para CPF/CNPJ enquanto o usuário digita.
+ * O CNPJ aceita letras nas 12 primeiras posições; os 2 dígitos verificadores
+ * continuam numéricos (IN RFB nº 2.229/2024).
  */
 export function maskDocumentInput(value: string, type: 'CPF' | 'CNPJ'): string {
-  const digits = cleanDigits(value);
   if (type === 'CPF') {
-    return digits
-      .slice(0, 11)
-      .replace(/(\d{3})(\d)/, '$1.$2')
-      .replace(/(\d{3})(\d)/, '$1.$2')
-      .replace(/(\d{3})(\d{1,2})$/, '$1-$2');
-  } else {
-    return digits
-      .slice(0, 14)
-      .replace(/(\d{2})(\d)/, '$1.$2')
-      .replace(/(\d{3})(\d)/, '$1.$2')
-      .replace(/(\d{3})(\d)/, '$1/$2')
-      .replace(/(\d{4})(\d{1,2})$/, '$1-$2');
+    const digits = cleanDigits(value).slice(0, 11);
+    let maskedCpf = digits.slice(0, 3);
+    if (digits.length > 3) maskedCpf += '.' + digits.slice(3, 6);
+    if (digits.length > 6) maskedCpf += '.' + digits.slice(6, 9);
+    if (digits.length > 9) maskedCpf += '-' + digits.slice(9, 11);
+    return maskedCpf;
   }
+
+  const chars = cleanAlphanumeric(value).slice(0, 14);
+  const base = chars.slice(0, 12);
+  const checkDigits = cleanDigits(chars.slice(12));
+  const raw = base + checkDigits;
+
+  let masked = raw.slice(0, 2);
+  if (raw.length > 2) masked += '.' + raw.slice(2, 5);
+  if (raw.length > 5) masked += '.' + raw.slice(5, 8);
+  if (raw.length > 8) masked += '/' + raw.slice(8, 12);
+  if (raw.length > 12) masked += '-' + raw.slice(12, 14);
+  return masked;
 }
 
 /**

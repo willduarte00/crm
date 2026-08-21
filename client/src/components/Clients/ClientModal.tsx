@@ -11,7 +11,7 @@ import { apiFetch, errorMessage } from '../../services/api';
 import {
   maskDocumentInput,
   maskPhoneInput,
-  cleanDigits,
+  normalizeDocument,
   validateDocument,
   formatDocument,
   formatPhoneBR,
@@ -127,10 +127,10 @@ export const ClientModal: React.FC<ClientModalProps> = ({
   // Valida ao sair do campo, para o erro aparecer junto do campo errado
   // em vez de só depois de tentar salvar o formulário inteiro.
   const handleDocumentBlur = () => {
-    const digits = cleanDigits(documentNumber);
-    if (!digits) return;
+    const normalized = normalizeDocument(documentNumber, documentType);
+    if (!normalized) return;
     setDocumentError(
-      validateDocument(digits, documentType)
+      validateDocument(normalized, documentType)
         ? null
         : `Este ${documentType} não é válido. Confira os dígitos.`
     );
@@ -141,7 +141,7 @@ export const ClientModal: React.FC<ClientModalProps> = ({
     if (isSubmitting) return;
     setError(null);
 
-    const cleanDoc = cleanDigits(documentNumber);
+    const cleanDoc = normalizeDocument(documentNumber, documentType);
     if (!validateDocument(cleanDoc, documentType)) {
       setDocumentError(`Este ${documentType} não é válido. Confira os dígitos.`);
       setError(`Corrija o ${documentType} antes de salvar.`);
@@ -291,12 +291,14 @@ export const ClientModal: React.FC<ClientModalProps> = ({
               <input
                 {...props}
                 type="text"
-                inputMode="numeric"
+                inputMode={documentType === 'CNPJ' ? 'text' : 'numeric'}
+                autoCapitalize="characters"
+                maxLength={documentType === 'CNPJ' ? 18 : 14}
                 value={documentNumber}
                 onChange={handleDocumentNumberChange}
                 onBlur={handleDocumentBlur}
                 placeholder={
-                  documentType === 'CNPJ' ? '00.000.000/0000-00' : '000.000.000-00'
+                  documentType === 'CNPJ' ? '00.000.000/0000-00 ou AB.CDE.F1G/0001-00' : '000.000.000-00'
                 }
                 className={`${controlClass} font-mono`}
               />

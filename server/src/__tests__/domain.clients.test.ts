@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import {
   validateCPF,
   validateCNPJ,
+  normalizeDocument,
   validateDocument,
   formatCPF,
   formatCNPJ,
@@ -66,6 +67,30 @@ describe('Domain — Clientes e Leads (Funções Puras)', () => {
       expect(validateCNPJ('123')).toBe(false);
       expect(validateCNPJ('123456789012345')).toBe(false);
     });
+
+    it('deve validar CNPJ alfanumérico (IN RFB nº 2.229/2024)', () => {
+      expect(validateCNPJ('LHILRC2X000188')).toBe(true);
+      expect(validateCNPJ('LH.ILR.C2X/0001-88')).toBe(true);
+      expect(validateCNPJ('12ABC34501DE35')).toBe(true);
+    });
+
+    it('deve aceitar CNPJ alfanumérico em minúsculas, normalizando para maiúsculas', () => {
+      expect(validateCNPJ('lh.ilr.c2x/0001-88')).toBe(true);
+    });
+
+    it('deve rejeitar CNPJ alfanumérico com dígito verificador incorreto', () => {
+      expect(validateCNPJ('LHILRC2X000100')).toBe(false);
+      expect(validateCNPJ('12ABC34501DE00')).toBe(false);
+    });
+
+    it('deve rejeitar CNPJ com letra nas posições dos dígitos verificadores', () => {
+      expect(validateCNPJ('LHILRC2X0001AB')).toBe(false);
+    });
+
+    it('deve rejeitar CNPJ com caracteres fora de [A-Z0-9]', () => {
+      expect(validateCNPJ('LH-ILR-C2X-0001-8@')).toBe(false);
+      expect(validateCNPJ('LHILRÇ2X000188')).toBe(false);
+    });
   });
 
   describe('Formatação de Documentos', () => {
@@ -77,6 +102,17 @@ describe('Domain — Clientes e Leads (Funções Puras)', () => {
     it('deve formatar CNPJ corretamente', () => {
       expect(formatCNPJ('11222333000181')).toBe('11.222.333/0001-81');
       expect(formatDocument('11222333000181', 'CNPJ')).toBe('11.222.333/0001-81');
+    });
+
+    it('deve formatar CNPJ alfanumérico corretamente', () => {
+      expect(formatCNPJ('LHILRC2X000188')).toBe('LH.ILR.C2X/0001-88');
+      expect(formatDocument('LHILRC2X000188', 'CNPJ')).toBe('LH.ILR.C2X/0001-88');
+      expect(formatDocument('LHILRC2X000188')).toBe('LH.ILR.C2X/0001-88');
+    });
+
+    it('deve normalizar documento conforme o tipo', () => {
+      expect(normalizeDocument('lh.ilr.c2x/0001-88', 'CNPJ')).toBe('LHILRC2X000188');
+      expect(normalizeDocument('529.982.247-25', 'CPF')).toBe('52998224725');
     });
   });
 
