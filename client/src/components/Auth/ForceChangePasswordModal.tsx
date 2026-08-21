@@ -1,9 +1,18 @@
 import React, { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
-import { apiFetch, AppApiError } from '../../services/api';
-import { Lock, ShieldAlert, CheckCircle2 } from 'lucide-react';
+import { apiFetch, errorMessage } from '../../services/api';
+import { Lock, CheckCircle2 } from 'lucide-react';
 import { toast } from 'sonner';
+import { Button } from '../ui/Button';
+import { Field, controlClass } from '../ui/Field';
+import { FormAlert } from '../ui/States';
 
+const MIN_PASSWORD_LENGTH = 8;
+
+/**
+ * Bloqueia o acesso até a troca da senha temporária. Diferente dos demais
+ * diálogos, não é dispensável: só sai daqui trocando a senha ou saindo da conta.
+ */
 export const ForceChangePasswordModal: React.FC = () => {
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
@@ -17,13 +26,13 @@ export const ForceChangePasswordModal: React.FC = () => {
     e.preventDefault();
     setError(null);
 
-    if (newPassword.length < 8) {
-      setError('A nova senha deve ter no mínimo 8 caracteres.');
+    if (newPassword.length < MIN_PASSWORD_LENGTH) {
+      setError(`A nova senha precisa ter pelo menos ${MIN_PASSWORD_LENGTH} caracteres.`);
       return;
     }
 
     if (newPassword !== confirmPassword) {
-      setError('A confirmação de senha não confere.');
+      setError('A confirmação não corresponde à nova senha.');
       return;
     }
 
@@ -32,111 +41,107 @@ export const ForceChangePasswordModal: React.FC = () => {
     try {
       await apiFetch('/api/auth/change-password', {
         method: 'POST',
-        body: JSON.stringify({
-          currentPassword,
-          newPassword,
-        }),
+        body: JSON.stringify({ currentPassword, newPassword }),
       });
 
-      toast.success('Senha atualizada com sucesso!');
+      toast.success('Senha atualizada.');
       await refreshUser();
-    } catch (err: any) {
-      if (err instanceof AppApiError) {
-        setError(err.data.error || 'Erro ao alterar senha');
-      } else {
-        setError('Ocorreu um erro ao atualizar a senha.');
-      }
+    } catch (err) {
+      setError(errorMessage(err, 'Não foi possível atualizar a senha.'));
     } finally {
       setIsSubmitting(false);
     }
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-navy-950/70 backdrop-blur-sm flex items-center justify-center p-4">
-      <div className="w-full max-w-md bg-white rounded-lg border border-slate-200 shadow-xl p-8 animate-in fade-in zoom-in duration-200">
+    <div className="fixed inset-0 z-50 bg-navy-950/70 backdrop-blur-sm flex items-start sm:items-center justify-center overflow-y-auto p-3 sm:p-4">
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="force-password-title"
+        aria-describedby="force-password-description"
+        className="w-full max-w-md bg-white rounded-xl border border-slate-200 shadow-xl p-6 sm:p-8 my-4 sm:my-8 animate-panel-in"
+      >
         <div className="text-center mb-6">
-          <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-teal-50 text-teal-600 mb-3">
+          <div
+            className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-teal-50 text-teal-700 mb-3"
+            aria-hidden="true"
+          >
             <Lock className="w-6 h-6" />
           </div>
-          <h2 className="text-xl font-bold text-navy-900">Troca de Senha Obrigatória</h2>
-          <p className="text-sm text-slate-500 mt-1">
-            Por segurança, você deve definir uma nova senha no seu primeiro acesso.
+          <h1 id="force-password-title" className="text-xl font-bold text-navy-900">
+            Defina uma nova senha
+          </h1>
+          <p id="force-password-description" className="text-sm text-slate-500 mt-1.5">
+            Sua senha atual é temporária. Escolha uma senha própria para continuar
+            usando o sistema.
           </p>
         </div>
 
-        {error && (
-          <div className="mb-4 p-3 rounded bg-red-50 border border-red-200 text-red-700 text-sm flex items-start gap-2">
-            <ShieldAlert className="w-4 h-4 flex-shrink-0 mt-0.5" />
-            <span>{error}</span>
-          </div>
-        )}
+        {error && <FormAlert>{error}</FormAlert>}
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1">
-              Senha Temporária Atual
-            </label>
-            <input
-              type="password"
-              required
-              value={currentPassword}
-              onChange={(e) => setCurrentPassword(e.target.value)}
-              placeholder="••••••••"
-              className="w-full px-3 py-2 text-sm bg-white border border-slate-300 rounded focus:outline-none focus:border-teal-600 focus:ring-2 focus:ring-teal-600/20 text-navy-900"
-            />
-          </div>
+          <Field label="Senha temporária atual" required>
+            {(props) => (
+              <input
+                {...props}
+                type="password"
+                autoComplete="current-password"
+                autoFocus
+                value={currentPassword}
+                onChange={(e) => setCurrentPassword(e.target.value)}
+                placeholder="••••••••"
+                className={controlClass}
+              />
+            )}
+          </Field>
 
-          <div>
-            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1">
-              Nova Senha (mínimo 8 caracteres)
-            </label>
-            <input
-              type="password"
-              required
-              value={newPassword}
-              onChange={(e) => setNewPassword(e.target.value)}
-              placeholder="••••••••"
-              className="w-full px-3 py-2 text-sm bg-white border border-slate-300 rounded focus:outline-none focus:border-teal-600 focus:ring-2 focus:ring-teal-600/20 text-navy-900"
-            />
-          </div>
+          <Field
+            label="Nova senha"
+            required
+            hint={`Mínimo de ${MIN_PASSWORD_LENGTH} caracteres.`}
+          >
+            {(props) => (
+              <input
+                {...props}
+                type="password"
+                autoComplete="new-password"
+                minLength={MIN_PASSWORD_LENGTH}
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                placeholder="••••••••"
+                className={controlClass}
+              />
+            )}
+          </Field>
 
-          <div>
-            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1">
-              Confirmar Nova Senha
-            </label>
-            <input
-              type="password"
-              required
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              placeholder="••••••••"
-              className="w-full px-3 py-2 text-sm bg-white border border-slate-300 rounded focus:outline-none focus:border-teal-600 focus:ring-2 focus:ring-teal-600/20 text-navy-900"
-            />
-          </div>
+          <Field label="Confirmar nova senha" required>
+            {(props) => (
+              <input
+                {...props}
+                type="password"
+                autoComplete="new-password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                placeholder="••••••••"
+                className={controlClass}
+              />
+            )}
+          </Field>
 
           <div className="pt-2 flex flex-col gap-2">
-            <button
+            <Button
               type="submit"
-              disabled={isSubmitting}
-              className="w-full py-2.5 px-4 bg-teal-600 hover:bg-teal-700 text-white font-medium text-sm rounded flex items-center justify-center gap-2 transition-colors disabled:opacity-50"
+              fullWidth
+              isLoading={isSubmitting}
+              icon={<CheckCircle2 className="w-4 h-4" aria-hidden="true" />}
             >
-              {isSubmitting ? (
-                <span className="inline-block animate-spin border-2 border-white border-t-transparent rounded-full w-4 h-4" />
-              ) : (
-                <>
-                  <CheckCircle2 className="w-4 h-4" />
-                  <span>Salvar Nova Senha</span>
-                </>
-              )}
-            </button>
+              Salvar nova senha
+            </Button>
 
-            <button
-              type="button"
-              onClick={logout}
-              className="w-full py-2 text-xs text-slate-500 hover:text-slate-700 transition-colors"
-            >
-              Cancelar e Sair
-            </button>
+            <Button variant="ghost" fullWidth onClick={logout} disabled={isSubmitting}>
+              Sair da conta
+            </Button>
           </div>
         </form>
       </div>

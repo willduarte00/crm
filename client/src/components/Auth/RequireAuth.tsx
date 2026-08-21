@@ -13,10 +13,17 @@ export const RequireAuth: React.FC<RequireAuthProps> = ({ children, adminOnly = 
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+      <div
+        className="min-h-dvh bg-slate-50 flex items-center justify-center"
+        role="status"
+        aria-live="polite"
+      >
         <div className="flex flex-col items-center gap-3">
-          <div className="w-8 h-8 border-3 border-teal-600 border-t-transparent rounded-full animate-spin" />
-          <p className="text-sm font-medium text-slate-500">Carregando CRM...</p>
+          <div
+            className="w-8 h-8 border-[3px] border-teal-600 border-t-transparent rounded-full animate-spin"
+            aria-hidden="true"
+          />
+          <p className="text-sm font-medium text-slate-600">Carregando o CRM…</p>
         </div>
       </div>
     );

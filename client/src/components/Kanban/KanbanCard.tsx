@@ -54,6 +54,16 @@ export const KanbanCard: React.FC<KanbanCardProps> = ({ client, index, onClick }
           {...provided.draggableProps}
           {...provided.dragHandleProps}
           onClick={() => onClick(client)}
+          onKeyDown={(event) => {
+            // O card é arrastável (div), então precisa responder ao teclado
+            // para quem navega sem mouse conseguir abrir a ficha.
+            if (event.key === 'Enter') {
+              event.preventDefault();
+              onClick(client);
+            }
+          }}
+          role="button"
+          aria-label={`Abrir ficha de ${client.name}`}
           className={`group bg-white rounded-lg border p-3.5 relative overflow-hidden transition-all duration-150 cursor-grab active:cursor-grabbing select-none ${
             snapshot.isDragging
               ? 'shadow-xl ring-2 ring-teal-500/40 border-teal-500 rotate-[1deg] scale-[1.02] z-50 bg-white'
@@ -64,8 +74,9 @@ export const KanbanCard: React.FC<KanbanCardProps> = ({ client, index, onClick }
           {/* Barra de Prioridade Lateral Esquerda (RF-06b) */}
           <div
             className={`absolute left-0 top-0 bottom-0 w-1 ${priorityBarColor} transition-colors`}
-            title={`Prioridade ${priorityInfo.label}`}
+            aria-hidden="true"
           />
+          <span className="sr-only">Prioridade {priorityInfo.label}</span>
 
           {/* Topo do Card: Origem do Lead e Data */}
           <div className="flex items-center justify-between gap-2 mb-2 pl-1.5">
@@ -74,7 +85,7 @@ export const KanbanCard: React.FC<KanbanCardProps> = ({ client, index, onClick }
             >
               {client.leadSource}
             </span>
-            <span className="text-[11px] tabular-nums text-slate-400 font-medium">
+            <span className="text-[11px] tabular-nums text-slate-500 font-medium">
               {formatDateBR(client.createdAt)}
             </span>
           </div>
@@ -122,7 +133,7 @@ export const KanbanCard: React.FC<KanbanCardProps> = ({ client, index, onClick }
                   </div>
                   <span
                     className={`text-xs truncate font-medium ${
-                      client.owner.active ? 'text-slate-700' : 'text-slate-400 italic'
+                      client.owner.active ? 'text-slate-700' : 'text-slate-500 italic'
                     }`}
                   >
                     {client.owner.name.split(' ')[0]}
@@ -131,22 +142,22 @@ export const KanbanCard: React.FC<KanbanCardProps> = ({ client, index, onClick }
                 </div>
               ) : (
                 <div
-                  className="flex items-center gap-1.5 text-slate-400"
+                  className="flex items-center gap-1.5 text-slate-500"
                   title="Lead sem responsável atribuído"
                 >
-                  <div className="w-6 h-6 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-400 flex-shrink-0">
+                  <div className="w-6 h-6 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-500 flex-shrink-0">
                     <UserX className="w-3 h-3" />
                   </div>
-                  <span className="text-[11px] text-slate-400 italic">Sem responsável</span>
+                  <span className="text-[11px] text-slate-500 italic">Sem responsável</span>
                 </div>
               )}
             </div>
 
             {/* Badges de Contratos e Anotações */}
-            <div className="flex items-center gap-2 text-slate-400 flex-shrink-0 text-xs">
+            <div className="flex items-center gap-2 text-slate-500 flex-shrink-0 text-xs">
               {client.phone && (
                 <span title={formatPhoneBR(client.phone)}>
-                  <Phone className="w-3.5 h-3.5 text-slate-400 hover:text-teal-600 transition-colors" />
+                  <Phone className="w-3.5 h-3.5 text-slate-500 hover:text-teal-600 transition-colors" />
                 </span>
               )}
 

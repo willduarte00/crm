@@ -11,6 +11,8 @@ import {
 import { apiFetch } from '../../services/api';
 import { DashboardData } from '../../types/dashboard';
 import { formatCurrencyBRL, formatReferenceMonthBR } from '../../utils/formatters';
+import { Button } from '../ui/Button';
+import { ErrorState } from '../ui/States';
 import { KpiCard } from './KpiCard';
 import { BillingChart } from './BillingChart';
 import { ServicesChart } from './ServicesChart';
@@ -30,7 +32,7 @@ export const DashboardPage: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="space-y-6 animate-pulse">
+      <div className="space-y-6 animate-pulse" role="status" aria-label="Carregando o dashboard">
         <div className="flex justify-between items-center">
           <div className="h-8 bg-slate-200 rounded w-48" />
           <div className="h-8 bg-slate-200 rounded w-32" />
@@ -53,26 +55,13 @@ export const DashboardPage: React.FC = () => {
 
   if (isError || !dashboard) {
     return (
-      <div className="p-8 bg-white border border-red-200 rounded-xl text-center space-y-4 shadow-sm">
-        <div className="w-12 h-12 rounded-full bg-red-50 text-red-600 flex items-center justify-center mx-auto">
-          <AlertTriangle className="w-6 h-6" />
-        </div>
-        <div>
-          <h3 className="text-base font-bold text-slate-900">
-            Erro ao carregar o dashboard
-          </h3>
-          <p className="text-xs text-slate-500 mt-1">
-            Não foi possível calcular as métricas e indicadores. Tente novamente.
-          </p>
-        </div>
-        <button
-          type="button"
-          onClick={() => refetch()}
-          className="inline-flex items-center gap-2 px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white text-xs font-semibold rounded-lg shadow-sm transition-colors"
-        >
-          <RefreshCw className="w-4 h-4" />
-          <span>Tentar novamente</span>
-        </button>
+      <div className="bg-white border border-slate-200 rounded-xl shadow-xs">
+        <ErrorState
+          title="Não foi possível carregar o dashboard"
+          message="As métricas e indicadores não puderam ser calculados. Verifique sua conexão e tente novamente."
+          onRetry={() => refetch()}
+          isRetrying={isFetching}
+        />
       </div>
     );
   }
@@ -85,24 +74,30 @@ export const DashboardPage: React.FC = () => {
       {/* Cabeçalho da Página */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900 tracking-tight">
-            Dashboard Geral
+          <h1 className="text-2xl font-bold text-navy-900 tracking-tight">
+            Dashboard
           </h1>
-          <p className="text-xs text-slate-500 mt-0.5">
-            Métricas financeiras, faturamento e saúde da operação em <span className="font-semibold text-slate-700">{monthName}</span>
+          <p className="text-sm text-slate-500 mt-0.5">
+            Métricas financeiras e saúde da operação em{' '}
+            <span className="font-semibold text-slate-700">{monthName}</span>.
           </p>
         </div>
 
         <div className="flex items-center gap-3">
-          <button
-            type="button"
+          <Button
+            variant="secondary"
+            size="sm"
             onClick={() => refetch()}
             disabled={isFetching}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-semibold rounded-lg shadow-2xs transition-colors"
+            icon={
+              <RefreshCw
+                className={`w-3.5 h-3.5 ${isFetching ? 'animate-spin text-teal-600' : ''}`}
+                aria-hidden="true"
+              />
+            }
           >
-            <RefreshCw className={`w-3.5 h-3.5 ${isFetching ? 'animate-spin text-teal-600' : ''}`} />
-            <span>Atualizar</span>
-          </button>
+            Atualizar
+          </Button>
         </div>
       </div>
 
@@ -146,8 +141,8 @@ export const DashboardPage: React.FC = () => {
           title="Inadimplência"
           value={formatCurrencyBRL(current.overdueCents)}
           icon={AlertTriangle}
-          iconBgColor="bg-red-50"
-          iconColor="text-red-600"
+          iconBgColor="bg-rose-50"
+          iconColor="text-rose-600"
           comparison={comparison?.overdue}
           subtitle={`${current.delinquencyRate}% taxa (${current.overdueCount} pendentes)`}
           isDelinquency

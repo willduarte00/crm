@@ -6,8 +6,51 @@
   body {
     @apply bg-slate-50 text-navy-900;
   }
+
+  /*
+   * Anel de foco visível e consistente para navegação por teclado.
+   * Aplicado apenas em :focus-visible para não poluir cliques de mouse.
+   */
+  :focus-visible {
+    @apply outline-none ring-2 ring-teal-600/60 ring-offset-2 ring-offset-white rounded-sm;
+  }
+
+  /* Alvos de toque mínimos em telas pequenas (WCAG 2.5.8). */
+  @media (pointer: coarse) {
+    button,
+    [role='button'],
+    a[href],
+    select,
+    summary {
+      min-height: 40px;
+    }
+
+    /* Inputs de texto já têm altura suficiente via padding. */
+    input:not([type='checkbox']):not([type='radio']) {
+      min-height: 40px;
+    }
+  }
 }
 
-.tabular-nums {
-  font-variant-numeric: tabular-nums;
+@layer utilities {
+  .tabular-nums {
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Impede que tabelas largas empurrem o layout da página. */
+  .table-scroll {
+    @apply overflow-x-auto overscroll-x-contain;
+  }
+}
+
+/* Respeita a preferência do sistema por menos movimento. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

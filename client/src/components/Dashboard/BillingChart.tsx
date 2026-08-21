@@ -45,7 +45,7 @@ export const BillingChart: React.FC<BillingChartProps> = ({ data }) => {
                 />
                 {entry.name}:
               </span>
-              <span className="font-semibold text-white font-variant-numeric tabular-nums">
+              <span className="font-semibold text-white  tabular-nums">
                 {formatCurrencyBRL(entry.value * 100)}
               </span>
             </div>
@@ -57,12 +57,12 @@ export const BillingChart: React.FC<BillingChartProps> = ({ data }) => {
   };
 
   return (
-    <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-2xs">
+    <div className="bg-white border border-slate-200 rounded-xl p-5 sm:p-6 shadow-xs">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h3 className="text-base font-bold text-slate-900">
-            Faturamento dos Últimos 6 Meses
-          </h3>
+          <h2 className="text-base font-bold text-navy-900">
+            Faturamento dos últimos 6 meses
+          </h2>
           <p className="text-xs text-slate-500 mt-0.5">
             Comparativo de faturamento (competência) vs recebimento (caixa)
           </p>

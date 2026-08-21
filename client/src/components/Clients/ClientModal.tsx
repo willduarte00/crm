@@ -7,7 +7,7 @@ import {
   Priority,
 } from '../../types/client';
 import { User } from '../../types';
-import { apiFetch, AppApiError } from '../../services/api';
+import { apiFetch, errorMessage } from '../../services/api';
 import {
   maskDocumentInput,
   maskPhoneInput,
@@ -16,8 +16,12 @@ import {
   formatDocument,
   formatPhoneBR,
 } from '../../utils/formatters';
-import { X, UserPlus, Edit3, AlertCircle, Check } from 'lucide-react';
+import { UserPlus, Edit3, Check } from 'lucide-react';
 import { toast } from 'sonner';
+import { Modal } from '../ui/Modal';
+import { Button } from '../ui/Button';
+import { Field, controlClass } from '../ui/Field';
+import { FormAlert } from '../ui/States';
 
 interface ClientModalProps {
   isOpen: boolean;
@@ -45,10 +49,10 @@ const PIPELINE_STAGES: PipelineStage[] = [
   'Pausado/Churn',
 ];
 
-const PRIORITIES: { value: Priority; label: string; color: string }[] = [
-  { value: 'alta', label: 'Alta', color: 'bg-red-50 text-red-700 border-red-200' },
-  { value: 'media', label: 'Média', color: 'bg-slate-100 text-slate-700 border-slate-200' },
-  { value: 'baixa', label: 'Baixa', color: 'bg-teal-50 text-teal-700 border-teal-200' },
+const PRIORITIES: { value: Priority; label: string }[] = [
+  { value: 'alta', label: 'Alta' },
+  { value: 'media', label: 'Média' },
+  { value: 'baixa', label: 'Baixa' },
 ];
 
 export const ClientModal: React.FC<ClientModalProps> = ({
@@ -71,16 +75,20 @@ export const ClientModal: React.FC<ClientModalProps> = ({
   const [notes, setNotes] = useState('');
 
   const [error, setError] = useState<string | null>(null);
+  const [documentError, setDocumentError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const isEditing = !!clientToEdit;
+  const formId = 'client-form';
 
   useEffect(() => {
     if (clientToEdit) {
       setName(clientToEdit.name);
       setTradeName(clientToEdit.tradeName || '');
       setDocumentType(clientToEdit.documentType);
-      setDocumentNumber(formatDocument(clientToEdit.documentNumber, clientToEdit.documentType));
+      setDocumentNumber(
+        formatDocument(clientToEdit.documentNumber, clientToEdit.documentType)
+      );
       setEmail(clientToEdit.email || '');
       setPhone(clientToEdit.phone ? formatPhoneBR(clientToEdit.phone) : '');
       setLeadSource(clientToEdit.leadSource);
@@ -102,32 +110,41 @@ export const ClientModal: React.FC<ClientModalProps> = ({
       setNotes('');
     }
     setError(null);
+    setDocumentError(null);
   }, [clientToEdit, isOpen]);
-
-  if (!isOpen) return null;
 
   const handleDocumentTypeChange = (newType: DocumentType) => {
     setDocumentType(newType);
     setDocumentNumber(maskDocumentInput(documentNumber, newType));
+    setDocumentError(null);
   };
 
   const handleDocumentNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const masked = maskDocumentInput(e.target.value, documentType);
-    setDocumentNumber(masked);
+    setDocumentNumber(maskDocumentInput(e.target.value, documentType));
+    setDocumentError(null);
   };
 
-  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const masked = maskPhoneInput(e.target.value);
-    setPhone(masked);
+  // Valida ao sair do campo, para o erro aparecer junto do campo errado
+  // em vez de só depois de tentar salvar o formulário inteiro.
+  const handleDocumentBlur = () => {
+    const digits = cleanDigits(documentNumber);
+    if (!digits) return;
+    setDocumentError(
+      validateDocument(digits, documentType)
+        ? null
+        : `Este ${documentType} não é válido. Confira os dígitos.`
+    );
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isSubmitting) return;
     setError(null);
 
     const cleanDoc = cleanDigits(documentNumber);
     if (!validateDocument(cleanDoc, documentType)) {
-      setError(`O número de ${documentType} informado é inválido.`);
+      setDocumentError(`Este ${documentType} não é válido. Confira os dígitos.`);
+      setError(`Corrija o ${documentType} antes de salvar.`);
       return;
     }
 
@@ -153,187 +170,178 @@ export const ClientModal: React.FC<ClientModalProps> = ({
           method: 'PATCH',
           body: JSON.stringify(payload),
         });
-        toast.success('Cliente atualizado com sucesso!');
+        toast.success('Cliente atualizado.');
       } else {
         await apiFetch('/api/clients', {
           method: 'POST',
           body: JSON.stringify(payload),
         });
-        toast.success('Cliente/Lead cadastrado com sucesso!');
+        toast.success('Cliente cadastrado.');
       }
 
       onSuccess();
       onClose();
-    } catch (err: any) {
-      if (err instanceof AppApiError) {
-        setError(err.data.error || 'Erro ao salvar cliente');
-      } else {
-        setError('Ocorreu um erro ao salvar o registro.');
-      }
+    } catch (err) {
+      setError(errorMessage(err, 'Não foi possível salvar o cliente.'));
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  // Filtrar apenas usuários ativos para atribuição (RF-06a)
-  // Caso esteja editando e o responsável atual esteja inativo, manter na lista visualmente com indicação
   const activeUsers = users.filter((u) => u.active);
   const currentOwnerIsInactive =
     clientToEdit?.owner && !clientToEdit.owner.active && clientToEdit.ownerId;
 
   return (
-    <div className="fixed inset-0 z-50 bg-navy-950/60 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
-      <div className="w-full max-w-2xl bg-white rounded-lg border border-slate-200 shadow-xl p-6 relative my-8 animate-in fade-in zoom-in duration-150">
-        <button
-          onClick={onClose}
-          className="absolute right-4 top-4 text-slate-400 hover:text-slate-600 rounded p-1"
-        >
-          <X className="w-5 h-5" />
-        </button>
-
-        <div className="flex items-center gap-3 mb-6">
-          <div className="w-10 h-10 rounded bg-teal-50 text-teal-600 flex items-center justify-center flex-shrink-0">
-            {isEditing ? <Edit3 className="w-5 h-5" /> : <UserPlus className="w-5 h-5" />}
-          </div>
-          <div>
-            <h3 className="text-lg font-bold text-navy-900">
-              {isEditing ? 'Editar Cliente / Lead' : 'Novo Cliente ou Lead'}
-            </h3>
-            <p className="text-xs text-slate-500">
-              {isEditing
-                ? 'Atualize as informações cadastrais e comerciais'
-                : 'Preencha os dados de contato e funil comercial'}
-            </p>
-          </div>
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      title={isEditing ? 'Editar cliente' : 'Novo cliente ou lead'}
+      description={
+        isEditing
+          ? 'Atualize os dados cadastrais e a posição no funil.'
+          : 'Preencha os dados de contato e a origem do lead.'
+      }
+      icon={
+        isEditing ? (
+          <Edit3 className="w-5 h-5" aria-hidden="true" />
+        ) : (
+          <UserPlus className="w-5 h-5" aria-hidden="true" />
+        )
+      }
+      size="lg"
+      footer={
+        <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2">
+          <Button variant="secondary" onClick={onClose} disabled={isSubmitting}>
+            Cancelar
+          </Button>
+          <Button
+            type="submit"
+            form={formId}
+            isLoading={isSubmitting}
+            icon={<Check className="w-4 h-4" aria-hidden="true" />}
+          >
+            {isEditing ? 'Salvar alterações' : 'Cadastrar cliente'}
+          </Button>
         </div>
+      }
+    >
+      {error && <FormAlert>{error}</FormAlert>}
 
-        {error && (
-          <div className="mb-5 p-3.5 rounded bg-red-50 border border-red-200 text-red-700 text-xs flex items-start gap-2">
-            <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
-            <span>{error}</span>
-          </div>
-        )}
-
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Nome / Razão Social */}
-            <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">
-                Nome / Razão Social <span className="text-red-500">*</span>
-              </label>
+      <form id={formId} onSubmit={handleSubmit} className="space-y-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <Field label="Nome / razão social" required>
+            {(props) => (
               <input
+                {...props}
                 type="text"
-                required
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="Ex: Apex Corp LTDA"
-                className="w-full px-3 py-2 text-sm bg-white border border-slate-300 rounded focus:outline-none focus:border-teal-600 focus:ring-2 focus:ring-teal-600/20 text-navy-900"
+                className={controlClass}
               />
-            </div>
+            )}
+          </Field>
 
-            {/* Nome Fantasia */}
-            <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">
-                Nome Fantasia (opcional)
-              </label>
+          <Field label="Nome fantasia">
+            {(props) => (
               <input
+                {...props}
                 type="text"
                 value={tradeName}
                 onChange={(e) => setTradeName(e.target.value)}
                 placeholder="Ex: Apex Corp"
-                className="w-full px-3 py-2 text-sm bg-white border border-slate-300 rounded focus:outline-none focus:border-teal-600 focus:ring-2 focus:ring-teal-600/20 text-navy-900"
+                className={controlClass}
               />
-            </div>
-          </div>
+            )}
+          </Field>
+        </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {/* Tipo de Documento */}
-            <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">
-                Tipo de Documento
-              </label>
-              <div className="grid grid-cols-2 gap-2">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <fieldset>
+            <legend className="block text-xs font-semibold text-slate-700 mb-1.5">
+              Tipo de documento
+            </legend>
+            <div className="grid grid-cols-2 gap-2">
+              {(['CNPJ', 'CPF'] as DocumentType[]).map((type) => (
                 <button
+                  key={type}
                   type="button"
-                  onClick={() => handleDocumentTypeChange('CNPJ')}
-                  className={`py-2 px-3 text-xs font-semibold rounded border transition-colors ${
-                    documentType === 'CNPJ'
+                  onClick={() => handleDocumentTypeChange(type)}
+                  aria-pressed={documentType === type}
+                  className={`py-2 px-3 text-xs font-semibold rounded-lg border transition-colors ${
+                    documentType === type
                       ? 'bg-teal-600 text-white border-teal-600'
                       : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-50'
                   }`}
                 >
-                  CNPJ (PJ)
+                  {type === 'CNPJ' ? 'CNPJ (PJ)' : 'CPF (PF)'}
                 </button>
-                <button
-                  type="button"
-                  onClick={() => handleDocumentTypeChange('CPF')}
-                  className={`py-2 px-3 text-xs font-semibold rounded border transition-colors ${
-                    documentType === 'CPF'
-                      ? 'bg-teal-600 text-white border-teal-600'
-                      : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-50'
-                  }`}
-                >
-                  CPF (PF)
-                </button>
-              </div>
+              ))}
             </div>
+          </fieldset>
 
-            {/* Número do Documento com máscara */}
-            <div className="md:col-span-2">
-              <label className="block text-xs font-semibold text-slate-700 mb-1">
-                Número do {documentType} <span className="text-red-500">*</span>
-              </label>
+          <Field
+            label={`Número do ${documentType}`}
+            required
+            error={documentError || undefined}
+            className="md:col-span-2"
+          >
+            {(props) => (
               <input
+                {...props}
                 type="text"
-                required
+                inputMode="numeric"
                 value={documentNumber}
                 onChange={handleDocumentNumberChange}
-                placeholder={documentType === 'CNPJ' ? '00.000.000/0000-00' : '000.000.000-00'}
-                className="w-full px-3 py-2 text-sm bg-white border border-slate-300 rounded focus:outline-none focus:border-teal-600 focus:ring-2 focus:ring-teal-600/20 text-navy-900 font-mono"
+                onBlur={handleDocumentBlur}
+                placeholder={
+                  documentType === 'CNPJ' ? '00.000.000/0000-00' : '000.000.000-00'
+                }
+                className={`${controlClass} font-mono`}
               />
-            </div>
-          </div>
+            )}
+          </Field>
+        </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* E-mail */}
-            <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">
-                E-mail de Contato
-              </label>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <Field label="E-mail de contato">
+            {(props) => (
               <input
+                {...props}
                 type="email"
+                autoComplete="off"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="contato@cliente.com.br"
-                className="w-full px-3 py-2 text-sm bg-white border border-slate-300 rounded focus:outline-none focus:border-teal-600 focus:ring-2 focus:ring-teal-600/20 text-navy-900"
+                className={controlClass}
               />
-            </div>
+            )}
+          </Field>
 
-            {/* Telefone / WhatsApp */}
-            <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">
-                Telefone / WhatsApp (com DDD)
-              </label>
+          <Field label="Telefone / WhatsApp" hint="Inclua o DDD.">
+            {(props) => (
               <input
-                type="text"
+                {...props}
+                type="tel"
+                inputMode="tel"
                 value={phone}
-                onChange={handlePhoneChange}
+                onChange={(e) => setPhone(maskPhoneInput(e.target.value))}
                 placeholder="(11) 98765-4321"
-                className="w-full px-3 py-2 text-sm bg-white border border-slate-300 rounded focus:outline-none focus:border-teal-600 focus:ring-2 focus:ring-teal-600/20 text-navy-900 font-mono"
+                className={`${controlClass} font-mono`}
               />
-            </div>
-          </div>
+            )}
+          </Field>
+        </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {/* Origem do Lead (RF-03) */}
-            <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">
-                Origem do Lead
-              </label>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <Field label="Origem do lead">
+            {(props) => (
               <select
+                {...props}
                 value={leadSource}
                 onChange={(e) => setLeadSource(e.target.value as LeadSource)}
-                className="w-full px-3 py-2 text-sm bg-white border border-slate-300 rounded focus:outline-none focus:border-teal-600 focus:ring-2 focus:ring-teal-600/20 text-navy-900"
+                className={controlClass}
               >
                 {LEAD_SOURCES.map((src) => (
                   <option key={src} value={src}>
@@ -341,17 +349,16 @@ export const ClientModal: React.FC<ClientModalProps> = ({
                   </option>
                 ))}
               </select>
-            </div>
+            )}
+          </Field>
 
-            {/* Etapa do Funil (RF-04) */}
-            <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">
-                Etapa do Funil
-              </label>
+          <Field label="Etapa do funil">
+            {(props) => (
               <select
+                {...props}
                 value={stage}
                 onChange={(e) => setStage(e.target.value as PipelineStage)}
-                className="w-full px-3 py-2 text-sm bg-white border border-slate-300 rounded focus:outline-none focus:border-teal-600 focus:ring-2 focus:ring-teal-600/20 text-navy-900"
+                className={controlClass}
               >
                 {PIPELINE_STAGES.map((stg) => (
                   <option key={stg} value={stg}>
@@ -359,17 +366,16 @@ export const ClientModal: React.FC<ClientModalProps> = ({
                   </option>
                 ))}
               </select>
-            </div>
+            )}
+          </Field>
 
-            {/* Prioridade (RF-06b) */}
-            <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">
-                Prioridade
-              </label>
+          <Field label="Prioridade">
+            {(props) => (
               <select
+                {...props}
                 value={priority}
                 onChange={(e) => setPriority(e.target.value as Priority)}
-                className="w-full px-3 py-2 text-sm bg-white border border-slate-300 rounded focus:outline-none focus:border-teal-600 focus:ring-2 focus:ring-teal-600/20 text-navy-900"
+                className={controlClass}
               >
                 {PRIORITIES.map((p) => (
                   <option key={p.value} value={p.value}>
@@ -377,23 +383,25 @@ export const ClientModal: React.FC<ClientModalProps> = ({
                   </option>
                 ))}
               </select>
-            </div>
-          </div>
+            )}
+          </Field>
+        </div>
 
-          {/* Responsável (RF-06a) */}
-          <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1">
-              Responsável pelo Lead (opcional)
-            </label>
+        <Field
+          label="Responsável pelo lead"
+          hint="Leads sem responsável aparecem marcados como “Sem responsável” nas listas."
+        >
+          {(props) => (
             <select
+              {...props}
               value={ownerId}
               onChange={(e) => setOwnerId(e.target.value)}
-              className="w-full px-3 py-2 text-sm bg-white border border-slate-300 rounded focus:outline-none focus:border-teal-600 focus:ring-2 focus:ring-teal-600/20 text-navy-900"
+              className={controlClass}
             >
               <option value="">Sem responsável</option>
               {currentOwnerIsInactive && (
                 <option value={clientToEdit.owner!.id} disabled>
-                  {clientToEdit.owner!.name} (Inativo)
+                  {clientToEdit.owner!.name} (inativo)
                 </option>
               )}
               {activeUsers.map((u) => (
@@ -402,48 +410,22 @@ export const ClientModal: React.FC<ClientModalProps> = ({
                 </option>
               ))}
             </select>
-            <p className="text-[11px] text-slate-500 mt-1">
-              Leads sem responsável aparecem explicitamente como &quot;Sem responsável&quot;.
-            </p>
-          </div>
+          )}
+        </Field>
 
-          {/* Observações Gerais */}
-          <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1">
-              Observações Gerais
-            </label>
+        <Field label="Observações gerais">
+          {(props) => (
             <textarea
+              {...props}
               rows={3}
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              placeholder="Informações adicionais, histórico inicial ou expectativas do cliente..."
-              className="w-full px-3 py-2 text-sm bg-white border border-slate-300 rounded focus:outline-none focus:border-teal-600 focus:ring-2 focus:ring-teal-600/20 text-navy-900"
+              placeholder="Contexto inicial, expectativas do cliente, combinados…"
+              className={controlClass}
             />
-          </div>
-
-          <div className="pt-4 flex justify-end gap-2 border-t border-slate-100">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100 rounded border border-slate-200"
-            >
-              Cancelar
-            </button>
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className="px-5 py-2 text-sm font-medium text-white bg-teal-600 hover:bg-teal-700 rounded flex items-center gap-2 disabled:opacity-50 shadow-sm"
-            >
-              {isSubmitting ? (
-                <span className="inline-block animate-spin border-2 border-white border-t-transparent rounded-full w-4 h-4" />
-              ) : (
-                <Check className="w-4 h-4" />
-              )}
-              <span>{isEditing ? 'Salvar Alterações' : 'Cadastrar Lead'}</span>
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
+          )}
+        </Field>
+      </form>
+    </Modal>
   );
 };

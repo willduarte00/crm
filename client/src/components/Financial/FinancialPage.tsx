@@ -1,6 +1,10 @@
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { apiFetch } from '../../services/api';
+import { apiFetch, apiDownload, errorMessage } from '../../services/api';
+import { useDebouncedValue } from '../../hooks/useDebouncedValue';
+import { Button, IconButton } from '../ui/Button';
+import { LoadingState, EmptyState, ErrorState } from '../ui/States';
+import { controlClassSm } from '../ui/Field';
 import { PaginatedPaymentsResponse } from '../../types/payment';
 import {
   formatDateBR,
@@ -24,19 +28,47 @@ import {
   ChevronRight,
   TrendingUp,
   Wallet,
-  AlertCircle,
   Eye,
   CreditCard,
   Download,
   MessageSquare,
+  X,
 } from 'lucide-react';
+import { toast } from 'sonner';
+
+const PAGE_SIZE = 25;
+
+/**
+ * Janela de páginas em volta da atual, sempre com primeira e última à vista.
+ * Antes a paginação renderizava um botão por página — com dezenas de meses
+ * de cobranças a barra estourava a largura da tela.
+ */
+function pageWindow(current: number, total: number): (number | 'gap')[] {
+  if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);
+
+  const pages = new Set<number>([1, total, current]);
+  if (current - 1 > 1) pages.add(current - 1);
+  if (current + 1 < total) pages.add(current + 1);
+  if (current <= 3) pages.add(2).add(3).add(4);
+  if (current >= total - 2) pages.add(total - 1).add(total - 2).add(total - 3);
+
+  const sorted = [...pages].filter((n) => n >= 1 && n <= total).sort((a, b) => a - b);
+
+  const result: (number | 'gap')[] = [];
+  sorted.forEach((n, i) => {
+    if (i > 0 && n - sorted[i - 1] > 1) result.push('gap');
+    result.push(n);
+  });
+  return result;
+}
 
 export const FinancialPage: React.FC = () => {
   const [page, setPage] = useState(1);
   const [statusFilter, setStatusFilter] = useState('all');
   const [referenceMonthFilter, setReferenceMonthFilter] = useState('');
   const [search, setSearch] = useState('');
-  const [debouncedSearch, setDebouncedSearch] = useState('');
+  const debouncedSearch = useDebouncedValue(search);
+  const [isExporting, setIsExporting] = useState(false);
 
   // Modais
   const [selectedPaymentId, setSelectedPaymentId] = useState<string | null>(null);
@@ -50,14 +82,10 @@ export const FinancialPage: React.FC = () => {
     queryFn: () => apiFetch<AgencySettings>('/api/settings').catch(() => null as any),
   });
 
-  // Debounce da busca
+  // Volta para a primeira página sempre que a busca efetiva muda.
   React.useEffect(() => {
-    const timer = setTimeout(() => {
-      setDebouncedSearch(search);
-      setPage(1);
-    }, 300);
-    return () => clearTimeout(timer);
-  }, [search]);
+    setPage(1);
+  }, [debouncedSearch]);
 
   // Query para buscar cobranças
   const { data, isLoading, isError, refetch } = useQuery<PaginatedPaymentsResponse>({
@@ -65,7 +93,7 @@ export const FinancialPage: React.FC = () => {
     queryFn: () => {
       const params = new URLSearchParams();
       params.set('page', page.toString());
-      params.set('limit', '25');
+      params.set('limit', String(PAGE_SIZE));
       if (statusFilter && statusFilter !== 'all') params.set('status', statusFilter);
       if (referenceMonthFilter) params.set('referenceMonth', referenceMonthFilter);
       if (debouncedSearch.trim()) params.set('search', debouncedSearch.trim());
@@ -82,6 +110,29 @@ export const FinancialPage: React.FC = () => {
   const handleOpenDetails = (id: string) => {
     setSelectedPaymentId(id);
     setIsDetailsModalOpen(true);
+  };
+
+  const hasActiveFilters =
+    search.trim() !== '' || statusFilter !== 'all' || referenceMonthFilter !== '';
+
+  const handleClearFilters = () => {
+    setSearch('');
+    setStatusFilter('all');
+    setReferenceMonthFilter('');
+    setPage(1);
+  };
+
+  const handleExport = async () => {
+    if (isExporting) return;
+    try {
+      setIsExporting(true);
+      await apiDownload('/api/export/payments', 'cobrancas.csv');
+      toast.success('Exportação concluída.');
+    } catch (err) {
+      toast.error(errorMessage(err, 'Não foi possível exportar as cobranças.'));
+    } finally {
+      setIsExporting(false);
+    }
   };
 
   const renderStatusBadge = (effectiveStatus?: string) => {
@@ -121,38 +172,38 @@ export const FinancialPage: React.FC = () => {
     <div className="space-y-6">
       {/* Cabeçalho da Página */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h2 className="text-xl font-bold text-navy-900 font-display-lg">
-            Financeiro e Cobranças
-          </h2>
-          <p className="text-xs text-slate-500 mt-1">
-            Gestão de faturamento, controle de cobranças e registro manual de pagamentos.
+        <div className="min-w-0">
+          <h1 className="text-2xl font-bold text-navy-900 tabular-nums tracking-tight">
+            Financeiro e cobranças
+          </h1>
+          <p className="text-sm text-slate-500 mt-0.5">
+            Faturamento, controle de cobranças e registro manual de pagamentos.
           </p>
         </div>
-        <div className="flex items-center gap-3">
-          <a
-            href="/api/export/payments"
-            download
-            className="flex items-center gap-2 px-3.5 py-2 bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 rounded-lg text-xs font-semibold transition-colors shadow-2xs"
+        <div className="flex items-center gap-2 flex-shrink-0">
+          <Button
+            variant="secondary"
+            onClick={handleExport}
+            isLoading={isExporting}
+            icon={<Download className="w-4 h-4" aria-hidden="true" />}
           >
-            <Download className="w-4 h-4 text-slate-500" />
-            <span>Exportar CSV</span>
-          </a>
+            <span className="hidden sm:inline">Exportar CSV</span>
+            <span className="sm:hidden">CSV</span>
+          </Button>
 
-          <button
+          <Button
             onClick={() => setIsCreateModalOpen(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-lg text-xs font-bold transition-colors shadow-xs"
+            icon={<Plus className="w-4 h-4" aria-hidden="true" />}
           >
-            <Plus className="w-4 h-4" />
-            <span>Nova cobrança</span>
-          </button>
+            Nova cobrança
+          </Button>
         </div>
       </div>
 
       {/* KPI Bento Grid */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {/* KPI 1: Faturado (Competência) */}
-        <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-xs flex flex-col justify-between relative overflow-hidden">
+        <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-xs flex flex-col justify-between">
           <div className="flex items-center justify-between">
             <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
               Total Faturado (Competência)
@@ -162,17 +213,17 @@ export const FinancialPage: React.FC = () => {
             </div>
           </div>
           <div className="mt-3">
-            <div className="text-2xl font-bold text-navy-900 font-headline-md">
+            <div className="text-2xl font-bold text-navy-900 tabular-nums ">
               {formatCurrencyBRL(summary?.invoicedCents ?? 0)}
             </div>
-            <p className="text-[11px] text-slate-400 mt-1">
+            <p className="text-[11px] text-slate-500 mt-1">
               Cobranças geradas para o mês corrente
             </p>
           </div>
         </div>
 
         {/* KPI 2: Recebido (Caixa) */}
-        <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-xs flex flex-col justify-between relative overflow-hidden">
+        <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-xs flex flex-col justify-between">
           <div className="flex items-center justify-between">
             <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
               Total Recebido (Caixa)
@@ -182,17 +233,17 @@ export const FinancialPage: React.FC = () => {
             </div>
           </div>
           <div className="mt-3">
-            <div className="text-2xl font-bold text-navy-900 font-headline-md">
+            <div className="text-2xl font-bold text-navy-900 tabular-nums ">
               {formatCurrencyBRL(summary?.receivedCents ?? 0)}
             </div>
-            <p className="text-[11px] text-slate-400 mt-1">
+            <p className="text-[11px] text-slate-500 mt-1">
               Pagamentos confirmados neste mês
             </p>
           </div>
         </div>
 
         {/* KPI 3: Inadimplência / Atrasadas */}
-        <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-xs flex flex-col justify-between relative overflow-hidden">
+        <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-xs flex flex-col justify-between">
           <div className="flex items-center justify-between">
             <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
               Inadimplência (Atrasadas)
@@ -202,10 +253,10 @@ export const FinancialPage: React.FC = () => {
             </div>
           </div>
           <div className="mt-3">
-            <div className="text-2xl font-bold text-rose-700 font-headline-md">
+            <div className="text-2xl font-bold text-rose-700 tabular-nums ">
               {formatCurrencyBRL(summary?.overdueCents ?? 0)}
             </div>
-            <p className="text-[11px] text-slate-400 mt-1">
+            <p className="text-[11px] text-slate-500 mt-1">
               {summary?.overdueCount ?? 0} cobrança(s) pendente(s) com vencimento vencido
             </p>
           </div>
@@ -219,24 +270,35 @@ export const FinancialPage: React.FC = () => {
           <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
             {/* Campo de Busca */}
             <div className="relative flex-grow sm:flex-grow-0 sm:w-72">
-              <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+              <label htmlFor="payments-search" className="sr-only">
+                Buscar cobranças por cliente ou número
+              </label>
+              <Search
+                className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none"
+                aria-hidden="true"
+              />
               <input
-                type="text"
+                id="payments-search"
+                type="search"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Buscar cliente ou número de cobrança..."
-                className="w-full pl-9 pr-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs text-navy-900 focus:border-teal-500 focus:ring-1 focus:ring-teal-500/20 outline-none transition-all placeholder:text-slate-400"
+                className={controlClassSm + ' pl-9'}
               />
             </div>
 
             {/* Filtro por Status */}
+            <label htmlFor="payments-status" className="sr-only">
+              Filtrar por status da cobrança
+            </label>
             <select
+              id="payments-status"
               value={statusFilter}
               onChange={(e) => {
                 setStatusFilter(e.target.value);
                 setPage(1);
               }}
-              className="bg-white border border-slate-200 rounded-lg py-1.5 px-3 text-xs text-navy-900 focus:border-teal-500 focus:ring-1 focus:ring-teal-500/20 outline-none font-medium"
+              className={controlClassSm + ' sm:w-auto'}
             >
               <option value="all">Todos os status</option>
               <option value="Pendente">Pendentes</option>
@@ -246,9 +308,15 @@ export const FinancialPage: React.FC = () => {
             </select>
 
             {/* Filtro por Mês de Referência */}
-            <div className="flex items-center gap-1.5 bg-white border border-slate-200 rounded-lg px-2.5 py-1">
-              <span className="text-[11px] text-slate-400 font-medium">Mês:</span>
+            <div className="flex items-center gap-1.5 bg-white border border-slate-300 rounded-lg px-2.5 py-1">
+              <label
+                htmlFor="payments-month"
+                className="text-[11px] text-slate-600 font-medium"
+              >
+                Mês:
+              </label>
               <input
+                id="payments-month"
                 type="month"
                 value={referenceMonthFilter}
                 onChange={(e) => {
@@ -258,66 +326,87 @@ export const FinancialPage: React.FC = () => {
                 className="text-xs text-navy-900 border-none p-0 focus:ring-0 outline-none bg-transparent"
               />
               {referenceMonthFilter && (
-                <button
+                <IconButton
+                  label="Limpar filtro de mês"
+                  tone="danger"
                   onClick={() => {
                     setReferenceMonthFilter('');
                     setPage(1);
                   }}
-                  className="text-[11px] text-slate-400 hover:text-rose-600 ml-1 font-bold"
+                  className="!p-1 ml-0.5"
                 >
-                  ✕
-                </button>
+                  <X className="w-3.5 h-3.5" aria-hidden="true" />
+                </IconButton>
               )}
             </div>
           </div>
 
-          <div className="text-xs text-slate-500 font-medium">
+          <p className="text-xs text-slate-600 font-medium" aria-live="polite">
             {total > 0
-              ? `Mostrando ${(page - 1) * 25 + 1}-${Math.min(page * 25, total)} de ${total} cobranças`
-              : '0 cobranças'}
-          </div>
+              ? `Mostrando ${(page - 1) * PAGE_SIZE + 1}–${Math.min(
+                  page * PAGE_SIZE,
+                  total
+                )} de ${total} ${total === 1 ? 'cobrança' : 'cobranças'}`
+              : 'Nenhuma cobrança'}
+          </p>
         </div>
 
         {/* Tabela de Cobranças */}
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
+        {isLoading ? (
+          <LoadingState message="Carregando cobranças..." />
+        ) : isError ? (
+          <ErrorState
+            title="Não foi possível carregar as cobranças"
+            message="A lista não pôde ser lida do servidor. Verifique sua conexão e tente novamente."
+            onRetry={() => refetch()}
+          />
+        ) : payments.length === 0 ? (
+          <EmptyState
+            icon={<Receipt className="w-6 h-6" />}
+            title={
+              hasActiveFilters
+                ? 'Nenhuma cobrança corresponde aos filtros'
+                : 'Nenhuma cobrança registrada ainda'
+            }
+            message={
+              hasActiveFilters
+                ? 'Ajuste os filtros ou limpe-os para ver todas as cobranças.'
+                : 'As cobranças recorrentes são geradas a partir dos contratos. Você também pode criar uma cobrança avulsa.'
+            }
+            action={
+              hasActiveFilters ? (
+                <Button variant="secondary" size="sm" onClick={handleClearFilters}>
+                  Limpar filtros
+                </Button>
+              ) : (
+                <Button
+                  size="sm"
+                  onClick={() => setIsCreateModalOpen(true)}
+                  icon={<Plus className="w-4 h-4" aria-hidden="true" />}
+                >
+                  Nova cobrança
+                </Button>
+              )
+            }
+          />
+        ) : (
+        <div className="table-scroll">
+          <table className="w-full min-w-[64rem] text-left border-collapse">
+            <caption className="sr-only">Cobranças emitidas e seu status de pagamento.</caption>
             <thead>
-              <tr className="bg-slate-50 border-b border-slate-200 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
-                <th className="py-3 px-4">Cobrança</th>
-                <th className="py-3 px-4">Cliente / Contrato</th>
-                <th className="py-3 px-4">Mês de Ref.</th>
-                <th className="py-3 px-4">Vencimento</th>
-                <th className="py-3 px-4">Valor (R$)</th>
-                <th className="py-3 px-4">Status</th>
-                <th className="py-3 px-4 text-center">Nota Fiscal</th>
-                <th className="py-3 px-4 text-right">Ações</th>
+              <tr className="bg-slate-50 border-b border-slate-200 text-[11px] font-bold text-slate-600 uppercase tracking-wider">
+                <th scope="col" className="py-3 px-4">Cobrança</th>
+                <th scope="col" className="py-3 px-4">Cliente / contrato</th>
+                <th scope="col" className="py-3 px-4">Mês de ref.</th>
+                <th scope="col" className="py-3 px-4">Vencimento</th>
+                <th scope="col" className="py-3 px-4">Valor</th>
+                <th scope="col" className="py-3 px-4">Status</th>
+                <th scope="col" className="py-3 px-4 text-center">Nota fiscal</th>
+                <th scope="col" className="py-3 px-4 text-right">Ações</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100 text-xs text-navy-900 font-data-tabular">
-              {isLoading ? (
-                <tr>
-                  <td colSpan={8} className="py-12 text-center text-slate-400">
-                    Carregando cobranças...
-                  </td>
-                </tr>
-              ) : isError ? (
-                <tr>
-                  <td colSpan={8} className="py-12 text-center text-rose-600">
-                    <AlertCircle className="w-6 h-6 mx-auto mb-1" />
-                    Ocorreu um erro ao carregar as cobranças.
-                  </td>
-                </tr>
-              ) : payments.length === 0 ? (
-                <tr>
-                  <td colSpan={8} className="py-12 text-center text-slate-400 bg-slate-50/30">
-                    <Receipt className="w-8 h-8 mx-auto mb-2 text-slate-300" />
-                    <p className="font-semibold text-slate-600">Nenhuma cobrança encontrada</p>
-                    <p className="text-[11px] text-slate-400 mt-0.5">
-                      Tente alterar os filtros ou crie uma nova cobrança manual.
-                    </p>
-                  </td>
-                </tr>
-              ) : (
+            <tbody className="divide-y divide-slate-100 text-xs text-navy-900 tabular-nums">
+              {(
                 payments.map((p) => (
                   <tr key={p.id} className="hover:bg-slate-50/70 transition-colors group">
                     {/* Número da Cobrança */}
@@ -383,7 +472,9 @@ export const FinancialPage: React.FC = () => {
                     {/* Ações */}
                     <td className="py-3 px-4 text-right">
                       <div className="flex items-center justify-end gap-1.5">
-                        <button
+                        <IconButton
+                          label={'Enviar lembrete da cobrança ' + p.number + ' por WhatsApp'}
+                          tone="whatsapp"
                           onClick={() =>
                             setWhatsAppModalData({
                               nome: p.contract?.client?.name,
@@ -397,27 +488,26 @@ export const FinancialPage: React.FC = () => {
                               tipoChavePix: settings?.pixKeyType,
                             })
                           }
-                          title="Enviar lembrete / NF via WhatsApp"
-                          className="p-1.5 text-slate-500 hover:text-[#25D366] hover:bg-[#25D366]/10 rounded transition-colors"
                         >
-                          <MessageSquare className="w-4 h-4" />
-                        </button>
+                          <MessageSquare className="w-4 h-4" aria-hidden="true" />
+                        </IconButton>
                         {p.status !== 'Pago' && p.status !== 'Cancelado' && (
                           <button
+                            type="button"
                             onClick={() => handleOpenDetails(p.id)}
-                            className="px-2.5 py-1 bg-teal-50 hover:bg-teal-100 text-teal-700 text-[11px] font-bold rounded transition-colors flex items-center gap-1 border border-teal-200/60"
+                            aria-label={'Registrar pagamento da cobrança ' + p.number}
+                            className="px-2.5 py-1.5 bg-teal-50 hover:bg-teal-100 text-teal-800 text-[11px] font-bold rounded-lg transition-colors flex items-center gap-1 border border-teal-200 whitespace-nowrap"
                           >
-                            <CreditCard className="w-3 h-3" />
+                            <CreditCard className="w-3 h-3" aria-hidden="true" />
                             Dar baixa
                           </button>
                         )}
-                        <button
+                        <IconButton
+                          label={'Ver detalhes da cobrança ' + p.number}
                           onClick={() => handleOpenDetails(p.id)}
-                          title="Visualizar detalhes"
-                          className="p-1.5 text-slate-400 hover:text-navy-900 hover:bg-slate-100 rounded transition-colors"
                         >
-                          <Eye className="w-4 h-4" />
-                        </button>
+                          <Eye className="w-4 h-4" aria-hidden="true" />
+                        </IconButton>
                       </div>
                     </td>
                   </tr>
@@ -426,44 +516,65 @@ export const FinancialPage: React.FC = () => {
             </tbody>
           </table>
         </div>
+        )}
 
         {/* Paginação */}
         {totalPages > 1 && (
-          <div className="p-4 border-t border-slate-200 bg-slate-50 flex items-center justify-between">
-            <button
+          <nav
+            aria-label="Paginação de cobranças"
+            className="p-4 border-t border-slate-200 bg-slate-50 flex items-center justify-between gap-3"
+          >
+            <Button
+              variant="secondary"
+              size="sm"
               onClick={() => setPage((p) => Math.max(1, p - 1))}
               disabled={page <= 1}
-              className="flex items-center gap-1 px-3 py-1.5 border border-slate-200 rounded-lg text-xs font-medium text-slate-700 bg-white hover:bg-slate-100 disabled:opacity-40 transition-colors"
+              icon={<ChevronLeft className="w-3.5 h-3.5" aria-hidden="true" />}
             >
-              <ChevronLeft className="w-3.5 h-3.5" />
-              Anterior
-            </button>
+              <span className="hidden sm:inline">Anterior</span>
+              <span className="sr-only sm:hidden">Página anterior</span>
+            </Button>
 
-            <div className="flex items-center gap-1">
-              {Array.from({ length: totalPages }, (_, i) => i + 1).map((num) => (
-                <button
-                  key={num}
-                  onClick={() => setPage(num)}
-                  className={`w-7 h-7 rounded text-xs font-bold transition-colors ${
-                    page === num
-                      ? 'bg-teal-600 text-white'
-                      : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-100'
-                  }`}
-                >
-                  {num}
-                </button>
-              ))}
+            <div className="flex items-center gap-1 overflow-hidden">
+              {pageWindow(page, totalPages).map((entry, i) =>
+                entry === 'gap' ? (
+                  <span
+                    key={'gap-' + i}
+                    aria-hidden="true"
+                    className="w-5 text-center text-xs text-slate-400"
+                  >
+                    …
+                  </span>
+                ) : (
+                  <button
+                    key={entry}
+                    type="button"
+                    onClick={() => setPage(entry)}
+                    aria-label={'Ir para a página ' + entry}
+                    aria-current={page === entry ? 'page' : undefined}
+                    className={`w-8 h-8 rounded-lg text-xs font-bold tabular-nums transition-colors ${
+                      page === entry
+                        ? 'bg-teal-600 text-white'
+                        : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-100'
+                    }`}
+                  >
+                    {entry}
+                  </button>
+                )
+              )}
             </div>
 
-            <button
+            <Button
+              variant="secondary"
+              size="sm"
               onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
               disabled={page >= totalPages}
-              className="flex items-center gap-1 px-3 py-1.5 border border-slate-200 rounded-lg text-xs font-medium text-slate-700 bg-white hover:bg-slate-100 disabled:opacity-40 transition-colors"
             >
-              Próximo
-              <ChevronRight className="w-3.5 h-3.5" />
-            </button>
-          </div>
+              <span className="hidden sm:inline">Próximo</span>
+              <span className="sr-only sm:hidden">Próxima página</span>
+              <ChevronRight className="w-3.5 h-3.5" aria-hidden="true" />
+            </Button>
+          </nav>
         )}
       </div>
 

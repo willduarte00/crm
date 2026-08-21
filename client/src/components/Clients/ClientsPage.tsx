@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   Client,
   LeadSource,
@@ -7,11 +7,13 @@ import {
   PaginatedClientsResponse,
 } from '../../types/client';
 import { User } from '../../types';
-import { apiFetch } from '../../services/api';
-import {
-  formatDocument,
-  formatPhoneBR,
-} from '../../utils/formatters';
+import { apiFetch, apiDownload, errorMessage } from '../../services/api';
+import { useDebouncedValue } from '../../hooks/useDebouncedValue';
+import { useConfirm } from '../ui/ConfirmDialog';
+import { Button, IconButton } from '../ui/Button';
+import { LoadingState, EmptyState, ErrorState } from '../ui/States';
+import { controlClassSm } from '../ui/Field';
+import { formatDocument, formatPhoneBR } from '../../utils/formatters';
 import { ClientModal } from './ClientModal';
 import { ClientDetailsModal } from './ClientDetailsModal';
 import { BatchReassignModal } from './BatchReassignModal';
@@ -27,7 +29,6 @@ import {
   Mail,
   ChevronLeft,
   ChevronRight,
-  Loader2,
   AlertTriangle,
   X,
   Download,
@@ -62,7 +63,10 @@ const SERVICE_TYPES = [
   'Pacote Completo',
 ];
 
-const STAGE_STYLES: Record<PipelineStage, { bg: string; text: string; border: string; dot: string }> = {
+const STAGE_STYLES: Record<
+  PipelineStage,
+  { bg: string; text: string; border: string; dot: string }
+> = {
   'Novo Lead': {
     bg: 'bg-slate-100',
     text: 'text-slate-800',
@@ -107,10 +111,20 @@ const PRIORITY_BARS: Record<Priority, string> = {
   baixa: 'bg-teal-500',
 };
 
+const PRIORITY_LABELS: Record<Priority, string> = {
+  alta: 'Alta',
+  media: 'Média',
+  baixa: 'Baixa',
+};
+
 export const ClientsPage: React.FC = () => {
+  const confirm = useConfirm();
+
   const [clients, setClients] = useState<Client[]>([]);
   const [users, setUsers] = useState<User[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
 
   // Paginação e filtros
   const [page, setPage] = useState(1);
@@ -119,6 +133,7 @@ export const ClientsPage: React.FC = () => {
   const [totalRecords, setTotalRecords] = useState(0);
 
   const [search, setSearch] = useState('');
+  const debouncedSearch = useDebouncedValue(search);
   const [stageFilter, setStageFilter] = useState('all');
   const [sourceFilter, setSourceFilter] = useState('all');
   const [serviceFilter, setServiceFilter] = useState('all');
@@ -135,42 +150,67 @@ export const ClientsPage: React.FC = () => {
   const [isBatchReassignOpen, setIsBatchReassignOpen] = useState(false);
   const [whatsAppModalData, setWhatsAppModalData] = useState<WhatsAppModalData | null>(null);
 
-  // Carregar usuários para os filtros e selects
+  // Impede que um duplo clique dispare dois DELETE para o mesmo registro.
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+
+  // Descarta respostas de buscas antigas que chegarem fora de ordem.
+  const requestIdRef = useRef(0);
+
   const fetchUsers = async () => {
     try {
       const data = await apiFetch<User[]>('/api/users');
       setUsers(data);
     } catch {
-      // Ignora erro se usuário não for admin
+      // Membros não-admin não têm acesso à lista de usuários; os filtros
+      // por responsável simplesmente não são populados.
     }
   };
 
-  // Carregar clientes
   const fetchClients = useCallback(async () => {
+    const requestId = ++requestIdRef.current;
     try {
       setIsLoading(true);
+      setLoadError(false);
+
       const params = new URLSearchParams({
         page: String(page),
         limit: String(limit),
       });
 
-      if (search.trim()) params.append('search', search.trim());
+      if (debouncedSearch.trim()) params.append('search', debouncedSearch.trim());
       if (stageFilter !== 'all') params.append('stage', stageFilter);
       if (sourceFilter !== 'all') params.append('leadSource', sourceFilter);
       if (serviceFilter !== 'all') params.append('serviceType', serviceFilter);
       if (ownerFilter !== 'all') params.append('ownerId', ownerFilter);
       if (priorityFilter !== 'all') params.append('priority', priorityFilter);
 
-      const res = await apiFetch<PaginatedClientsResponse>(`/api/clients?${params.toString()}`);
+      const res = await apiFetch<PaginatedClientsResponse>(
+        `/api/clients?${params.toString()}`
+      );
+
+      if (requestId !== requestIdRef.current) return;
       setClients(res.data);
       setTotalPages(res.pagination.totalPages);
       setTotalRecords(res.pagination.total);
-    } catch (err: any) {
-      toast.error('Erro ao carregar lista de clientes');
+    } catch {
+      if (requestId !== requestIdRef.current) return;
+      setClients([]);
+      setTotalRecords(0);
+      setTotalPages(1);
+      setLoadError(true);
     } finally {
-      setIsLoading(false);
+      if (requestId === requestIdRef.current) setIsLoading(false);
     }
-  }, [page, limit, search, stageFilter, sourceFilter, serviceFilter, ownerFilter, priorityFilter]);
+  }, [
+    page,
+    limit,
+    debouncedSearch,
+    stageFilter,
+    sourceFilter,
+    serviceFilter,
+    ownerFilter,
+    priorityFilter,
+  ]);
 
   useEffect(() => {
     fetchUsers();
@@ -180,27 +220,53 @@ export const ClientsPage: React.FC = () => {
     fetchClients();
   }, [fetchClients]);
 
-  // Soft delete com confirmação
+  // Volta para a primeira página sempre que a busca efetiva muda.
+  useEffect(() => {
+    setPage(1);
+  }, [debouncedSearch]);
+
   const handleDelete = async (client: Client) => {
-    if (
-      !confirm(
-        `Deseja realmente excluir o cliente "${client.name}"? O registro será arquivado no sistema.`
-      )
-    ) {
-      return;
-    }
+    if (deletingId) return;
+
+    const confirmed = await confirm({
+      title: 'Excluir cliente',
+      tone: 'danger',
+      confirmLabel: 'Excluir cliente',
+      message: (
+        <>
+          O cliente <strong className="text-navy-900">{client.name}</strong> será
+          arquivado e deixará de aparecer nas listas, no pipeline e nos relatórios.
+          Contratos e cobranças já registrados são preservados.
+        </>
+      ),
+    });
+    if (!confirmed) return;
 
     try {
-      await apiFetch(`/api/clients/${client.id}`, {
-        method: 'DELETE',
-      });
-      toast.success(`Cliente "${client.name}" excluído com sucesso`);
+      setDeletingId(client.id);
+      await apiFetch(`/api/clients/${client.id}`, { method: 'DELETE' });
+      toast.success(`Cliente "${client.name}" excluído.`);
       if (isDetailsModalOpen && selectedClientId === client.id) {
         setIsDetailsModalOpen(false);
       }
       fetchClients();
-    } catch (err: any) {
-      toast.error('Erro ao excluir cliente');
+    } catch (err) {
+      toast.error(errorMessage(err, 'Não foi possível excluir o cliente.'));
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
+  const handleExport = async () => {
+    if (isExporting) return;
+    try {
+      setIsExporting(true);
+      await apiDownload('/api/export/clients', 'clientes.csv');
+      toast.success('Exportação concluída.');
+    } catch (err) {
+      toast.error(errorMessage(err, 'Não foi possível exportar os clientes.'));
+    } finally {
+      setIsExporting(false);
     }
   };
 
@@ -248,67 +314,76 @@ export const ClientsPage: React.FC = () => {
   const inactiveClientIds = isInactiveOwnerFiltered ? clients.map((c) => c.id) : [];
 
   return (
-    <div className="space-y-6">
-      {/* Header da Página */}
+    <div className="space-y-6 min-w-0">
+      {/* Cabeçalho da página */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
+        <div className="min-w-0">
           <h1 className="text-2xl font-bold text-navy-900 tracking-tight">
-            Clientes & Leads
+            Clientes e leads
           </h1>
           <p className="text-sm text-slate-500 mt-0.5">
-            Gerencie o pipeline comercial, base de contatos e histórico de atendimentos
+            Gerencie o pipeline comercial, a base de contatos e o histórico de atendimentos.
           </p>
         </div>
 
-        <div className="flex items-center gap-3">
-          <a
-            href="/api/export/clients"
-            download
-            className="inline-flex items-center justify-center gap-2 px-3.5 py-2 bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 text-sm font-medium rounded transition-colors shadow-2xs"
+        <div className="flex items-center gap-2 flex-shrink-0">
+          <Button
+            variant="secondary"
+            onClick={handleExport}
+            isLoading={isExporting}
+            icon={<Download className="w-4 h-4" aria-hidden="true" />}
           >
-            <Download className="w-4 h-4 text-slate-500" />
-            <span>Exportar CSV</span>
-          </a>
+            <span className="hidden sm:inline">Exportar CSV</span>
+            <span className="sm:hidden">CSV</span>
+          </Button>
 
-          <button
+          <Button
             onClick={handleOpenNew}
-            className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white text-sm font-medium rounded transition-colors shadow-sm"
+            icon={<UserPlus className="w-4 h-4" aria-hidden="true" />}
           >
-            <UserPlus className="w-4 h-4" />
-            <span>Novo Cliente</span>
-          </button>
+            Novo cliente
+          </Button>
         </div>
       </div>
 
-      {/* Barra de Filtros e Busca */}
-      <div className="bg-white p-4 rounded-lg border border-slate-200 shadow-sm space-y-3">
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-3">
-          {/* Busca Textual */}
-          <div className="md:col-span-4 relative">
-            <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+      {/* Filtros e busca */}
+      <section
+        aria-label="Filtros da lista de clientes"
+        className="bg-white p-4 rounded-xl border border-slate-200 shadow-xs space-y-3"
+      >
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-12 gap-3">
+          <div className="sm:col-span-2 xl:col-span-4 relative">
+            <label htmlFor="clients-search" className="sr-only">
+              Buscar clientes
+            </label>
+            <Search
+              className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none"
+              aria-hidden="true"
+            />
             <input
-              type="text"
+              id="clients-search"
+              type="search"
               value={search}
-              onChange={(e) => {
-                setSearch(e.target.value);
-                setPage(1);
-              }}
-              placeholder="Buscar por nome, documento, telefone, e-mail..."
-              className="w-full pl-9 pr-3 py-1.5 text-xs bg-white border border-slate-300 rounded focus:outline-none focus:border-teal-600 focus:ring-2 focus:ring-teal-600/20 text-navy-900 placeholder:text-slate-400"
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Buscar por nome, documento, telefone ou e-mail…"
+              className={`${controlClassSm} pl-9`}
             />
           </div>
 
-          {/* Filtro por Etapa (RF-04) */}
-          <div className="md:col-span-2">
+          <div className="xl:col-span-2">
+            <label htmlFor="clients-stage" className="sr-only">
+              Filtrar por etapa do funil
+            </label>
             <select
+              id="clients-stage"
               value={stageFilter}
               onChange={(e) => {
                 setStageFilter(e.target.value);
                 setPage(1);
               }}
-              className="w-full px-2.5 py-1.5 text-xs bg-white border border-slate-300 rounded focus:outline-none focus:border-teal-600 text-navy-900"
+              className={controlClassSm}
             >
-              <option value="all">Todas as Etapas</option>
+              <option value="all">Todas as etapas</option>
               {PIPELINE_STAGES.map((stg) => (
                 <option key={stg} value={stg}>
                   {stg}
@@ -317,17 +392,20 @@ export const ClientsPage: React.FC = () => {
             </select>
           </div>
 
-          {/* Filtro por Origem (RF-03) */}
-          <div className="md:col-span-2">
+          <div className="xl:col-span-2">
+            <label htmlFor="clients-source" className="sr-only">
+              Filtrar por origem do lead
+            </label>
             <select
+              id="clients-source"
               value={sourceFilter}
               onChange={(e) => {
                 setSourceFilter(e.target.value);
                 setPage(1);
               }}
-              className="w-full px-2.5 py-1.5 text-xs bg-white border border-slate-300 rounded focus:outline-none focus:border-teal-600 text-navy-900"
+              className={controlClassSm}
             >
-              <option value="all">Todas as Origens</option>
+              <option value="all">Todas as origens</option>
               {LEAD_SOURCES.map((src) => (
                 <option key={src} value={src}>
                   {src}
@@ -336,17 +414,20 @@ export const ClientsPage: React.FC = () => {
             </select>
           </div>
 
-          {/* Filtro por Tipo de Serviço (RF-10) */}
-          <div className="md:col-span-2">
+          <div className="xl:col-span-2">
+            <label htmlFor="clients-service" className="sr-only">
+              Filtrar por tipo de serviço
+            </label>
             <select
+              id="clients-service"
               value={serviceFilter}
               onChange={(e) => {
                 setServiceFilter(e.target.value);
                 setPage(1);
               }}
-              className="w-full px-2.5 py-1.5 text-xs bg-white border border-slate-300 rounded focus:outline-none focus:border-teal-600 text-navy-900"
+              className={controlClassSm}
             >
-              <option value="all">Todos os Serviços</option>
+              <option value="all">Todos os serviços</option>
               {SERVICE_TYPES.map((svc) => (
                 <option key={svc} value={svc}>
                   {svc}
@@ -355,20 +436,23 @@ export const ClientsPage: React.FC = () => {
             </select>
           </div>
 
-          {/* Filtro por Responsável (RF-06a, RF-06c) */}
-          <div className="md:col-span-2">
+          <div className="xl:col-span-2">
+            <label htmlFor="clients-owner" className="sr-only">
+              Filtrar por responsável
+            </label>
             <select
+              id="clients-owner"
               value={ownerFilter}
               onChange={(e) => {
                 setOwnerFilter(e.target.value);
                 setPage(1);
               }}
-              className="w-full px-2.5 py-1.5 text-xs bg-white border border-slate-300 rounded focus:outline-none focus:border-teal-600 text-navy-900"
+              className={controlClassSm}
             >
-              <option value="all">Todos os Responsáveis</option>
+              <option value="all">Todos os responsáveis</option>
               <option value="unassigned">Sem responsável</option>
-              <option value="inactive">Responsável inativo (RF-06c)</option>
-              <optgroup label="Usuários Ativos">
+              <option value="inactive">Responsável inativo</option>
+              <optgroup label="Usuários ativos">
                 {users
                   .filter((u) => u.active)
                   .map((u) => (
@@ -380,127 +464,175 @@ export const ClientsPage: React.FC = () => {
             </select>
           </div>
 
-          {/* Filtro por Prioridade (RF-06b) */}
-          <div className="md:col-span-2 flex items-center gap-2">
+          <div className="xl:col-span-2 flex items-center gap-2">
+            <label htmlFor="clients-priority" className="sr-only">
+              Filtrar por prioridade
+            </label>
             <select
+              id="clients-priority"
               value={priorityFilter}
               onChange={(e) => {
                 setPriorityFilter(e.target.value);
                 setPage(1);
               }}
-              className="w-full px-2.5 py-1.5 text-xs bg-white border border-slate-300 rounded focus:outline-none focus:border-teal-600 text-navy-900"
+              className={controlClassSm}
             >
-              <option value="all">Todas as Prioridades</option>
+              <option value="all">Todas as prioridades</option>
               <option value="alta">Alta</option>
               <option value="media">Média</option>
               <option value="baixa">Baixa</option>
             </select>
 
             {hasActiveFilters && (
-              <button
+              <IconButton
+                label="Limpar filtros"
                 onClick={handleClearFilters}
-                title="Limpar filtros"
-                className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded"
+                className="flex-shrink-0"
               >
-                <X className="w-4 h-4" />
-              </button>
+                <X className="w-4 h-4" aria-hidden="true" />
+              </IconButton>
             )}
           </div>
         </div>
 
-        {/* Banner de Responsável Inativo (RF-06c) */}
+        {/* Reatribuição de leads órfãos (RF-06c) */}
         {isInactiveOwnerFiltered && (
-          <div className="p-3 bg-amber-50 border border-amber-200 rounded-md flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs text-amber-800">
-            <div className="flex items-center gap-2">
-              <AlertTriangle className="w-4 h-4 text-amber-600 flex-shrink-0" />
+          <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs text-amber-900">
+            <div className="flex items-start sm:items-center gap-2">
+              <AlertTriangle
+                className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5 sm:mt-0"
+                aria-hidden="true"
+              />
               <span>
-                Exibindo leads cujos responsáveis foram desativados. Você pode reatribuí-los
-                em lote para um membro ativo.
+                Estes leads pertencem a responsáveis desativados. Reatribua-os a um
+                membro ativo para que voltem a ter dono.
               </span>
             </div>
             {clients.length > 0 && (
-              <button
+              <Button
+                size="sm"
                 onClick={() => setIsBatchReassignOpen(true)}
-                className="px-3 py-1.5 bg-amber-600 hover:bg-amber-700 text-white font-semibold rounded shadow-xs transition-colors whitespace-nowrap"
+                className="flex-shrink-0 whitespace-nowrap"
               >
-                Reatribuir {clients.length} leads em lote
-              </button>
+                Reatribuir {clients.length}{' '}
+                {clients.length === 1 ? 'lead' : 'leads'}
+              </Button>
             )}
           </div>
         )}
-      </div>
+      </section>
 
-      {/* Tabela de Clientes */}
-      <div className="bg-white rounded-lg border border-slate-200 shadow-sm overflow-hidden flex flex-col">
+      {/* Tabela de clientes */}
+      <div className="bg-white rounded-xl border border-slate-200 shadow-xs overflow-hidden">
         {isLoading ? (
-          <div className="p-16 flex flex-col items-center justify-center text-slate-400 gap-3">
-            <Loader2 className="w-8 h-8 animate-spin text-teal-600" />
-            <p className="text-sm">Carregando clientes...</p>
-          </div>
+          <LoadingState message="Carregando clientes…" />
+        ) : loadError ? (
+          <ErrorState
+            title="Não foi possível carregar os clientes"
+            message="A lista não pôde ser lida do servidor. Verifique sua conexão e tente novamente."
+            onRetry={fetchClients}
+          />
         ) : clients.length === 0 ? (
-          <div className="p-16 text-center text-slate-500">
-            <Users className="w-12 h-12 mx-auto text-slate-300 mb-3" />
-            <p className="font-semibold text-base text-navy-900">
-              Nenhum cliente ou lead encontrado
-            </p>
-            <p className="text-xs text-slate-500 mt-1 max-w-md mx-auto">
-              {hasActiveFilters
-                ? 'Nenhum resultado corresponde aos filtros selecionados. Tente ajustar os parâmetros ou limpar os filtros.'
-                : 'Cadastre o primeiro cliente da agência clicando no botão "Novo Cliente" acima.'}
-            </p>
-            {hasActiveFilters && (
-              <button
-                onClick={handleClearFilters}
-                className="mt-4 px-3 py-1.5 text-xs font-semibold text-teal-700 hover:bg-teal-50 border border-teal-200 rounded transition-colors"
-              >
-                Limpar todos os filtros
-              </button>
-            )}
-          </div>
+          <EmptyState
+            icon={<Users className="w-6 h-6" />}
+            title={
+              hasActiveFilters
+                ? 'Nenhum cliente corresponde aos filtros'
+                : 'Nenhum cliente cadastrado ainda'
+            }
+            message={
+              hasActiveFilters
+                ? 'Ajuste os filtros ou limpe-os para ver toda a base.'
+                : 'Cadastre o primeiro cliente ou lead para começar a acompanhar o pipeline comercial.'
+            }
+            action={
+              hasActiveFilters ? (
+                <Button variant="secondary" size="sm" onClick={handleClearFilters}>
+                  Limpar filtros
+                </Button>
+              ) : (
+                <Button
+                  size="sm"
+                  onClick={handleOpenNew}
+                  icon={<UserPlus className="w-4 h-4" aria-hidden="true" />}
+                >
+                  Novo cliente
+                </Button>
+              )
+            }
+          />
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs border-collapse">
+          <div className="table-scroll">
+            <table className="w-full min-w-[52rem] text-left text-xs border-collapse">
+              <caption className="sr-only">
+                Clientes e leads cadastrados. Cada linha abre a ficha completa.
+              </caption>
               <thead>
-                <tr className="border-b border-slate-200 bg-slate-50/80 font-semibold text-slate-600 uppercase tracking-wider">
-                  <th className="py-3 px-3 w-3"></th>
-                  <th className="py-3 px-4">Cliente / Razão Social</th>
-                  <th className="py-3 px-4">Documento</th>
-                  <th className="py-3 px-4">Contato</th>
-                  <th className="py-3 px-4">Origem</th>
-                  <th className="py-3 px-4">Etapa do Funil</th>
-                  <th className="py-3 px-4">Responsável</th>
-                  <th className="py-3 px-4 text-right">Ações</th>
+                <tr className="border-b border-slate-200 bg-slate-50 font-semibold text-slate-600 uppercase tracking-wider">
+                  <th scope="col" className="py-3 px-0 w-3">
+                    <span className="sr-only">Prioridade</span>
+                  </th>
+                  <th scope="col" className="py-3 px-4">
+                    Cliente / razão social
+                  </th>
+                  <th scope="col" className="py-3 px-4">
+                    Documento
+                  </th>
+                  <th scope="col" className="py-3 px-4">
+                    Contato
+                  </th>
+                  <th scope="col" className="py-3 px-4">
+                    Origem
+                  </th>
+                  <th scope="col" className="py-3 px-4">
+                    Etapa do funil
+                  </th>
+                  <th scope="col" className="py-3 px-4">
+                    Responsável
+                  </th>
+                  <th scope="col" className="py-3 px-4 text-right">
+                    Ações
+                  </th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 tabular-nums">
                 {clients.map((c) => {
                   const stageStyle = STAGE_STYLES[c.stage] || STAGE_STYLES['Novo Lead'];
-                  const priorityColor = PRIORITY_BARS[c.priority || 'media'];
+                  const priority = c.priority || 'media';
 
                   return (
                     <tr
                       key={c.id}
-                      className="hover:bg-slate-50/70 transition-colors group cursor-pointer"
-                      onClick={() => handleOpenDetails(c)}
+                      className="hover:bg-slate-50 focus-within:bg-slate-50 transition-colors group"
                     >
-                      {/* Barra de Prioridade na lateral esquerda */}
+                      {/* Barra lateral de prioridade */}
                       <td className="py-3 px-0 relative">
                         <span
-                          className={`absolute inset-y-1.5 left-1 w-1 rounded-full ${priorityColor}`}
-                          title={`Prioridade: ${c.priority || 'media'}`}
+                          className={`absolute inset-y-1.5 left-1 w-1 rounded-full ${PRIORITY_BARS[priority]}`}
+                          aria-hidden="true"
                         />
+                        <span className="sr-only">
+                          Prioridade {PRIORITY_LABELS[priority]}
+                        </span>
                       </td>
 
-                      {/* Nome / Razão Social */}
+                      {/* Nome — âncora acessível para abrir a ficha */}
                       <td className="py-3 px-4">
                         <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 rounded bg-teal-50 text-teal-700 flex items-center justify-center font-bold text-xs flex-shrink-0 border border-teal-200/50">
+                          <div
+                            className="w-8 h-8 rounded-lg bg-teal-50 text-teal-700 flex items-center justify-center font-bold text-xs flex-shrink-0 border border-teal-200/60"
+                            aria-hidden="true"
+                          >
                             {c.name.substring(0, 2).toUpperCase()}
                           </div>
-                          <div>
-                            <div className="font-bold text-navy-900 group-hover:text-teal-700 transition-colors">
+                          <div className="min-w-0">
+                            <button
+                              type="button"
+                              onClick={() => handleOpenDetails(c)}
+                              className="font-bold text-navy-900 group-hover:text-teal-700 transition-colors text-left rounded-sm"
+                            >
                               {c.name}
-                            </div>
+                            </button>
                             {c.tradeName && (
                               <div className="text-[11px] text-slate-500 font-normal">
                                 {c.tradeName}
@@ -510,108 +642,109 @@ export const ClientsPage: React.FC = () => {
                         </div>
                       </td>
 
-                      {/* Documento (CPF / CNPJ) com máscara */}
-                      <td className="py-3 px-4 font-mono text-slate-700">
+                      <td className="py-3 px-4 font-mono text-slate-700 whitespace-nowrap">
                         {formatDocument(c.documentNumber, c.documentType)}
                       </td>
 
-                      {/* Contato (Email + Telefone formatado) */}
                       <td className="py-3 px-4">
                         <div className="space-y-0.5">
                           {c.phone && (
-                            <div className="flex items-center gap-1.5 text-slate-700 font-mono">
-                              <Phone className="w-3 h-3 text-teal-600 flex-shrink-0" />
+                            <div className="flex items-center gap-1.5 text-slate-700 font-mono whitespace-nowrap">
+                              <Phone
+                                className="w-3 h-3 text-teal-600 flex-shrink-0"
+                                aria-hidden="true"
+                              />
                               <span>{formatPhoneBR(c.phone)}</span>
                             </div>
                           )}
                           {c.email && (
                             <div className="flex items-center gap-1.5 text-slate-500">
-                              <Mail className="w-3 h-3 text-slate-400 flex-shrink-0" />
+                              <Mail
+                                className="w-3 h-3 text-slate-400 flex-shrink-0"
+                                aria-hidden="true"
+                              />
                               <span className="truncate max-w-[180px]">{c.email}</span>
                             </div>
                           )}
                           {!c.phone && !c.email && (
-                            <span className="text-slate-400 italic">Sem contato</span>
+                            <span className="text-slate-500 italic">Sem contato</span>
                           )}
                         </div>
                       </td>
 
-                      {/* Origem do Lead */}
-                      <td className="py-3 px-4 text-slate-700 font-medium">
+                      <td className="py-3 px-4 text-slate-700 font-medium whitespace-nowrap">
                         {c.leadSource}
                       </td>
 
-                      {/* Etapa do Funil (Pill) */}
                       <td className="py-3 px-4">
                         <span
-                          className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-medium border ${stageStyle.bg} ${stageStyle.text} ${stageStyle.border}`}
+                          className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-medium border whitespace-nowrap ${stageStyle.bg} ${stageStyle.text} ${stageStyle.border}`}
                         >
-                          <span className={`w-1.5 h-1.5 rounded-full ${stageStyle.dot}`} />
+                          <span
+                            className={`w-1.5 h-1.5 rounded-full ${stageStyle.dot}`}
+                            aria-hidden="true"
+                          />
                           <span>{c.stage}</span>
                         </span>
                       </td>
 
-                      {/* Responsável (RF-06a, RF-06c) */}
                       <td className="py-3 px-4">
                         {c.owner ? (
                           <div className="flex items-center gap-2">
                             <div
-                              className={`w-6 h-6 rounded-full flex items-center justify-center font-bold text-[10px] uppercase text-white ${
-                                c.owner.active ? 'bg-navy-800' : 'bg-slate-400'
+                              className={`w-6 h-6 rounded-full flex items-center justify-center font-bold text-[10px] uppercase text-white flex-shrink-0 ${
+                                c.owner.active ? 'bg-navy-800' : 'bg-slate-500'
                               }`}
+                              aria-hidden="true"
                             >
                               {c.owner.name.substring(0, 2)}
                             </div>
                             <div>
-                              <div className="font-medium text-slate-800">
+                              <div className="font-medium text-slate-800 whitespace-nowrap">
                                 {c.owner.name}
                               </div>
                               {!c.owner.active && (
-                                <span className="inline-block text-[10px] text-amber-700 bg-amber-50 border border-amber-200 px-1 rounded font-semibold">
+                                <span className="inline-block text-[10px] text-amber-800 bg-amber-50 border border-amber-200 px-1 rounded font-semibold">
                                   Inativo
                                 </span>
                               )}
                             </div>
                           </div>
                         ) : (
-                          <span className="text-slate-400 italic">Sem responsável</span>
+                          <span className="text-slate-500 italic">Sem responsável</span>
                         )}
                       </td>
 
-                      {/* Ações */}
-                      <td
-                        className="py-3 px-4 text-right"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        <div className="inline-flex items-center gap-1">
-                          <button
+                      <td className="py-3 px-4 text-right">
+                        <div className="inline-flex items-center gap-0.5">
+                          <IconButton
+                            label={`Enviar WhatsApp para ${c.name}`}
+                            tone="whatsapp"
                             onClick={() => handleOpenWhatsApp(c)}
-                            title="Enviar mensagem via WhatsApp"
-                            className="p-1.5 text-slate-500 hover:text-[#25D366] hover:bg-[#25D366]/10 rounded transition-colors"
                           >
-                            <MessageSquare className="w-4 h-4" />
-                          </button>
-                          <button
+                            <MessageSquare className="w-4 h-4" aria-hidden="true" />
+                          </IconButton>
+                          <IconButton
+                            label={`Ver ficha de ${c.name}`}
                             onClick={() => handleOpenDetails(c)}
-                            title="Visualizar ficha"
-                            className="p-1.5 text-slate-500 hover:text-teal-700 hover:bg-slate-100 rounded transition-colors"
                           >
-                            <Eye className="w-4 h-4" />
-                          </button>
-                          <button
+                            <Eye className="w-4 h-4" aria-hidden="true" />
+                          </IconButton>
+                          <IconButton
+                            label={`Editar ${c.name}`}
                             onClick={() => handleOpenEdit(c)}
-                            title="Editar cliente"
-                            className="p-1.5 text-slate-500 hover:text-navy-900 hover:bg-slate-100 rounded transition-colors"
                           >
-                            <Edit2 className="w-4 h-4" />
-                          </button>
-                          <button
+                            <Edit2 className="w-4 h-4" aria-hidden="true" />
+                          </IconButton>
+                          <IconButton
+                            label={`Excluir ${c.name}`}
+                            tone="danger"
                             onClick={() => handleDelete(c)}
-                            title="Excluir cliente"
-                            className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
+                            isLoading={deletingId === c.id}
+                            disabled={deletingId !== null}
                           >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
+                            <Trash2 className="w-4 h-4" aria-hidden="true" />
+                          </IconButton>
                         </div>
                       </td>
                     </tr>
@@ -622,48 +755,56 @@ export const ClientsPage: React.FC = () => {
           </div>
         )}
 
-        {/* Rodapé de Paginação */}
-        <div className="p-4 border-t border-slate-200 bg-white flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs text-slate-500">
-          <div>
-            Exibindo{' '}
-            <strong className="text-navy-900 font-bold tabular-nums">
-              {totalRecords === 0 ? 0 : (page - 1) * limit + 1}
-            </strong>{' '}
-            a{' '}
-            <strong className="text-navy-900 font-bold tabular-nums">
-              {Math.min(page * limit, totalRecords)}
-            </strong>{' '}
-            de{' '}
-            <strong className="text-navy-900 font-bold tabular-nums">{totalRecords}</strong>{' '}
-            clientes cadastrados
-          </div>
+        {/* Paginação */}
+        {!loadError && (
+          <nav
+            aria-label="Paginação de clientes"
+            className="p-4 border-t border-slate-200 bg-white flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs text-slate-600"
+          >
+            <p aria-live="polite">
+              Exibindo{' '}
+              <strong className="text-navy-900 font-bold tabular-nums">
+                {totalRecords === 0 ? 0 : (page - 1) * limit + 1}
+              </strong>{' '}
+              a{' '}
+              <strong className="text-navy-900 font-bold tabular-nums">
+                {Math.min(page * limit, totalRecords)}
+              </strong>{' '}
+              de{' '}
+              <strong className="text-navy-900 font-bold tabular-nums">
+                {totalRecords}
+              </strong>{' '}
+              {totalRecords === 1 ? 'cliente' : 'clientes'}
+            </p>
 
-          <div className="flex items-center gap-1 self-end sm:self-auto">
-            <button
-              onClick={() => setPage((p) => Math.max(1, p - 1))}
-              disabled={page === 1 || isLoading}
-              className="p-1.5 rounded border border-slate-200 text-slate-600 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed"
-            >
-              <ChevronLeft className="w-4 h-4" />
-            </button>
+            <div className="flex items-center gap-1 self-end sm:self-auto">
+              <IconButton
+                label="Página anterior"
+                onClick={() => setPage((p) => Math.max(1, p - 1))}
+                disabled={page === 1 || isLoading}
+                className="border border-slate-200"
+              >
+                <ChevronLeft className="w-4 h-4" aria-hidden="true" />
+              </IconButton>
 
-            <span className="px-3 py-1 text-slate-700 font-medium">
-              Página <span className="font-bold tabular-nums">{page}</span> de{' '}
-              <span className="font-bold tabular-nums">{totalPages}</span>
-            </span>
+              <span className="px-3 py-1 text-slate-700 font-medium whitespace-nowrap">
+                Página <span className="font-bold tabular-nums">{page}</span> de{' '}
+                <span className="font-bold tabular-nums">{totalPages}</span>
+              </span>
 
-            <button
-              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-              disabled={page === totalPages || isLoading}
-              className="p-1.5 rounded border border-slate-200 text-slate-600 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed"
-            >
-              <ChevronRight className="w-4 h-4" />
-            </button>
-          </div>
-        </div>
+              <IconButton
+                label="Próxima página"
+                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                disabled={page >= totalPages || isLoading}
+                className="border border-slate-200"
+              >
+                <ChevronRight className="w-4 h-4" aria-hidden="true" />
+              </IconButton>
+            </div>
+          </nav>
+        )}
       </div>
 
-      {/* Modal de Criação / Edição de Cliente */}
       <ClientModal
         isOpen={isClientModalOpen}
         onClose={() => setIsClientModalOpen(false)}
@@ -672,7 +813,6 @@ export const ClientsPage: React.FC = () => {
         users={users}
       />
 
-      {/* Modal de Ficha Detalhada */}
       <ClientDetailsModal
         isOpen={isDetailsModalOpen}
         onClose={() => {
@@ -684,14 +824,11 @@ export const ClientsPage: React.FC = () => {
           setIsDetailsModalOpen(false);
           handleOpenEdit(c);
         }}
-        onDelete={(c) => {
-          handleDelete(c);
-        }}
+        onDelete={handleDelete}
         onUpdated={fetchClients}
         users={users}
       />
 
-      {/* Modal de Reatribuição em Lote */}
       <BatchReassignModal
         isOpen={isBatchReassignOpen}
         onClose={() => setIsBatchReassignOpen(false)}
@@ -700,10 +837,9 @@ export const ClientsPage: React.FC = () => {
         users={users}
       />
 
-      {/* Modal de WhatsApp */}
       {whatsAppModalData && (
         <WhatsAppModal
-          isOpen={true}
+          isOpen
           onClose={() => setWhatsAppModalData(null)}
           initialTemplate="onboarding"
           data={whatsAppModalData}

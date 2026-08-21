@@ -43,17 +43,17 @@ export const AlertsWidget: React.FC<AlertsWidgetProps> = ({
   const hasAlerts = overdue.length > 0 || upcoming7Days.length > 0;
 
   return (
-    <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-2xs flex flex-col justify-between h-full">
+    <div className="bg-white border border-slate-200 rounded-xl p-5 sm:p-6 shadow-xs flex flex-col justify-between h-full">
       <div>
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-red-50 text-red-600 flex items-center justify-center">
+            <div className="w-8 h-8 rounded-lg bg-rose-50 text-rose-600 flex items-center justify-center">
               <AlertCircle className="w-4 h-4" />
             </div>
             <div>
-              <h3 className="text-base font-bold text-slate-900">
-                Alertas de Cobrança
-              </h3>
+              <h2 className="text-base font-bold text-navy-900">
+                Alertas de cobrança
+              </h2>
               <p className="text-xs text-slate-500">
                 Vencidas e a vencer nos próximos 7 dias
               </p>
@@ -81,7 +81,7 @@ export const AlertsWidget: React.FC<AlertsWidgetProps> = ({
             {/* Seção Vencidas */}
             {overdue.length > 0 && (
               <div>
-                <div className="text-[11px] font-bold text-red-600 uppercase tracking-wider mb-2 flex items-center justify-between">
+                <div className="text-[11px] font-bold text-rose-600 uppercase tracking-wider mb-2 flex items-center justify-between">
                   <span>Vencidas ({overdue.length})</span>
                 </div>
                 <div className="space-y-2">
@@ -90,21 +90,21 @@ export const AlertsWidget: React.FC<AlertsWidgetProps> = ({
                     return (
                       <div
                         key={item.id}
-                        className="p-3 bg-red-50/60 border border-red-200/80 rounded-lg flex items-center justify-between gap-3 relative overflow-hidden group hover:border-red-300 transition-colors"
+                        className="p-3 bg-rose-50/60 border border-rose-200/80 rounded-lg flex items-center justify-between gap-3 relative overflow-hidden group hover:border-rose-300 transition-colors"
                       >
-                        <div className="absolute left-0 top-0 bottom-0 w-1 bg-red-500" />
+                        <div className="absolute left-0 top-0 bottom-0 w-1 bg-rose-500" />
                         <div className="min-w-0 flex-1 pl-1">
                           <div className="flex items-center justify-between">
                             <span className="text-xs font-bold text-slate-900 truncate">
                               {item.clientName}
                             </span>
-                            <span className="text-xs font-bold text-red-700 font-variant-numeric tabular-nums">
+                            <span className="text-xs font-bold text-rose-700  tabular-nums">
                               {formatCurrencyBRL(item.amountCents)}
                             </span>
                           </div>
                           <div className="flex items-center justify-between mt-1 text-[11px] text-slate-500">
                             <span className="font-mono">{item.number}</span>
-                            <span className="text-red-600 font-semibold flex items-center gap-1">
+                            <span className="text-rose-600 font-semibold flex items-center gap-1">
                               <Clock className="w-3 h-3" />
                               {daysLate === 1 ? '1 dia de atraso' : `${daysLate} dias de atraso`}
                             </span>
@@ -115,10 +115,11 @@ export const AlertsWidget: React.FC<AlertsWidgetProps> = ({
                         <button
                           type="button"
                           onClick={() => handleOpenWhatsApp(item)}
-                          title="Enviar mensagem de cobrança via WhatsApp"
-                          className="w-8 h-8 rounded-lg bg-white border border-red-200 text-[#25D366] hover:bg-[#25D366] hover:text-white hover:border-[#25D366] flex items-center justify-center transition-colors flex-shrink-0 shadow-2xs"
+                          aria-label={`Cobrar ${item.clientName} por WhatsApp sobre a cobrança ${item.number}`}
+                          title="Enviar cobrança por WhatsApp"
+                          className="w-8 h-8 rounded-lg bg-white border border-rose-200 text-[#128C4A] hover:bg-[#25D366] hover:text-white hover:border-[#25D366] flex items-center justify-center transition-colors flex-shrink-0 shadow-2xs"
                         >
-                          <MessageSquare className="w-4 h-4 fill-current" />
+                          <MessageSquare className="w-4 h-4 fill-current" aria-hidden="true" />
                         </button>
                       </div>
                     );
@@ -154,7 +155,7 @@ export const AlertsWidget: React.FC<AlertsWidgetProps> = ({
                             <span className="text-xs font-bold text-slate-900 truncate">
                               {item.clientName}
                             </span>
-                            <span className="text-xs font-bold text-slate-900 font-variant-numeric tabular-nums">
+                            <span className="text-xs font-bold text-slate-900  tabular-nums">
                               {formatCurrencyBRL(item.amountCents)}
                             </span>
                           </div>
@@ -171,10 +172,11 @@ export const AlertsWidget: React.FC<AlertsWidgetProps> = ({
                         <button
                           type="button"
                           onClick={() => handleOpenWhatsApp(item)}
-                          title="Enviar lembrete de vencimento via WhatsApp"
-                          className="w-8 h-8 rounded-lg bg-white border border-slate-200 text-[#25D366] hover:bg-[#25D366] hover:text-white hover:border-[#25D366] flex items-center justify-center transition-colors flex-shrink-0 shadow-2xs"
+                          aria-label={`Lembrar ${item.clientName} por WhatsApp do vencimento da cobrança ${item.number}`}
+                          title="Enviar lembrete por WhatsApp"
+                          className="w-8 h-8 rounded-lg bg-white border border-slate-200 text-[#128C4A] hover:bg-[#25D366] hover:text-white hover:border-[#25D366] flex items-center justify-center transition-colors flex-shrink-0 shadow-2xs"
                         >
-                          <MessageSquare className="w-4 h-4 fill-current" />
+                          <MessageSquare className="w-4 h-4 fill-current" aria-hidden="true" />
                         </button>
                       </div>
                     );

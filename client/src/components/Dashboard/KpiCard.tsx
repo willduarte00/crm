@@ -27,11 +27,7 @@ export const KpiCard: React.FC<KpiCardProps> = ({
   const renderComparison = () => {
     if (!comparison) {
       if (subtitle) {
-        return (
-          <p className="text-xs text-slate-400 mt-2 truncate">
-            {subtitle}
-          </p>
-        );
+        return <p className="text-xs text-slate-500 mt-2">{subtitle}</p>;
       }
       return null;
     }
@@ -44,20 +40,20 @@ export const KpiCard: React.FC<KpiCardProps> = ({
     let badgeClass = 'text-slate-500';
     if (!isZero) {
       if (isDelinquency) {
-        badgeClass = isPositive ? 'text-red-600 font-semibold' : 'text-emerald-600 font-semibold';
+        badgeClass = isPositive ? 'text-rose-600 font-semibold' : 'text-emerald-600 font-semibold';
       } else {
-        badgeClass = isPositive ? 'text-emerald-600 font-semibold' : 'text-red-600 font-semibold';
+        badgeClass = isPositive ? 'text-emerald-600 font-semibold' : 'text-rose-600 font-semibold';
       }
     }
 
     return (
       <div className={`flex items-center gap-1 text-xs mt-2 ${badgeClass}`}>
         {isZero ? (
-          <Minus className="w-3.5 h-3.5" />
+          <Minus className="w-3.5 h-3.5" aria-hidden="true" />
         ) : isPositive ? (
-          <ArrowUpRight className="w-3.5 h-3.5" />
+          <ArrowUpRight className="w-3.5 h-3.5" aria-hidden="true" />
         ) : (
-          <ArrowDownRight className="w-3.5 h-3.5" />
+          <ArrowDownRight className="w-3.5 h-3.5" aria-hidden="true" />
         )}
         <span>
           {isPositive ? `+${percentage}%` : `${percentage}%`} vs mês anterior
@@ -67,20 +63,23 @@ export const KpiCard: React.FC<KpiCardProps> = ({
   };
 
   return (
-    <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-2xs hover:shadow-sm transition-shadow flex flex-col justify-between">
-      <div className="flex items-center justify-between mb-3">
-        <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+    <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-xs hover:shadow-sm transition-shadow flex flex-col justify-between">
+      <div className="flex items-start justify-between gap-2 mb-3">
+        <h3 className="text-xs font-bold text-slate-600 uppercase tracking-wider">
           {title}
-        </span>
-        <div className={`w-9 h-9 rounded-lg ${iconBgColor} ${iconColor} flex items-center justify-center`}>
+        </h3>
+        <div
+          className={`w-9 h-9 rounded-lg ${iconBgColor} ${iconColor} flex items-center justify-center flex-shrink-0`}
+          aria-hidden="true"
+        >
           <Icon className="w-5 h-5" />
         </div>
       </div>
 
       <div>
-        <div className="text-2xl font-bold text-slate-900 tracking-tight font-variant-numeric tabular-nums">
+        <p className="text-2xl font-bold text-navy-900 tracking-tight tabular-nums">
           {value}
-        </div>
+        </p>
         {renderComparison()}
       </div>
     </div>

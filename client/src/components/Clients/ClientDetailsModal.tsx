@@ -8,7 +8,12 @@ import {
 } from '../../types/client';
 import { Contract } from '../../types/contract';
 import { User } from '../../types';
-import { apiFetch } from '../../services/api';
+import { apiFetch, apiDownload, errorMessage } from '../../services/api';
+import { useDialogBehavior } from '../../hooks/useDialogBehavior';
+import { useConfirm } from '../ui/ConfirmDialog';
+import { Button, IconButton } from '../ui/Button';
+import { LoadingState, EmptyState, ErrorState } from '../ui/States';
+import { controlClass, controlClassSm } from '../ui/Field';
 import {
   formatDocument,
   formatPhoneBR,
@@ -75,6 +80,9 @@ export const ClientDetailsModal: React.FC<ClientDetailsModalProps> = ({
   onUpdated,
   users,
 }) => {
+  const confirm = useConfirm();
+  const panelRef = useDialogBehavior(isOpen, onClose);
+
   const [client, setClient] = useState<Client | null>(null);
   const [logs, setLogs] = useState<InteractionLog[]>([]);
   const [contracts, setContracts] = useState<Contract[]>([]);
@@ -85,6 +93,9 @@ export const ClientDetailsModal: React.FC<ClientDetailsModalProps> = ({
   const [isSubmittingLog, setIsSubmittingLog] = useState(false);
   const [isUpdatingStage, setIsUpdatingStage] = useState(false);
   const [isUpdatingOwner, setIsUpdatingOwner] = useState(false);
+  const [loadError, setLoadError] = useState(false);
+  const [deletingContractId, setDeletingContractId] = useState<string | null>(null);
+  const [downloadingFileId, setDownloadingFileId] = useState<string | null>(null);
 
   // Modals de contratos e arquivos
   const [isContractModalOpen, setIsContractModalOpen] = useState(false);
@@ -96,14 +107,16 @@ export const ClientDetailsModal: React.FC<ClientDetailsModalProps> = ({
     if (!clientId) return;
     try {
       setIsLoading(true);
+      setLoadError(false);
       const data = await apiFetch<Client>(`/api/clients/${clientId}`);
       setClient(data);
       if (data.interactionLogs) {
         setLogs(data.interactionLogs);
       }
-    } catch (err) {
-      toast.error('Erro ao carregar detalhes do cliente');
-      onClose();
+    } catch {
+      // Antes o modal se fechava sozinho; agora mostra o erro com opção de repetir.
+      setClient(null);
+      setLoadError(true);
     } finally {
       setIsLoading(false);
     }
@@ -115,8 +128,8 @@ export const ClientDetailsModal: React.FC<ClientDetailsModalProps> = ({
       setIsLoadingContracts(true);
       const data = await apiFetch<Contract[]>(`/api/contracts?clientId=${clientId}`);
       setContracts(data);
-    } catch (err) {
-      toast.error('Erro ao carregar contratos do cliente');
+    } catch {
+      setContracts([]);
     } finally {
       setIsLoadingContracts(false);
     }
@@ -146,10 +159,10 @@ export const ClientDetailsModal: React.FC<ClientDetailsModalProps> = ({
         body: JSON.stringify({ stage: newStage }),
       });
       setClient((prev) => (prev ? { ...prev, stage: updated.stage } : null));
-      toast.success(`Etapa alterada para "${newStage}"`);
+      toast.success(`Etapa alterada para “${newStage}”.`);
       onUpdated();
-    } catch (err: any) {
-      toast.error('Erro ao alterar etapa');
+    } catch (err) {
+      toast.error(errorMessage(err, 'Não foi possível alterar a etapa.'));
     } finally {
       setIsUpdatingStage(false);
     }
@@ -172,10 +185,10 @@ export const ClientDetailsModal: React.FC<ClientDetailsModalProps> = ({
             }
           : null
       );
-      toast.success('Responsável atualizado com sucesso!');
+      toast.success('Responsável atualizado.');
       onUpdated();
-    } catch (err: any) {
-      toast.error('Erro ao alterar responsável');
+    } catch (err) {
+      toast.error(errorMessage(err, 'Não foi possível alterar o responsável.'));
     } finally {
       setIsUpdatingOwner(false);
     }
@@ -197,47 +210,54 @@ export const ClientDetailsModal: React.FC<ClientDetailsModalProps> = ({
 
       setLogs((prev) => [log, ...prev]);
       setNewLogContent('');
-      toast.success('Anotação registrada na timeline!');
+      toast.success('Anotação registrada.');
       onUpdated();
-    } catch (err: any) {
-      toast.error('Erro ao adicionar anotação');
+    } catch (err) {
+      toast.error(errorMessage(err, 'Não foi possível registrar a anotação.'));
     } finally {
       setIsSubmittingLog(false);
     }
   };
 
   const handleDeleteContract = async (contract: Contract) => {
-    if (!confirm(`Deseja realmente excluir o contrato de ${contract.serviceType}?`)) {
-      return;
-    }
+    if (deletingContractId) return;
+
+    const confirmed = await confirm({
+      title: 'Excluir contrato',
+      tone: 'danger',
+      confirmLabel: 'Excluir contrato',
+      message: (
+        <>
+          O contrato de{' '}
+          <strong className="text-navy-900">{contract.serviceType}</strong> será excluído
+          junto com os arquivos anexados. Esta ação não pode ser desfeita.
+        </>
+      ),
+    });
+    if (!confirmed) return;
 
     try {
-      await apiFetch(`/api/contracts/${contract.id}`, {
-        method: 'DELETE',
-      });
-      toast.success('Contrato excluído com sucesso!');
+      setDeletingContractId(contract.id);
+      await apiFetch(`/api/contracts/${contract.id}`, { method: 'DELETE' });
+      toast.success('Contrato excluído.');
       fetchContracts();
       onUpdated();
-    } catch (err: any) {
-      toast.error('Erro ao excluir contrato.');
+    } catch (err) {
+      toast.error(errorMessage(err, 'Não foi possível excluir o contrato.'));
+    } finally {
+      setDeletingContractId(null);
     }
   };
 
   const handleDownloadFile = async (fileId: string, filename: string) => {
+    if (downloadingFileId) return;
     try {
-      const res = await fetch(`/api/files/${fileId}`);
-      if (!res.ok) throw new Error('Falha ao baixar arquivo');
-      const blob = await res.blob();
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = filename;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      window.URL.revokeObjectURL(url);
-    } catch (err: any) {
-      toast.error(err.message || 'Erro no download');
+      setDownloadingFileId(fileId);
+      await apiDownload(`/api/files/${fileId}`, filename);
+    } catch (err) {
+      toast.error(errorMessage(err, 'Não foi possível baixar o arquivo.'));
+    } finally {
+      setDownloadingFileId(null);
     }
   };
 
@@ -245,18 +265,31 @@ export const ClientDetailsModal: React.FC<ClientDetailsModalProps> = ({
   const activeUsers = users.filter((u) => u.active);
 
   return (
-    <div className="fixed inset-0 z-50 bg-navy-950/60 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
-      <div className="w-full max-w-4xl bg-white rounded-lg border border-slate-200 shadow-xl overflow-hidden my-6 animate-in fade-in zoom-in duration-150 flex flex-col max-h-[90vh]">
+    <div className="fixed inset-0 z-50 bg-navy-950/60 backdrop-blur-sm flex items-start sm:items-center justify-center overflow-y-auto p-3 sm:p-4">
+      <div
+        ref={panelRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="client-details-title"
+        tabIndex={-1}
+        className="w-full max-w-4xl bg-white rounded-xl border border-slate-200 shadow-xl overflow-hidden my-4 sm:my-8 animate-panel-in flex flex-col max-h-[calc(100dvh-2rem)] focus:outline-none"
+      >
         {/* Header da Ficha */}
-        <div className="p-6 bg-slate-50 border-b border-slate-200 flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div className="flex items-start gap-4">
-            <div className="w-12 h-12 rounded-lg bg-teal-600 text-white flex items-center justify-center font-bold text-lg shadow-sm flex-shrink-0">
+        <div className="p-4 sm:p-6 bg-slate-50 border-b border-slate-200 flex flex-col md:flex-row md:items-center justify-between gap-4 flex-shrink-0">
+          <div className="flex items-start gap-4 min-w-0">
+            <div
+              className="w-12 h-12 rounded-lg bg-teal-600 text-white flex items-center justify-center font-bold text-lg flex-shrink-0"
+              aria-hidden="true"
+            >
               {client?.name ? client.name.substring(0, 2).toUpperCase() : 'CL'}
             </div>
-            <div>
+            <div className="min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
-                <h2 className="text-xl font-bold text-navy-900 leading-tight">
-                  {client?.name}
+                <h2
+                  id="client-details-title"
+                  className="text-xl font-bold text-navy-900 leading-tight"
+                >
+                  {client?.name || 'Ficha do cliente'}
                 </h2>
                 {client?.tradeName && (
                   <span className="text-xs text-slate-500 font-medium px-2 py-0.5 bg-slate-200 rounded">
@@ -269,7 +302,7 @@ export const ClientDetailsModal: React.FC<ClientDetailsModalProps> = ({
                   Prioridade {priorityObj.label}
                 </span>
               </div>
-              <div className="flex items-center gap-4 text-xs text-slate-500 mt-1">
+              <div className="flex items-center gap-x-4 gap-y-1 text-xs text-slate-500 mt-1 flex-wrap">
                 <span>
                   {client?.documentType}:{' '}
                   <strong className="font-mono text-slate-700">
@@ -285,15 +318,21 @@ export const ClientDetailsModal: React.FC<ClientDetailsModalProps> = ({
           </div>
 
           {/* Ações e Dropdown de Etapa (RF-05) */}
-          <div className="flex items-center gap-3">
-            {/* Dropdown de Etapa */}
-            <div className="flex items-center gap-1.5 bg-white px-2.5 py-1 rounded border border-slate-300 shadow-xs">
-              <span className="text-xs font-semibold text-slate-500">Etapa:</span>
+          <div className="flex items-center gap-2 flex-shrink-0 flex-wrap">
+            {/* Etapa do funil, editável direto na ficha */}
+            <div className="flex items-center gap-1.5 bg-white px-2.5 py-1 rounded-lg border border-slate-300">
+              <label
+                htmlFor="details-stage"
+                className="text-xs font-semibold text-slate-600"
+              >
+                Etapa:
+              </label>
               <select
+                id="details-stage"
                 value={client?.stage || ''}
-                disabled={isUpdatingStage || isLoading}
+                disabled={isUpdatingStage || isLoading || !client}
                 onChange={(e) => handleStageChange(e.target.value as PipelineStage)}
-                className="text-xs font-bold text-teal-700 bg-transparent border-none focus:ring-0 cursor-pointer py-1 pr-6"
+                className="text-xs font-bold text-teal-700 bg-transparent border-none focus:ring-0 cursor-pointer py-1 pr-6 disabled:text-slate-400"
               >
                 {PIPELINE_STAGES.map((stg) => (
                   <option key={stg} value={stg} className="text-navy-900 font-normal">
@@ -301,30 +340,34 @@ export const ClientDetailsModal: React.FC<ClientDetailsModalProps> = ({
                   </option>
                 ))}
               </select>
+              {isUpdatingStage && (
+                <Loader2
+                  className="w-3.5 h-3.5 animate-spin text-teal-600"
+                  aria-hidden="true"
+                />
+              )}
             </div>
 
-            <button
+            <IconButton
+              label="Editar dados do cliente"
               onClick={() => client && onEdit(client)}
-              title="Editar dados"
-              className="p-2 text-slate-600 hover:text-teal-700 hover:bg-slate-200/70 rounded transition-colors"
+              disabled={!client}
             >
-              <Edit2 className="w-4 h-4" />
-            </button>
+              <Edit2 className="w-4 h-4" aria-hidden="true" />
+            </IconButton>
 
-            <button
+            <IconButton
+              label="Excluir cliente"
+              tone="danger"
               onClick={() => client && onDelete(client)}
-              title="Excluir cliente"
-              className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
+              disabled={!client}
             >
-              <Trash2 className="w-4 h-4" />
-            </button>
+              <Trash2 className="w-4 h-4" aria-hidden="true" />
+            </IconButton>
 
-            <button
-              onClick={onClose}
-              className="p-2 text-slate-400 hover:text-slate-600 rounded transition-colors ml-1"
-            >
-              <X className="w-5 h-5" />
-            </button>
+            <IconButton label="Fechar" onClick={onClose}>
+              <X className="w-5 h-5" aria-hidden="true" />
+            </IconButton>
           </div>
         </div>
 
@@ -334,26 +377,26 @@ export const ClientDetailsModal: React.FC<ClientDetailsModalProps> = ({
           onValueChange={setActiveTab}
           className="flex-1 flex flex-col overflow-hidden"
         >
-          <Tabs.List className="flex border-b border-slate-200 bg-white px-6">
+          <Tabs.List className="flex border-b border-slate-200 bg-white px-4 sm:px-6 overflow-x-auto flex-shrink-0">
             <Tabs.Trigger
               value="geral"
-              className="py-3 px-4 text-xs font-semibold text-slate-500 hover:text-navy-900 border-b-2 border-transparent data-[state=active]:border-teal-600 data-[state=active]:text-teal-700 transition-colors flex items-center gap-2"
+              className="py-3 px-4 text-xs font-semibold text-slate-600 hover:text-navy-900 border-b-2 border-transparent data-[state=active]:border-teal-600 data-[state=active]:text-teal-700 transition-colors flex items-center gap-2 whitespace-nowrap flex-shrink-0"
             >
               <Building2 className="w-4 h-4" />
-              <span>Dados Gerais & Histórico</span>
+              <span>Dados e histórico</span>
             </Tabs.Trigger>
 
             <Tabs.Trigger
               value="contratos"
-              className="py-3 px-4 text-xs font-semibold text-slate-500 hover:text-navy-900 border-b-2 border-transparent data-[state=active]:border-teal-600 data-[state=active]:text-teal-700 transition-colors flex items-center gap-2"
+              className="py-3 px-4 text-xs font-semibold text-slate-600 hover:text-navy-900 border-b-2 border-transparent data-[state=active]:border-teal-600 data-[state=active]:text-teal-700 transition-colors flex items-center gap-2 whitespace-nowrap flex-shrink-0"
             >
               <FileCode2 className="w-4 h-4" />
-              <span>Contrato & Arquivos ({contracts.length})</span>
+              <span>Contratos ({contracts.length})</span>
             </Tabs.Trigger>
 
             <Tabs.Trigger
               value="whatsapp"
-              className="py-3 px-4 text-xs font-semibold text-slate-500 hover:text-navy-900 border-b-2 border-transparent data-[state=active]:border-teal-600 data-[state=active]:text-teal-700 transition-colors flex items-center gap-2"
+              className="py-3 px-4 text-xs font-semibold text-slate-600 hover:text-navy-900 border-b-2 border-transparent data-[state=active]:border-teal-600 data-[state=active]:text-teal-700 transition-colors flex items-center gap-2 whitespace-nowrap flex-shrink-0"
             >
               <MessageSquare className="w-4 h-4" />
               <span>WhatsApp</span>
@@ -363,13 +406,16 @@ export const ClientDetailsModal: React.FC<ClientDetailsModalProps> = ({
           {/* Conteúdo Aba 1: Dados Gerais & Timeline */}
           <Tabs.Content
             value="geral"
-            className="flex-1 overflow-y-auto p-6 focus:outline-none bg-slate-50/50"
+            className="flex-1 overflow-y-auto p-4 sm:p-6 focus:outline-none bg-slate-50/50"
           >
             {isLoading ? (
-              <div className="py-16 flex flex-col items-center justify-center text-slate-400 gap-3">
-                <Loader2 className="w-8 h-8 animate-spin text-teal-600" />
-                <p className="text-sm">Carregando ficha do cliente...</p>
-              </div>
+              <LoadingState message="Carregando ficha do cliente..." />
+            ) : loadError ? (
+              <ErrorState
+                title="Não foi possível carregar a ficha"
+                message="Os dados do cliente não puderam ser lidos do servidor. Verifique sua conexão e tente novamente."
+                onRetry={fetchClientDetails}
+              />
             ) : client ? (
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 {/* Coluna Esquerda: Informações Cadastrais */}
@@ -381,7 +427,7 @@ export const ClientDetailsModal: React.FC<ClientDetailsModalProps> = ({
 
                     <div className="space-y-3 text-xs">
                       <div>
-                        <span className="text-slate-400 block mb-0.5">Telefone / WhatsApp</span>
+                        <span className="text-slate-500 block mb-0.5">Telefone / WhatsApp</span>
                         <div className="flex items-center gap-2 text-slate-800 font-medium font-mono">
                           <Phone className="w-3.5 h-3.5 text-teal-600" />
                           <span>{client.phone ? formatPhoneBR(client.phone) : 'Não informado'}</span>
@@ -389,7 +435,7 @@ export const ClientDetailsModal: React.FC<ClientDetailsModalProps> = ({
                       </div>
 
                       <div>
-                        <span className="text-slate-400 block mb-0.5">E-mail</span>
+                        <span className="text-slate-500 block mb-0.5">E-mail</span>
                         <div className="flex items-center gap-2 text-slate-800 font-medium">
                           <Mail className="w-3.5 h-3.5 text-teal-600" />
                           <span className="truncate">
@@ -399,14 +445,23 @@ export const ClientDetailsModal: React.FC<ClientDetailsModalProps> = ({
                       </div>
 
                       <div>
-                        <span className="text-slate-400 block mb-0.5">Responsável pelo Lead</span>
+                        <label
+                          htmlFor="details-owner"
+                          className="text-slate-500 block mb-0.5"
+                        >
+                          Responsável pelo lead
+                        </label>
                         <div className="flex items-center gap-2 text-slate-800 font-medium">
-                          <UserCheck className="w-3.5 h-3.5 text-teal-600" />
+                          <UserCheck
+                            className="w-3.5 h-3.5 text-teal-600 flex-shrink-0"
+                            aria-hidden="true"
+                          />
                           <select
+                            id="details-owner"
                             value={client.ownerId || ''}
                             disabled={isUpdatingOwner}
                             onChange={(e) => handleOwnerChange(e.target.value)}
-                            className="text-xs bg-slate-50 border border-slate-200 rounded px-2 py-1 focus:ring-teal-600 w-full"
+                            className={controlClassSm}
                           >
                             <option value="">Sem responsável</option>
                             {client.owner && !client.owner.active && (
@@ -424,9 +479,9 @@ export const ClientDetailsModal: React.FC<ClientDetailsModalProps> = ({
                       </div>
 
                       <div>
-                        <span className="text-slate-400 block mb-0.5">Criado em</span>
+                        <span className="text-slate-500 block mb-0.5">Criado em</span>
                         <div className="flex items-center gap-2 text-slate-600">
-                          <Calendar className="w-3.5 h-3.5 text-slate-400" />
+                          <Calendar className="w-3.5 h-3.5 text-slate-500" />
                           <span>{formatDateTimeBR(client.createdAt)}</span>
                         </div>
                       </div>
@@ -450,31 +505,32 @@ export const ClientDetailsModal: React.FC<ClientDetailsModalProps> = ({
                   {/* Card de Nova Anotação */}
                   <div className="bg-white p-4 rounded-lg border border-slate-200 shadow-xs">
                     <h4 className="text-xs font-bold text-navy-900 mb-2 flex items-center gap-2">
-                      <MessageSquare className="w-4 h-4 text-teal-600" />
-                      <span>Registrar Anotação na Timeline (RF-06)</span>
+                      <MessageSquare className="w-4 h-4 text-teal-600" aria-hidden="true" />
+                      <span>Registrar anotação</span>
                     </h4>
                     <form onSubmit={handleAddLog} className="space-y-3">
+                      <label htmlFor="new-log" className="sr-only">
+                        Nova anotação
+                      </label>
                       <textarea
+                        id="new-log"
                         rows={2}
                         required
                         value={newLogContent}
                         onChange={(e) => setNewLogContent(e.target.value)}
-                        placeholder="Escreva uma anotação sobre contato, reunião, proposta ou alinhamento com o cliente..."
-                        className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded focus:outline-none focus:bg-white focus:border-teal-600 focus:ring-2 focus:ring-teal-600/20 text-navy-900"
+                        placeholder="Contato, reunião, proposta ou alinhamento com o cliente..."
+                        className={controlClass + ' text-xs'}
                       />
                       <div className="flex justify-end">
-                        <button
+                        <Button
                           type="submit"
-                          disabled={isSubmittingLog || !newLogContent.trim()}
-                          className="px-3.5 py-1.5 bg-teal-600 hover:bg-teal-700 text-white text-xs font-medium rounded flex items-center gap-1.5 disabled:opacity-50 transition-colors shadow-xs"
+                          size="sm"
+                          isLoading={isSubmittingLog}
+                          disabled={!newLogContent.trim()}
+                          icon={<Send className="w-3.5 h-3.5" aria-hidden="true" />}
                         >
-                          {isSubmittingLog ? (
-                            <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                          ) : (
-                            <Send className="w-3.5 h-3.5" />
-                          )}
-                          <span>Registrar Anotação</span>
-                        </button>
+                          Registrar anotação
+                        </Button>
                       </div>
                     </form>
                   </div>
@@ -482,22 +538,19 @@ export const ClientDetailsModal: React.FC<ClientDetailsModalProps> = ({
                   {/* Lista da Timeline */}
                   <div className="bg-white p-5 rounded-lg border border-slate-200 shadow-xs">
                     <h4 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-4 flex items-center justify-between">
-                      <span>Histórico de Interações ({logs.length})</span>
-                      <span className="text-[11px] font-normal text-slate-400">
+                      <span>Histórico de interações ({logs.length})</span>
+                      <span className="text-[11px] font-normal text-slate-500">
                         Ordenado do mais recente
                       </span>
                     </h4>
 
                     {logs.length === 0 ? (
-                      <div className="py-8 text-center text-slate-400">
-                        <Clock className="w-8 h-8 mx-auto mb-2 text-slate-300" />
-                        <p className="text-xs font-medium text-slate-600">
-                          Nenhuma anotação registrada ainda.
-                        </p>
-                        <p className="text-[11px] text-slate-400 mt-0.5">
-                          Use o formulário acima para registrar contatos e reuniões.
-                        </p>
-                      </div>
+                      <EmptyState
+                        icon={<Clock className="w-6 h-6" />}
+                        title="Nenhuma anotação ainda"
+                        message="Registre contatos, reuniões e alinhamentos no campo acima para manter o histórico do cliente."
+                        className="!py-8"
+                      />
                     ) : (
                       <div className="relative pl-6 space-y-6 before:absolute before:left-2 before:top-2 before:bottom-2 before:w-0.5 before:bg-slate-200">
                         {logs.map((log) => (
@@ -516,7 +569,7 @@ export const ClientDetailsModal: React.FC<ClientDetailsModalProps> = ({
                                   <span className="text-xs font-bold text-navy-900">
                                     {log.user.name}
                                   </span>
-                                  <span className="text-[10px] text-slate-400">
+                                  <span className="text-[10px] text-slate-500">
                                     ({log.user.role})
                                   </span>
                                 </div>
@@ -548,48 +601,48 @@ export const ClientDetailsModal: React.FC<ClientDetailsModalProps> = ({
             <div className="flex items-center justify-between bg-white p-4 rounded-lg border border-slate-200 shadow-xs">
               <div>
                 <h3 className="text-xs font-bold text-navy-900 uppercase tracking-wider">
-                  Contratos e Anexos Assinados (RF-10 a RF-13)
+                  Contratos e anexos assinados
                 </h3>
                 <p className="text-xs text-slate-500 mt-0.5">
-                  Gerencie serviços contratados, vigência, valores e anexos de documentos.
+                  Serviços contratados, vigência, valores e documentos.
                 </p>
               </div>
-              <button
+              <Button
+                size="sm"
                 onClick={() => {
                   setContractToEdit(null);
                   setIsContractModalOpen(true);
                 }}
-                className="px-3.5 py-1.5 bg-teal-600 hover:bg-teal-700 text-white text-xs font-medium rounded flex items-center gap-1.5 transition-colors shadow-xs"
+                icon={<Plus className="w-3.5 h-3.5" aria-hidden="true" />}
+                className="flex-shrink-0"
               >
-                <Plus className="w-3.5 h-3.5" />
-                <span>Novo Contrato</span>
-              </button>
+                Novo contrato
+              </Button>
             </div>
 
             {isLoadingContracts ? (
-              <div className="py-16 flex flex-col items-center justify-center text-slate-400 gap-3 bg-white rounded-lg border border-slate-200">
-                <Loader2 className="w-8 h-8 animate-spin text-teal-600" />
-                <p className="text-sm">Carregando contratos...</p>
+              <div className="bg-white rounded-lg border border-slate-200">
+                <LoadingState message="Carregando contratos..." />
               </div>
             ) : contracts.length === 0 ? (
-              <div className="py-12 text-center bg-white rounded-lg border border-slate-200 p-8">
-                <FileCode2 className="w-10 h-10 mx-auto mb-2 text-slate-300" />
-                <h4 className="text-sm font-bold text-navy-900">
-                  Nenhum contrato cadastrado para este cliente
-                </h4>
-                <p className="text-xs text-slate-500 mt-1 max-w-sm mx-auto">
-                  Cadastre o primeiro contrato com modelo de cobrança recorrente ou pontual e anexe o documento assinado.
-                </p>
-                <button
-                  onClick={() => {
-                    setContractToEdit(null);
-                    setIsContractModalOpen(true);
-                  }}
-                  className="mt-4 px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white text-xs font-medium rounded inline-flex items-center gap-1.5 transition-colors shadow-xs"
-                >
-                  <Plus className="w-4 h-4" />
-                  <span>Cadastrar Primeiro Contrato</span>
-                </button>
+              <div className="bg-white rounded-lg border border-slate-200">
+                <EmptyState
+                  icon={<FileCode2 className="w-6 h-6" />}
+                  title="Nenhum contrato para este cliente"
+                  message="Cadastre o primeiro contrato, escolha o modelo de cobrança e anexe o documento assinado."
+                  action={
+                    <Button
+                      size="sm"
+                      onClick={() => {
+                        setContractToEdit(null);
+                        setIsContractModalOpen(true);
+                      }}
+                      icon={<Plus className="w-4 h-4" aria-hidden="true" />}
+                    >
+                      Cadastrar contrato
+                    </Button>
+                  }
+                />
               </div>
             ) : (
               <div className="space-y-4">
@@ -641,7 +694,7 @@ export const ClientDetailsModal: React.FC<ClientDetailsModalProps> = ({
                         {/* Valor e Tipo de Cobrança */}
                         <div className="flex items-center gap-3 sm:text-right">
                           <div>
-                            <span className="text-xs text-slate-400 block font-medium">
+                            <span className="text-xs text-slate-500 block font-medium">
                               {isRecorrente ? 'Mensalidade' : 'Valor Total'}
                             </span>
                             <span className="text-base font-bold text-navy-900 font-mono">
@@ -649,24 +702,25 @@ export const ClientDetailsModal: React.FC<ClientDetailsModalProps> = ({
                             </span>
                           </div>
 
-                          <div className="flex items-center gap-1">
-                            <button
+                          <div className="flex items-center gap-0.5">
+                            <IconButton
+                              label={'Editar contrato de ' + ct.serviceType}
                               onClick={() => {
                                 setContractToEdit(ct);
                                 setIsContractModalOpen(true);
                               }}
-                              title="Editar contrato"
-                              className="p-1.5 text-slate-500 hover:text-teal-700 hover:bg-slate-100 rounded transition-colors"
                             >
-                              <Edit2 className="w-4 h-4" />
-                            </button>
-                            <button
+                              <Edit2 className="w-4 h-4" aria-hidden="true" />
+                            </IconButton>
+                            <IconButton
+                              label={'Excluir contrato de ' + ct.serviceType}
+                              tone="danger"
                               onClick={() => handleDeleteContract(ct)}
-                              title="Excluir contrato"
-                              className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded transition-colors"
+                              isLoading={deletingContractId === ct.id}
+                              disabled={deletingContractId !== null}
                             >
-                              <Trash2 className="w-4 h-4" />
-                            </button>
+                              <Trash2 className="w-4 h-4" aria-hidden="true" />
+                            </IconButton>
                           </div>
                         </div>
                       </div>
@@ -720,23 +774,29 @@ export const ClientDetailsModal: React.FC<ClientDetailsModalProps> = ({
                         <div className="pt-2 border-t border-slate-100">
                           <div className="flex items-center justify-between mb-2">
                             <h5 className="text-[11px] font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
-                              <Paperclip className="w-3.5 h-3.5 text-teal-600" />
-                              <span>Arquivos Anexos ({ct.files?.length || 0})</span>
+                              <Paperclip
+                                className="w-3.5 h-3.5 text-teal-600"
+                                aria-hidden="true"
+                              />
+                              <span>Arquivos anexos ({ct.files?.length || 0})</span>
                             </h5>
-                            <button
+                            <Button
+                              variant="ghost"
+                              size="sm"
                               onClick={() => {
                                 setContractForFiles(ct);
                                 setIsFilesModalOpen(true);
                               }}
-                              className="text-xs font-semibold text-teal-700 hover:text-teal-800 hover:underline flex items-center gap-1"
+                              aria-label={'Gerenciar anexos do contrato de ' + ct.serviceType}
+                              icon={<Plus className="w-3 h-3" aria-hidden="true" />}
+                              className="text-teal-700 hover:bg-teal-50 hover:text-teal-800"
                             >
-                              <Plus className="w-3 h-3" />
-                              <span>Gerenciar / Anexar</span>
-                            </button>
+                              Gerenciar anexos
+                            </Button>
                           </div>
 
                           {!ct.files || ct.files.length === 0 ? (
-                            <p className="text-[11px] text-slate-400 italic">
+                            <p className="text-[11px] text-slate-500 italic">
                               Nenhum arquivo anexado (contrato assinado ou aditivo).
                             </p>
                           ) : (
@@ -752,13 +812,16 @@ export const ClientDetailsModal: React.FC<ClientDetailsModalProps> = ({
                                       {file.originalName}
                                     </span>
                                   </div>
-                                  <button
-                                    onClick={() => handleDownloadFile(file.id, file.originalName)}
-                                    title="Baixar arquivo"
-                                    className="p-1 text-slate-500 hover:text-teal-700 hover:bg-slate-200 rounded transition-colors flex-shrink-0"
+                                  <IconButton
+                                    label={'Baixar ' + file.originalName}
+                                    onClick={() =>
+                                      handleDownloadFile(file.id, file.originalName)
+                                    }
+                                    isLoading={downloadingFileId === file.id}
+                                    className="!p-1 flex-shrink-0"
                                   >
-                                    <Download className="w-3.5 h-3.5" />
-                                  </button>
+                                    <Download className="w-3.5 h-3.5" aria-hidden="true" />
+                                  </IconButton>
                                 </div>
                               ))}
                             </div>

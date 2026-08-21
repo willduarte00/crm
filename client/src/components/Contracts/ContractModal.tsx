@@ -8,10 +8,14 @@ import {
   CONTRACT_STATUSES,
 } from '../../types/contract';
 import { Client } from '../../types/client';
-import { apiFetch } from '../../services/api';
+import { apiFetch, errorMessage } from '../../services/api';
 import { formatCurrencyBRL, parseBRLToCents } from '../../utils/formatters';
-import { X, FileText, AlertCircle, Loader2 } from 'lucide-react';
+import { FileText } from 'lucide-react';
 import { toast } from 'sonner';
+import { Modal } from '../ui/Modal';
+import { Button } from '../ui/Button';
+import { Field, controlClass } from '../ui/Field';
+import { FormAlert } from '../ui/States';
 
 interface ContractModalProps {
   isOpen: boolean;
@@ -21,6 +25,20 @@ interface ContractModalProps {
   fixedClientId?: string;
   clients?: Client[];
 }
+
+const STATUS_LABELS: Record<ContractStatus, string> = {
+  ativo: 'Ativo',
+  pausado: 'Pausado',
+  encerrado: 'Encerrado',
+};
+
+const PERIODICITY_OPTIONS = [
+  { value: 1, label: 'Mensal (a cada 1 mês)' },
+  { value: 2, label: 'Bimestral (a cada 2 meses)' },
+  { value: 3, label: 'Trimestral (a cada 3 meses)' },
+  { value: 6, label: 'Semestral (a cada 6 meses)' },
+  { value: 12, label: 'Anual (a cada 12 meses)' },
+];
 
 export const ContractModal: React.FC<ContractModalProps> = ({
   isOpen,
@@ -45,39 +63,40 @@ export const ContractModal: React.FC<ContractModalProps> = ({
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const formId = 'contract-form';
+
   useEffect(() => {
-    if (isOpen) {
-      setError(null);
-      if (contractToEdit) {
-        setClientId(contractToEdit.clientId);
-        setServiceType(contractToEdit.serviceType);
-        setDescription(contractToEdit.description || '');
-        setBillingType(contractToEdit.billingType);
-        setValueDisplay(formatCurrencyBRL(contractToEdit.valueCents).replace('R$', '').trim());
-        setBillingDay(contractToEdit.billingDay || 10);
-        setBillingPeriodMonths(contractToEdit.billingPeriodMonths || 1);
-        setInstallments(contractToEdit.installments || 1);
-        setStartDate(contractToEdit.startDate);
-        setEndDate(contractToEdit.endDate || '');
-        setStatus(contractToEdit.status);
-      } else {
-        setClientId(fixedClientId || (clients[0]?.id || ''));
-        setServiceType('Social Media & Conteúdo');
-        setDescription('');
-        setBillingType('recorrente');
-        setValueDisplay('2.500,00');
-        setBillingDay(10);
-        setBillingPeriodMonths(1);
-        setInstallments(1);
-        const today = new Date().toISOString().split('T')[0];
-        setStartDate(today);
-        setEndDate('');
-        setStatus('ativo');
-      }
+    if (!isOpen) return;
+
+    setError(null);
+    if (contractToEdit) {
+      setClientId(contractToEdit.clientId);
+      setServiceType(contractToEdit.serviceType);
+      setDescription(contractToEdit.description || '');
+      setBillingType(contractToEdit.billingType);
+      setValueDisplay(
+        formatCurrencyBRL(contractToEdit.valueCents).replace('R$', '').trim()
+      );
+      setBillingDay(contractToEdit.billingDay || 10);
+      setBillingPeriodMonths(contractToEdit.billingPeriodMonths || 1);
+      setInstallments(contractToEdit.installments || 1);
+      setStartDate(contractToEdit.startDate);
+      setEndDate(contractToEdit.endDate || '');
+      setStatus(contractToEdit.status);
+    } else {
+      setClientId(fixedClientId || clients[0]?.id || '');
+      setServiceType('Social Media & Conteúdo');
+      setDescription('');
+      setBillingType('recorrente');
+      setValueDisplay('2.500,00');
+      setBillingDay(10);
+      setBillingPeriodMonths(1);
+      setInstallments(1);
+      setStartDate(new Date().toISOString().split('T')[0]);
+      setEndDate('');
+      setStatus('ativo');
     }
   }, [isOpen, contractToEdit, fixedClientId, clients]);
-
-  if (!isOpen) return null;
 
   const handleValueChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const raw = e.target.value.replace(/\D/g, '');
@@ -86,160 +105,147 @@ export const ContractModal: React.FC<ContractModalProps> = ({
       return;
     }
     const cents = parseInt(raw, 10);
-    setValueDisplay((cents / 100).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
+    setValueDisplay(
+      (cents / 100).toLocaleString('pt-BR', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      })
+    );
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isLoading) return;
     setError(null);
 
     const valueCents = parseBRLToCents(valueDisplay);
 
     if (!clientId && !fixedClientId) {
-      setError('Selecione um cliente para o contrato.');
+      setError('Selecione o cliente deste contrato.');
       return;
     }
-
     if (valueCents <= 0) {
-      setError('O valor do contrato deve ser maior que zero.');
+      setError('Informe um valor maior que zero.');
       return;
     }
-
     if (!startDate) {
       setError('Informe a data de início do contrato.');
       return;
     }
-
+    if (endDate && endDate < startDate) {
+      setError('A data de término não pode ser anterior à data de início.');
+      return;
+    }
     if (billingType === 'recorrente') {
       if (!billingDay || billingDay < 1 || billingDay > 31) {
-        setError('O dia de cobrança (billingDay) deve ser entre 1 e 31.');
+        setError('O dia de vencimento precisa estar entre 1 e 31.');
         return;
       }
       if (!billingPeriodMonths || billingPeriodMonths < 1) {
-        setError('A periodicidade de cobrança deve ser de pelo menos 1 mês.');
+        setError('A periodicidade precisa ser de pelo menos 1 mês.');
         return;
       }
     }
-
-    if (billingType === 'pontual') {
-      if (!installments || installments < 1) {
-        setError('O número de parcelas deve ser no mínimo 1.');
-        return;
-      }
+    if (billingType === 'pontual' && (!installments || installments < 1)) {
+      setError('O contrato precisa ter pelo menos 1 parcela.');
+      return;
     }
 
     try {
       setIsLoading(true);
 
-      const payload: any = {
+      const payload = {
         clientId: fixedClientId || clientId,
         serviceType,
         description: description.trim() || null,
         billingType,
         valueCents,
         billingDay: billingType === 'recorrente' ? Number(billingDay) : null,
-        billingPeriodMonths: billingType === 'recorrente' ? Number(billingPeriodMonths) : null,
+        billingPeriodMonths:
+          billingType === 'recorrente' ? Number(billingPeriodMonths) : null,
         installments: billingType === 'pontual' ? Number(installments) : null,
         startDate,
         endDate: endDate.trim() ? endDate.trim() : null,
         status,
       };
 
-      let result: Contract;
+      const result = contractToEdit
+        ? await apiFetch<Contract>(`/api/contracts/${contractToEdit.id}`, {
+            method: 'PATCH',
+            body: JSON.stringify(payload),
+          })
+        : await apiFetch<Contract>('/api/contracts', {
+            method: 'POST',
+            body: JSON.stringify(payload),
+          });
 
-      if (contractToEdit) {
-        result = await apiFetch<Contract>(`/api/contracts/${contractToEdit.id}`, {
-          method: 'PATCH',
-          body: JSON.stringify(payload),
-        });
-        toast.success('Contrato atualizado com sucesso!');
-      } else {
-        result = await apiFetch<Contract>('/api/contracts', {
-          method: 'POST',
-          body: JSON.stringify(payload),
-        });
-        toast.success('Contrato cadastrado com sucesso!');
-      }
-
+      toast.success(contractToEdit ? 'Contrato atualizado.' : 'Contrato criado.');
       onSuccess(result);
       onClose();
-    } catch (err: any) {
-      setError(err.message || 'Erro ao salvar contrato.');
-      toast.error('Erro ao salvar contrato.');
+    } catch (err) {
+      setError(errorMessage(err, 'Não foi possível salvar o contrato.'));
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-navy-950/60 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
-      <div className="w-full max-w-2xl bg-white rounded-lg border border-slate-200 shadow-xl overflow-hidden my-6 animate-in fade-in zoom-in duration-150">
-        {/* Header */}
-        <div className="px-6 py-4 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded bg-teal-600/10 text-teal-700 flex items-center justify-center font-bold">
-              <FileText className="w-4 h-4" />
-            </div>
-            <div>
-              <h3 className="text-sm font-bold text-navy-900">
-                {contractToEdit ? 'Editar Contrato' : 'Novo Contrato'}
-              </h3>
-              <p className="text-xs text-slate-500">
-                {contractToEdit
-                  ? 'Atualize os dados e condições financeiras do contrato'
-                  : 'Cadastre um contrato recorrente ou pontual com serviços e vigência'}
-              </p>
-            </div>
-          </div>
-          <button
-            onClick={onClose}
-            className="p-1.5 text-slate-400 hover:text-slate-600 rounded transition-colors"
-          >
-            <X className="w-4 h-4" />
-          </button>
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      title={contractToEdit ? 'Editar contrato' : 'Novo contrato'}
+      description={
+        contractToEdit
+          ? 'Atualize os dados e as condições financeiras do contrato.'
+          : 'Cadastre um contrato recorrente ou pontual, com serviço e vigência.'
+      }
+      icon={<FileText className="w-5 h-5" aria-hidden="true" />}
+      size="lg"
+      footer={
+        <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2">
+          <Button variant="secondary" onClick={onClose} disabled={isLoading}>
+            Cancelar
+          </Button>
+          <Button type="submit" form={formId} isLoading={isLoading}>
+            {contractToEdit ? 'Salvar alterações' : 'Criar contrato'}
+          </Button>
         </div>
+      }
+    >
+      {error && <FormAlert>{error}</FormAlert>}
 
-        {/* Formulário */}
-        <form onSubmit={handleSubmit} className="p-6 space-y-4">
-          {error && (
-            <div className="p-3 bg-red-50 border border-red-200 rounded text-xs text-red-700 flex items-start gap-2">
-              <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
-              <span>{error}</span>
-            </div>
-          )}
-
-          {/* Seleção de Cliente se não fixo */}
-          {!fixedClientId && !contractToEdit && (
-            <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">
-                Cliente *
-              </label>
+      <form id={formId} onSubmit={handleSubmit} className="space-y-4">
+        {!fixedClientId && !contractToEdit && (
+          <Field label="Cliente" required>
+            {(props) => (
               <select
-                required
+                {...props}
                 value={clientId}
                 onChange={(e) => setClientId(e.target.value)}
-                className="w-full px-3 py-2 text-xs bg-white border border-slate-200 rounded focus:outline-none focus:border-teal-600 focus:ring-2 focus:ring-teal-600/20 text-navy-900"
+                className={controlClass}
               >
-                <option value="" disabled>Selecione um cliente...</option>
+                <option value="" disabled>
+                  Selecione um cliente…
+                </option>
                 {clients.map((c) => (
                   <option key={c.id} value={c.id}>
-                    {c.name} {c.tradeName ? `(${c.tradeName})` : ''}
+                    {c.name}
+                    {c.tradeName ? ` (${c.tradeName})` : ''}
                   </option>
                 ))}
               </select>
-            </div>
-          )}
+            )}
+          </Field>
+        )}
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {/* Tipo de Serviço (RF-10) */}
-            <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">
-                Tipo de Serviço (RF-10) *
-              </label>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <Field label="Tipo de serviço" required>
+            {(props) => (
               <select
+                {...props}
                 value={serviceType}
                 onChange={(e) => setServiceType(e.target.value as ServiceType)}
-                className="w-full px-3 py-2 text-xs bg-white border border-slate-200 rounded focus:outline-none focus:border-teal-600 focus:ring-2 focus:ring-teal-600/20 text-navy-900"
+                className={controlClass}
               >
                 {SERVICE_TYPES.map((st) => (
                   <option key={st} value={st}>
@@ -247,205 +253,207 @@ export const ContractModal: React.FC<ContractModalProps> = ({
                   </option>
                 ))}
               </select>
-            </div>
+            )}
+          </Field>
 
-            {/* Status do Contrato (RF-13) */}
-            <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">
-                Status do Contrato (RF-13) *
-              </label>
+          <Field label="Status do contrato" required>
+            {(props) => (
               <select
+                {...props}
                 value={status}
                 onChange={(e) => setStatus(e.target.value as ContractStatus)}
-                className="w-full px-3 py-2 text-xs bg-white border border-slate-200 rounded focus:outline-none focus:border-teal-600 focus:ring-2 focus:ring-teal-600/20 text-navy-900 font-medium"
+                className={controlClass}
               >
                 {CONTRACT_STATUSES.map((st) => (
                   <option key={st} value={st}>
-                    {st === 'ativo' ? 'Ativo' : st === 'pausado' ? 'Pausado' : 'Encerrado'}
+                    {STATUS_LABELS[st]}
                   </option>
                 ))}
               </select>
-            </div>
-          </div>
+            )}
+          </Field>
+        </div>
 
-          {/* Descrição / Escopo */}
-          <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1">
-              Descrição do Escopo <span className="text-slate-400 font-normal">(opcional)</span>
-            </label>
+        <Field label="Descrição do escopo">
+          {(props) => (
             <input
+              {...props}
               type="text"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              placeholder="Ex: Gestão de 12 posts mensais, stories diários e tráfego pago..."
-              className="w-full px-3 py-2 text-xs bg-white border border-slate-200 rounded focus:outline-none focus:border-teal-600 focus:ring-2 focus:ring-teal-600/20 text-navy-900"
+              placeholder="Ex: 12 posts mensais, stories diários e gestão de tráfego pago"
+              className={controlClass}
             />
-          </div>
+          )}
+        </Field>
 
-          {/* Tipo de Cobrança (RF-11, RF-11a) e Valor */}
-          <div className="p-4 bg-slate-50 border border-slate-200 rounded-lg space-y-3">
-            <h4 className="text-xs font-bold text-navy-900 uppercase tracking-wider">
-              Condições Financeiras (RF-11)
-            </h4>
+        {/* Condições financeiras */}
+        <div className="p-4 bg-slate-50 border border-slate-200 rounded-lg space-y-4">
+          <h3 className="text-xs font-bold text-navy-900 uppercase tracking-wider">
+            Condições financeiras
+          </h3>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {/* Tipo de Cobrança */}
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">
-                  Tipo de Cobrança *
-                </label>
-                <div className="flex gap-4 mt-1.5">
-                  <label className="flex items-center gap-1.5 text-xs text-navy-900 cursor-pointer font-medium">
-                    <input
-                      type="radio"
-                      name="billingType"
-                      value="recorrente"
-                      checked={billingType === 'recorrente'}
-                      onChange={() => setBillingType('recorrente')}
-                      className="text-teal-600 focus:ring-teal-600"
-                    />
-                    <span>Recorrente (Mensalidade)</span>
-                  </label>
-                  <label className="flex items-center gap-1.5 text-xs text-navy-900 cursor-pointer font-medium">
-                    <input
-                      type="radio"
-                      name="billingType"
-                      value="pontual"
-                      checked={billingType === 'pontual'}
-                      onChange={() => setBillingType('pontual')}
-                      className="text-teal-600 focus:ring-teal-600"
-                    />
-                    <span>Pontual (Projeto / Parcelado)</span>
-                  </label>
-                </div>
-              </div>
-
-              {/* Valor em R$ */}
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">
-                  {billingType === 'recorrente' ? 'Valor da Mensalidade (R$) *' : 'Valor Total do Contrato (R$) *'}
-                </label>
-                <div className="relative">
-                  <span className="absolute left-3 top-2 text-xs font-semibold text-slate-500">R$</span>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <fieldset>
+              <legend className="block text-xs font-semibold text-slate-700 mb-1.5">
+                Tipo de cobrança
+                <span className="text-rose-600 ml-0.5" aria-hidden="true">
+                  *
+                </span>
+              </legend>
+              <div className="flex flex-col gap-2 mt-1">
+                <label className="flex items-center gap-2 text-xs text-navy-900 cursor-pointer font-medium">
                   <input
+                    type="radio"
+                    name="billingType"
+                    value="recorrente"
+                    checked={billingType === 'recorrente'}
+                    onChange={() => setBillingType('recorrente')}
+                    className="text-teal-600 focus:ring-teal-600"
+                  />
+                  <span>Recorrente (mensalidade)</span>
+                </label>
+                <label className="flex items-center gap-2 text-xs text-navy-900 cursor-pointer font-medium">
+                  <input
+                    type="radio"
+                    name="billingType"
+                    value="pontual"
+                    checked={billingType === 'pontual'}
+                    onChange={() => setBillingType('pontual')}
+                    className="text-teal-600 focus:ring-teal-600"
+                  />
+                  <span>Pontual (projeto parcelado)</span>
+                </label>
+              </div>
+            </fieldset>
+
+            <Field
+              label={
+                billingType === 'recorrente'
+                  ? 'Valor da mensalidade'
+                  : 'Valor total do contrato'
+              }
+              required
+            >
+              {(props) => (
+                <div className="relative">
+                  <span
+                    className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-slate-500 pointer-events-none"
+                    aria-hidden="true"
+                  >
+                    R$
+                  </span>
+                  <input
+                    {...props}
                     type="text"
-                    required
+                    inputMode="numeric"
                     value={valueDisplay}
                     onChange={handleValueChange}
                     placeholder="0,00"
-                    className="w-full pl-9 pr-3 py-2 text-xs bg-white border border-slate-200 rounded focus:outline-none focus:border-teal-600 focus:ring-2 focus:ring-teal-600/20 text-navy-900 font-mono font-bold"
+                    className={`${controlClass} pl-9 font-mono font-bold`}
                   />
                 </div>
-              </div>
-            </div>
+              )}
+            </Field>
+          </div>
 
-            {/* Campos Específicos por Tipo */}
-            {billingType === 'recorrente' ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-slate-200">
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    Dia de Vencimento (1 a 31) *
-                  </label>
+          {billingType === 'recorrente' ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-3 border-t border-slate-200">
+              <Field
+                label="Dia de vencimento"
+                required
+                hint="Em meses mais curtos, o vencimento cai no último dia do mês."
+              >
+                {(props) => (
                   <input
+                    {...props}
                     type="number"
-                    required
+                    inputMode="numeric"
                     min={1}
                     max={31}
                     value={billingDay}
                     onChange={(e) => setBillingDay(parseInt(e.target.value, 10) || 1)}
-                    className="w-full px-3 py-2 text-xs bg-white border border-slate-200 rounded focus:outline-none focus:border-teal-600 focus:ring-2 focus:ring-teal-600/20 text-navy-900"
+                    className={controlClass}
                   />
-                  <span className="text-[11px] text-slate-400 mt-0.5 block">
-                    Mês curto ajusta automaticamente para o último dia do mês.
-                  </span>
-                </div>
+                )}
+              </Field>
 
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    Periodicidade (RF-11a) *
-                  </label>
+              <Field label="Periodicidade" required>
+                {(props) => (
                   <select
+                    {...props}
                     value={billingPeriodMonths}
-                    onChange={(e) => setBillingPeriodMonths(parseInt(e.target.value, 10) || 1)}
-                    className="w-full px-3 py-2 text-xs bg-white border border-slate-200 rounded focus:outline-none focus:border-teal-600 focus:ring-2 focus:ring-teal-600/20 text-navy-900"
+                    onChange={(e) =>
+                      setBillingPeriodMonths(parseInt(e.target.value, 10) || 1)
+                    }
+                    className={controlClass}
                   >
-                    <option value={1}>Mensal (a cada 1 mês)</option>
-                    <option value={2}>Bimestral (a cada 2 meses)</option>
-                    <option value={3}>Trimestral (a cada 3 meses)</option>
-                    <option value={6}>Semestral (a cada 6 meses)</option>
-                    <option value={12}>Anual (a cada 12 meses)</option>
+                    {PERIODICITY_OPTIONS.map((opt) => (
+                      <option key={opt.value} value={opt.value}>
+                        {opt.label}
+                      </option>
+                    ))}
                   </select>
-                </div>
-              </div>
-            ) : (
-              <div className="pt-2 border-t border-slate-200">
-                <label className="block text-xs font-semibold text-slate-700 mb-1">
-                  Número de Parcelas *
-                </label>
-                <input
-                  type="number"
-                  required
-                  min={1}
-                  max={60}
-                  value={installments}
-                  onChange={(e) => setInstallments(parseInt(e.target.value, 10) || 1)}
-                  className="w-full sm:w-1/2 px-3 py-2 text-xs bg-white border border-slate-200 rounded focus:outline-none focus:border-teal-600 focus:ring-2 focus:ring-teal-600/20 text-navy-900"
-                />
-                <span className="text-[11px] text-slate-400 mt-0.5 block">
-                  Cria {installments} parcela(s) com valores e datas editáveis no módulo financeiro.
-                </span>
-              </div>
-            )}
-          </div>
-
-          {/* Vigência / Datas civis (YYYY-MM-DD) */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">
-                Data de Início do Contrato *
-              </label>
-              <input
-                type="date"
+                )}
+              </Field>
+            </div>
+          ) : (
+            <div className="pt-3 border-t border-slate-200">
+              <Field
+                label="Número de parcelas"
                 required
+                hint={`Gera ${installments} ${
+                  installments === 1 ? 'cobrança' : 'cobranças'
+                } com valores e datas editáveis no financeiro.`}
+                className="sm:max-w-[50%]"
+              >
+                {(props) => (
+                  <input
+                    {...props}
+                    type="number"
+                    inputMode="numeric"
+                    min={1}
+                    max={60}
+                    value={installments}
+                    onChange={(e) => setInstallments(parseInt(e.target.value, 10) || 1)}
+                    className={controlClass}
+                  />
+                )}
+              </Field>
+            </div>
+          )}
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <Field label="Início da vigência" required>
+            {(props) => (
+              <input
+                {...props}
+                type="date"
                 value={startDate}
                 onChange={(e) => setStartDate(e.target.value)}
-                className="w-full px-3 py-2 text-xs bg-white border border-slate-200 rounded focus:outline-none focus:border-teal-600 focus:ring-2 focus:ring-teal-600/20 text-navy-900"
+                className={controlClass}
               />
-            </div>
+            )}
+          </Field>
 
-            <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">
-                Data de Término <span className="text-slate-400 font-normal">(opcional / indeterminado)</span>
-              </label>
+          <Field
+            label="Término da vigência"
+            hint="Deixe em branco para prazo indeterminado."
+          >
+            {(props) => (
               <input
+                {...props}
                 type="date"
+                min={startDate || undefined}
                 value={endDate}
                 onChange={(e) => setEndDate(e.target.value)}
-                className="w-full px-3 py-2 text-xs bg-white border border-slate-200 rounded focus:outline-none focus:border-teal-600 focus:ring-2 focus:ring-teal-600/20 text-navy-900"
+                className={controlClass}
               />
-            </div>
-          </div>
-
-          {/* Rodapé e Botões */}
-          <div className="pt-4 border-t border-slate-200 flex items-center justify-end gap-3">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-4 py-2 text-xs font-medium text-slate-600 hover:bg-slate-100 rounded transition-colors"
-            >
-              Cancelar
-            </button>
-            <button
-              type="submit"
-              disabled={isLoading}
-              className="px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white text-xs font-medium rounded flex items-center gap-1.5 disabled:opacity-50 transition-colors shadow-xs"
-            >
-              {isLoading && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
-              <span>{contractToEdit ? 'Salvar Alterações' : 'Criar Contrato'}</span>
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
+            )}
+          </Field>
+        </div>
+      </form>
+    </Modal>
   );
 };

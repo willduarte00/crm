@@ -1,15 +1,32 @@
-import React from 'react';
+import React, { Suspense, lazy } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { LoginPage } from './components/Auth/LoginPage';
 import { RequireAuth } from './components/Auth/RequireAuth';
 import { AppShell } from './components/Layout/AppShell';
-import { UsersPage } from './components/Users/UsersPage';
 import { ClientsPage } from './components/Clients/ClientsPage';
 import { ContractsPage } from './components/Contracts/ContractsPage';
 import { FinancialPage } from './components/Financial/FinancialPage';
-import { KanbanPage } from './components/Kanban/KanbanPage';
-import { DashboardPage } from './components/Dashboard/DashboardPage';
-import { SettingsPage } from './components/Settings/SettingsPage';
+import { LoadingState } from './components/ui/States';
+
+/*
+ * Recharts (dashboard) e @hello-pangea/dnd (pipeline) respondem por boa parte
+ * do bundle e só são usados nessas duas rotas. Carregá-las sob demanda tira
+ * esse peso do primeiro carregamento, que hoje cai na tela de login.
+ */
+const DashboardPage = lazy(() =>
+  import('./components/Dashboard/DashboardPage').then((m) => ({ default: m.DashboardPage }))
+);
+const KanbanPage = lazy(() =>
+  import('./components/Kanban/KanbanPage').then((m) => ({ default: m.KanbanPage }))
+);
+const UsersPage = lazy(() =>
+  import('./components/Users/UsersPage').then((m) => ({ default: m.UsersPage }))
+);
+const SettingsPage = lazy(() =>
+  import('./components/Settings/SettingsPage').then((m) => ({ default: m.SettingsPage }))
+);
+
+const RouteFallback = <LoadingState message="Carregando a página…" />;
 
 export const App: React.FC = () => {
   return (
@@ -24,16 +41,24 @@ export const App: React.FC = () => {
           </RequireAuth>
         }
       >
-        <Route index element={<DashboardPage />} />
+        <Route
+          index
+          element={<Suspense fallback={RouteFallback}>{<DashboardPage />}</Suspense>}
+        />
         <Route path="clientes" element={<ClientsPage />} />
-        <Route path="pipeline" element={<KanbanPage />} />
+        <Route
+          path="pipeline"
+          element={<Suspense fallback={RouteFallback}>{<KanbanPage />}</Suspense>}
+        />
         <Route path="contratos" element={<ContractsPage />} />
         <Route path="financeiro" element={<FinancialPage />} />
         <Route
           path="usuarios"
           element={
             <RequireAuth adminOnly>
-              <UsersPage />
+              <Suspense fallback={RouteFallback}>
+                <UsersPage />
+              </Suspense>
             </RequireAuth>
           }
         />
@@ -41,7 +66,9 @@ export const App: React.FC = () => {
           path="configuracoes"
           element={
             <RequireAuth adminOnly>
-              <SettingsPage />
+              <Suspense fallback={RouteFallback}>
+                <SettingsPage />
+              </Suspense>
             </RequireAuth>
           }
         />

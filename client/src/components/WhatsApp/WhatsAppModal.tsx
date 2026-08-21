@@ -143,10 +143,10 @@ export const WhatsAppModal: React.FC<WhatsAppModalProps> = ({
   return (
     <Dialog.Root open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <Dialog.Portal>
-        <Dialog.Overlay className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 animate-in fade-in duration-200" />
-        <Dialog.Content className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white rounded-xl shadow-2xl border border-slate-200 w-full max-w-3xl z-50 overflow-hidden animate-in zoom-in-95 duration-200 flex flex-col max-h-[90vh]">
+        <Dialog.Overlay className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 animate-overlay-in" />
+        <Dialog.Content className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white rounded-xl shadow-2xl border border-slate-200 w-[calc(100vw-1.5rem)] max-w-3xl z-50 overflow-hidden animate-panel-in flex flex-col max-h-[calc(100dvh-2rem)]">
           {/* Header */}
-          <div className="flex items-center justify-between p-5 border-b border-slate-200 bg-slate-50/80">
+          <div className="flex items-start justify-between gap-3 p-4 sm:p-5 border-b border-slate-200 bg-slate-50/80 flex-shrink-0">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-full bg-[#25D366]/10 text-[#25D366] flex items-center justify-center flex-shrink-0">
                 <MessageSquare className="w-5 h-5 fill-current" />
@@ -164,21 +164,28 @@ export const WhatsAppModal: React.FC<WhatsAppModalProps> = ({
               </div>
             </div>
             <Dialog.Close asChild>
-              <button className="text-slate-400 hover:text-slate-700 p-1.5 rounded-lg hover:bg-slate-200/60 transition-colors">
-                <X className="w-5 h-5" />
+              <button
+                aria-label="Fechar"
+                className="text-slate-500 hover:text-navy-900 p-1.5 rounded-lg hover:bg-slate-200/60 transition-colors flex-shrink-0"
+              >
+                <X className="w-5 h-5" aria-hidden="true" />
               </button>
             </Dialog.Close>
           </div>
 
           {/* Body */}
-          <div className="p-6 overflow-y-auto grid grid-cols-1 md:grid-cols-12 gap-6 bg-slate-50/30">
+          <div className="p-4 sm:p-6 overflow-y-auto grid grid-cols-1 md:grid-cols-12 gap-5 bg-slate-50/30">
             {/* Coluna Esquerda: Controles e Variáveis */}
             <div className="md:col-span-5 space-y-4">
               <div>
-                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-                  Modelo da Mensagem
+                <label
+                  htmlFor="wa-template"
+                  className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5"
+                >
+                  Modelo da mensagem
                 </label>
                 <select
+                  id="wa-template"
                   value={selectedTemplate}
                   onChange={(e) =>
                     handleTemplateChange(e.target.value as WhatsAppTemplateKey)
@@ -248,21 +255,28 @@ export const WhatsAppModal: React.FC<WhatsAppModalProps> = ({
                 <button
                   type="button"
                   onClick={() => setIsEditingCustom(!isEditingCustom)}
-                  className="text-xs font-semibold text-teal-700 hover:text-teal-800 hover:underline flex items-center gap-1"
+                  aria-pressed={isEditingCustom}
+                  className="text-xs font-semibold text-teal-700 hover:text-teal-800 hover:underline rounded-sm"
                 >
-                  {isEditingCustom ? '← Visualizar balão padrão' : '✏️ Editar texto manualmente'}
+                  {isEditingCustom
+                    ? 'Voltar para a pré-visualização'
+                    : 'Editar o texto manualmente'}
                 </button>
               </div>
             </div>
 
             {/* Coluna Direita: Preview do Balão WhatsApp */}
             <div className="md:col-span-7 flex flex-col">
-              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-                {isEditingCustom ? 'Editar Mensagem' : 'Pré-visualização (WhatsApp)'}
+              <label
+                htmlFor="wa-message"
+                className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5"
+              >
+                {isEditingCustom ? 'Editar mensagem' : 'Pré-visualização'}
               </label>
 
               {isEditingCustom ? (
                 <textarea
+                  id="wa-message"
                   rows={8}
                   value={customText}
                   onChange={(e) => setCustomText(e.target.value)}
@@ -279,7 +293,7 @@ export const WhatsAppModal: React.FC<WhatsAppModalProps> = ({
                   }}
                 >
                   {/* Balão WhatsApp Verde */}
-                  <div className="bg-[#D9FDD3] text-[#111B21] rounded-lg rounded-tr-xs p-3.5 shadow-sm max-w-[95%] self-end relative text-sm leading-relaxed border border-[#c3f0bb]">
+                  <div className="bg-[#D9FDD3] text-[#111B21] rounded-lg rounded-tr-sm p-3.5 shadow-sm max-w-[95%] self-end relative text-sm leading-relaxed border border-[#c3f0bb]">
                     <div className="whitespace-pre-wrap font-normal text-[13.5px]">
                       {customText}
                     </div>
@@ -295,12 +309,14 @@ export const WhatsAppModal: React.FC<WhatsAppModalProps> = ({
           </div>
 
           {/* Footer & Aviso RF-53 */}
-          <div className="p-5 border-t border-slate-200 bg-slate-50 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="p-4 sm:p-5 border-t border-slate-200 bg-slate-50 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 flex-shrink-0">
             {/* Alerta RF-53 Obrigatório */}
             <div className="flex items-center gap-2.5 text-amber-800 bg-amber-50 px-3.5 py-2 rounded-lg border border-amber-200 text-xs w-full sm:w-auto">
               <AlertTriangle className="w-4 h-4 text-amber-600 flex-shrink-0" />
               <span>
-                <strong>Aviso:</strong> A NF e arquivos não vão anexados. O link abre o WhatsApp e o anexo é manual.
+                <strong>Anexos não vão junto.</strong> O link abre a conversa com o
+                texto pronto; a nota fiscal e outros arquivos precisam ser anexados
+                manualmente no WhatsApp.
               </span>
             </div>
 

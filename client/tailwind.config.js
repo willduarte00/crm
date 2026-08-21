@@ -45,11 +45,38 @@ export default {
         xl: '0.75rem',      // 12px
         full: '9999px',
       },
+      // Escala de elevação usada em toda a aplicação. `xs`/`2xs` já eram
+      // referenciadas no código, mas não existiam no Tailwind 3 e eram
+      // silenciosamente ignoradas — deixando cards e barras totalmente planos.
+      boxShadow: {
+        '2xs': '0 1px 1px 0 rgb(15 23 42 / 0.04)',
+        xs: '0 1px 2px 0 rgb(15 23 42 / 0.06)',
+      },
+      blur: {
+        xs: '2px',
+      },
+      borderWidth: {
+        3: '3px',
+      },
       width: {
         sidebar: '260px',
       },
       maxWidth: {
         app: '1440px',
+      },
+      keyframes: {
+        'overlay-in': {
+          from: { opacity: '0' },
+          to: { opacity: '1' },
+        },
+        'panel-in': {
+          from: { opacity: '0', transform: 'translateY(8px) scale(0.98)' },
+          to: { opacity: '1', transform: 'translateY(0) scale(1)' },
+        },
+      },
+      animation: {
+        'overlay-in': 'overlay-in 150ms ease-out',
+        'panel-in': 'panel-in 150ms ease-out',
       },
     },
   },

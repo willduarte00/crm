@@ -1,8 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { User } from '../../types';
-import { apiFetch, AppApiError } from '../../services/api';
-import { X, Users, Check, AlertCircle } from 'lucide-react';
+import { apiFetch, errorMessage } from '../../services/api';
+import { Users, Check } from 'lucide-react';
 import { toast } from 'sonner';
+import { Modal } from '../ui/Modal';
+import { Button } from '../ui/Button';
+import { Field, controlClass } from '../ui/Field';
+import { FormAlert } from '../ui/States';
 
 interface BatchReassignModalProps {
   isOpen: boolean;
@@ -23,12 +27,20 @@ export const BatchReassignModal: React.FC<BatchReassignModalProps> = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  if (!isOpen) return null;
-
   const activeUsers = users.filter((u) => u.active);
+  const count = selectedClientIds.length;
+  const formId = 'batch-reassign-form';
+
+  useEffect(() => {
+    if (isOpen) {
+      setNewOwnerId('');
+      setError(null);
+    }
+  }, [isOpen]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isSubmitting) return;
     setError(null);
     setIsSubmitting(true);
 
@@ -45,62 +57,57 @@ export const BatchReassignModal: React.FC<BatchReassignModalProps> = ({
       );
 
       toast.success(
-        `${res.updatedCount} ${
-          res.updatedCount === 1 ? 'lead reatribuído' : 'leads reatribuídos'
-        } com sucesso!`
+        res.updatedCount === 1
+          ? '1 lead reatribuído.'
+          : `${res.updatedCount} leads reatribuídos.`
       );
       onSuccess();
       onClose();
-    } catch (err: any) {
-      if (err instanceof AppApiError) {
-        setError(err.data.error || 'Erro ao reatribuir leads');
-      } else {
-        setError('Ocorreu um erro ao reatribuir.');
-      }
+    } catch (err) {
+      setError(errorMessage(err, 'Não foi possível reatribuir os leads.'));
     } finally {
       setIsSubmitting(false);
     }
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-navy-950/60 backdrop-blur-sm flex items-center justify-center p-4">
-      <div className="w-full max-w-md bg-white rounded-lg border border-slate-200 shadow-xl p-6 relative animate-in fade-in zoom-in duration-150">
-        <button
-          onClick={onClose}
-          className="absolute right-4 top-4 text-slate-400 hover:text-slate-600 rounded p-1"
-        >
-          <X className="w-5 h-5" />
-        </button>
-
-        <div className="flex items-center gap-3 mb-5">
-          <div className="w-10 h-10 rounded bg-teal-50 text-teal-600 flex items-center justify-center flex-shrink-0">
-            <Users className="w-5 h-5" />
-          </div>
-          <div>
-            <h3 className="text-lg font-bold text-navy-900">Reatribuição em Lote</h3>
-            <p className="text-xs text-slate-500">
-              Reatribuir {selectedClientIds.length}{' '}
-              {selectedClientIds.length === 1 ? 'lead selecionado' : 'leads selecionados'}
-            </p>
-          </div>
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      title="Reatribuir leads em lote"
+      description={`${count} ${count === 1 ? 'lead será reatribuído' : 'leads serão reatribuídos'}.`}
+      icon={<Users className="w-5 h-5" aria-hidden="true" />}
+      size="sm"
+      footer={
+        <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2">
+          <Button variant="secondary" onClick={onClose} disabled={isSubmitting}>
+            Cancelar
+          </Button>
+          <Button
+            type="submit"
+            form={formId}
+            isLoading={isSubmitting}
+            disabled={count === 0}
+            icon={<Check className="w-4 h-4" aria-hidden="true" />}
+          >
+            Reatribuir {count} {count === 1 ? 'lead' : 'leads'}
+          </Button>
         </div>
+      }
+    >
+      {error && <FormAlert>{error}</FormAlert>}
 
-        {error && (
-          <div className="mb-4 p-3 rounded bg-red-50 border border-red-200 text-red-700 text-xs flex items-start gap-2">
-            <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
-            <span>{error}</span>
-          </div>
-        )}
-
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1">
-              Novo Responsável
-            </label>
+      <form id={formId} onSubmit={handleSubmit} className="space-y-4">
+        <Field
+          label="Novo responsável"
+          hint="Quem assumirá o atendimento destes leads. Deixe em branco para removê-los de qualquer responsável."
+        >
+          {(props) => (
             <select
+              {...props}
               value={newOwnerId}
               onChange={(e) => setNewOwnerId(e.target.value)}
-              className="w-full px-3 py-2 text-sm bg-white border border-slate-300 rounded focus:outline-none focus:border-teal-600 focus:ring-2 focus:ring-teal-600/20 text-navy-900"
+              className={controlClass}
             >
               <option value="">Deixar sem responsável</option>
               {activeUsers.map((u) => (
@@ -109,34 +116,9 @@ export const BatchReassignModal: React.FC<BatchReassignModalProps> = ({
                 </option>
               ))}
             </select>
-            <p className="text-[11px] text-slate-500 mt-1">
-              Selecione o novo membro da agência que assumirá o atendimento destes leads.
-            </p>
-          </div>
-
-          <div className="pt-3 flex justify-end gap-2 border-t border-slate-100">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100 rounded border border-slate-200"
-            >
-              Cancelar
-            </button>
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className="px-4 py-2 text-sm font-medium text-white bg-teal-600 hover:bg-teal-700 rounded flex items-center gap-2 disabled:opacity-50 shadow-sm"
-            >
-              {isSubmitting ? (
-                <span className="inline-block animate-spin border-2 border-white border-t-transparent rounded-full w-4 h-4" />
-              ) : (
-                <Check className="w-4 h-4" />
-              )}
-              <span>Confirmar Reatribuição</span>
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
+          )}
+        </Field>
+      </form>
+    </Modal>
   );
 };

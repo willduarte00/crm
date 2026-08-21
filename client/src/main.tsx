@@ -4,6 +4,7 @@ import { BrowserRouter } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from 'sonner';
 import { AuthProvider } from './context/AuthContext';
+import { ConfirmProvider } from './components/ui/ConfirmDialog';
 import { App } from './App';
 import './index.css';
 
@@ -21,8 +22,19 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
         <AuthProvider>
-          <App />
-          <Toaster richColors position="top-right" />
+          <ConfirmProvider>
+            <App />
+          </ConfirmProvider>
+          {/*
+            Topo-centro: no canto superior direito os toasts cobriam o botão
+            de menu e as ações do cabeçalho em telas estreitas.
+          */}
+          <Toaster
+            richColors
+            closeButton
+            position="top-center"
+            toastOptions={{ duration: 5000 }}
+          />
         </AuthProvider>
       </BrowserRouter>
     </QueryClientProvider>

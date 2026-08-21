@@ -46,18 +46,18 @@ export const ServicesChart: React.FC<ServicesChartProps> = ({ data }) => {
   };
 
   return (
-    <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-2xs flex flex-col justify-between">
+    <div className="bg-white border border-slate-200 rounded-xl p-5 sm:p-6 shadow-xs flex flex-col justify-between">
       <div className="mb-4">
-        <h3 className="text-base font-bold text-slate-900">
-          Distribuição por Serviço
-        </h3>
+        <h2 className="text-base font-bold text-navy-900">
+          Distribuição por serviço
+        </h2>
         <p className="text-xs text-slate-500 mt-0.5">
           Participação de clientes ativos por tipo de contrato
         </p>
       </div>
 
       {data.length === 0 ? (
-        <div className="h-[240px] flex items-center justify-center text-xs text-slate-400">
+        <div className="h-[240px] flex items-center justify-center text-xs text-slate-500">
           Nenhum contrato ativo cadastrado
         </div>
       ) : (
@@ -104,7 +104,7 @@ export const ServicesChart: React.FC<ServicesChartProps> = ({ data }) => {
                   <span className="text-slate-500 font-mono text-[11px]">
                     {item.value} {item.value === 1 ? 'cli' : 'clis'}
                   </span>
-                  <span className="font-bold text-slate-900 font-variant-numeric tabular-nums w-9 text-right">
+                  <span className="font-bold text-slate-900  tabular-nums w-9 text-right">
                     {item.percentage}%
                   </span>
                 </div>

@@ -58,7 +58,12 @@ export const KanbanColumn: React.FC<KanbanColumnProps> = ({
   };
 
   return (
-    <div className="w-[320px] flex flex-col bg-slate-100/90 rounded-xl border border-slate-200/80 h-full max-h-full shrink-0 shadow-xs">
+    <section
+      aria-label={`Etapa ${stage}, ${clients.length} ${
+        clients.length === 1 ? 'lead' : 'leads'
+      }`}
+      className="w-[280px] sm:w-[320px] flex flex-col bg-slate-100/90 rounded-xl border border-slate-200/80 h-full max-h-full shrink-0 shadow-xs"
+    >
       {/* Topo da Coluna */}
       <div className="flex items-center justify-between px-3.5 py-3 border-b border-slate-200/60 bg-white/70 rounded-t-xl shrink-0">
         <div className="flex items-center gap-2">
@@ -67,7 +72,10 @@ export const KanbanColumn: React.FC<KanbanColumnProps> = ({
             {stage}
           </h3>
         </div>
-        <span className="text-xs font-semibold tabular-nums px-2 py-0.5 bg-slate-200/80 text-slate-700 rounded-full">
+        <span
+          aria-hidden="true"
+          className="text-xs font-semibold tabular-nums px-2 py-0.5 bg-slate-200/80 text-slate-700 rounded-full"
+        >
           {clients.length}
         </span>
       </div>
@@ -94,15 +102,15 @@ export const KanbanColumn: React.FC<KanbanColumnProps> = ({
             {provided.placeholder}
 
             {clients.length === 0 && !snapshot.isDraggingOver && (
-              <div className="h-40 flex flex-col items-center justify-center text-slate-400 p-4 text-center border-2 border-dashed border-slate-200 rounded-lg">
+              <div className="h-40 flex flex-col items-center justify-center text-slate-500 p-4 text-center border-2 border-dashed border-slate-200 rounded-lg">
                 <Inbox className="w-6 h-6 text-slate-300 mb-1" />
                 <p className="text-xs font-medium text-slate-500">Nenhum lead</p>
-                <p className="text-[11px] text-slate-400 mt-0.5">Arraste um card para esta etapa</p>
+                <p className="text-[11px] text-slate-500 mt-0.5">Arraste um card para esta etapa</p>
               </div>
             )}
           </div>
         )}
       </Droppable>
-    </div>
+    </section>
   );
 };
