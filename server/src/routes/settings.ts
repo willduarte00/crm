@@ -50,3 +50,28 @@ settingsRouter.put('/', async (req: Request, res: Response) => {
 
   return res.json(updated);
 });
+
+/**
+ * Router separado para a leitura pública (autenticada) dos dados da agência.
+ *
+ * O módulo admin (RF-07a) controla quem *edita* as configurações, mas o
+ * `membro` também usa o WhatsApp (RF-08a) e o lembrete de vencimento precisa
+ * da chave PIX vinda de SETTINGS (RF-52). Este endpoint devolve apenas os
+ * campos já expostos pelo `/api/dashboard` — nunca permite escrita.
+ */
+export const settingsSummaryRouter = Router();
+
+settingsSummaryRouter.get('/', async (_req: Request, res: Response) => {
+  const settings = await prisma.settings.findFirst();
+
+  return res.json({
+    agencyName: settings?.agencyName || 'Minha Agência',
+    contactEmail: settings?.contactEmail || null,
+    phone: settings?.phone || null,
+    pixKey: settings?.pixKey || null,
+    pixKeyType: settings?.pixKeyType || null,
+    bankName: settings?.bankName || null,
+    bankBranch: settings?.bankBranch || null,
+    bankAccount: settings?.bankAccount || null,
+  });
+});

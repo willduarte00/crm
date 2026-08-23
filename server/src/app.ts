@@ -8,7 +8,7 @@ import { requireAdmin } from './middlewares/requireAdmin.js';
 import { errorHandler } from './middlewares/errorHandler.js';
 import { authRouter } from './routes/auth.js';
 import { usersRouter } from './routes/users.js';
-import { settingsRouter } from './routes/settings.js';
+import { settingsRouter, settingsSummaryRouter } from './routes/settings.js';
 import { clientsRouter } from './routes/clients.js';
 import { contractsRouter } from './routes/contracts.js';
 import { filesRouter } from './routes/files.js';
@@ -38,6 +38,10 @@ app.use('/api', requireAuth);
 
 // Rotas de autenticação
 app.use('/api/auth', authRouter);
+
+// Leitura dos dados da agência liberada a qualquer usuário autenticado.
+// Precisa vir ANTES do mount com requireAdmin: o Express casa na ordem.
+app.use('/api/settings/summary', settingsSummaryRouter);
 
 // Rotas administrativas protegidas (declaradas em um só lugar com requireAdmin)
 app.use('/api/users', requireAdmin, usersRouter);

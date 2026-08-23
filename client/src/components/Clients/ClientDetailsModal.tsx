@@ -23,6 +23,7 @@ import {
 } from '../../utils/formatters';
 import { ContractModal } from '../Contracts/ContractModal';
 import { ContractFilesModal } from '../Contracts/ContractFilesModal';
+import { ClientWhatsAppTab } from './ClientWhatsAppTab';
 import {
   X,
   Building2,
@@ -36,7 +37,6 @@ import {
   Send,
   FileCode2,
   Calendar,
-  Sparkles,
   Loader2,
   Plus,
   Paperclip,
@@ -835,27 +835,30 @@ export const ClientDetailsModal: React.FC<ClientDetailsModalProps> = ({
             )}
           </Tabs.Content>
 
-          {/* Conteúdo Aba 3: WhatsApp (Placeholder Fatia 6) */}
+          {/* Conteúdo Aba 3: WhatsApp (RF-50 a RF-53) */}
           <Tabs.Content
             value="whatsapp"
-            className="flex-1 overflow-y-auto p-12 focus:outline-none bg-slate-50/50"
+            className="flex-1 overflow-y-auto p-4 sm:p-6 focus:outline-none bg-slate-50/50"
           >
-            <div className="max-w-md mx-auto text-center bg-white p-8 rounded-lg border border-slate-200 shadow-sm">
-              <div className="w-12 h-12 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center mx-auto mb-4 border border-emerald-100">
-                <MessageSquare className="w-6 h-6" />
+            {isLoading ? (
+              <div className="bg-white rounded-lg border border-slate-200">
+                <LoadingState message="Carregando ficha do cliente..." />
               </div>
-              <h3 className="text-base font-bold text-navy-900">
-                Central de Mensagens WhatsApp
-              </h3>
-              <p className="text-xs text-slate-500 mt-2 leading-relaxed">
-                Disparo rápido de mensagens pré-preenchidas com modelos de boas-vindas,
-                lembrete de vencimento com chave PIX e envio de cobrança via links wa.me.
-              </p>
-              <div className="mt-5 inline-flex items-center gap-1.5 px-3 py-1 bg-amber-50 text-amber-800 border border-amber-200 rounded-full text-xs font-medium">
-                <Sparkles className="w-3.5 h-3.5" />
-                <span>Será implementado na Fatia 6</span>
-              </div>
-            </div>
+            ) : loadError ? (
+              <ErrorState
+                title="Não foi possível carregar a ficha"
+                message="Os dados do cliente não puderam ser lidos do servidor. Verifique sua conexão e tente novamente."
+                onRetry={fetchClientDetails}
+              />
+            ) : client ? (
+              <ClientWhatsAppTab
+                client={client}
+                onLogged={(log) => {
+                  setLogs((prev) => [log, ...prev]);
+                  onUpdated();
+                }}
+              />
+            ) : null}
           </Tabs.Content>
         </Tabs.Root>
       </div>

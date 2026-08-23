@@ -116,6 +116,37 @@ describe('Permissões — Testes de Integração', () => {
     expect(resSettings.status).toBe(200);
   });
 
+  it('8a. RF-08a/RF-52: membro lê os dados da agência em GET /api/settings/summary', async () => {
+    const token = createToken(memberUser);
+    vi.mocked(prisma.user.findUnique).mockResolvedValue(memberUser);
+    vi.mocked(prisma.settings.findFirst).mockResolvedValue({
+      id: 'settings-1',
+      agencyName: 'Minha Agência',
+      contactEmail: 'contato@agencia.com',
+      phone: '11999999999',
+      pixKey: '12345678000199',
+      pixKeyType: 'CNPJ',
+      bankName: null,
+      bankBranch: null,
+      bankAccount: null,
+      updatedAt: new Date(),
+    });
+
+    // O membro usa o WhatsApp e precisa da chave PIX no lembrete de vencimento.
+    const resSummary = await request(app)
+      .get('/api/settings/summary')
+      .set('Cookie', [`token=${token}`]);
+    expect(resSummary.status).toBe(200);
+    expect(resSummary.body.pixKey).toBe('12345678000199');
+    expect(resSummary.body.agencyName).toBe('Minha Agência');
+
+    // A leitura liberada não abre a edição nem o restante do módulo admin.
+    const resSettings = await request(app)
+      .get('/api/settings')
+      .set('Cookie', [`token=${token}`]);
+    expect(resSettings.status).toBe(403);
+  });
+
   it('9. RF-08: o 403 acontece com chamada direta sem passar pela UI', async () => {
     const token = createToken(memberUser);
     vi.mocked(prisma.user.findUnique).mockResolvedValue(memberUser);
