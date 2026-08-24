@@ -15,6 +15,8 @@ import { filesRouter } from './routes/files.js';
 import { paymentsRouter } from './routes/payments.js';
 import { dashboardRouter } from './routes/dashboard.js';
 import { exportRouter } from './routes/export.js';
+import { operationalStagesRouter } from './routes/operationalStages.js';
+import { operationalTasksRouter } from './routes/operationalTasks.js';
 
 export const app = express();
 
@@ -54,6 +56,8 @@ app.use('/api/files', filesRouter);
 app.use('/api/payments', paymentsRouter);
 app.use('/api/dashboard', dashboardRouter);
 app.use('/api/export', exportRouter);
+app.use('/api/operational-stages', operationalStagesRouter);
+app.use('/api/operational-tasks', operationalTasksRouter);
 
 // Servindo build do React na mesma origem (se existir)
 const clientDist = path.resolve(process.cwd(), 'public-client');

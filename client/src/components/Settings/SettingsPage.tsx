@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { Building2, CreditCard, Save, CheckCircle2, HelpCircle } from 'lucide-react';
+import { Save } from 'lucide-react';
+import * as Tabs from '@radix-ui/react-tabs';
 
 const EMPTY_FORM: UpdateAgencySettingsInput = {
   agencyName: '',
@@ -15,25 +16,18 @@ const EMPTY_FORM: UpdateAgencySettingsInput = {
 };
 import { apiFetch, errorMessage } from '../../services/api';
 import { Button } from '../ui/Button';
-import { Field, controlClass } from '../ui/Field';
 import { ErrorState } from '../ui/States';
 import { AgencySettings, UpdateAgencySettingsInput } from '../../types/settings';
-import { maskPhoneInput, cleanDigits } from '../../utils/formatters';
-
-const PIX_KEY_TYPES = [
-  { value: 'CNPJ', label: 'CNPJ' },
-  { value: 'CPF', label: 'CPF' },
-  { value: 'Email', label: 'E-mail' },
-  { value: 'Telefone', label: 'Celular / Telefone' },
-  { value: 'Aleatoria', label: 'Chave Aleatória (EVP)' },
-];
+import { cleanDigits } from '../../utils/formatters';
+import { AgencyTab } from './AgencyTab';
+import { OperationalStagesTab } from './OperationalStagesTab';
 
 export const SettingsPage: React.FC = () => {
   const queryClient = useQueryClient();
 
   const [formData, setFormData] = useState<UpdateAgencySettingsInput>(EMPTY_FORM);
-  // Guarda o estado salvo para detectar alterações não persistidas.
   const [savedData, setSavedData] = useState<UpdateAgencySettingsInput>(EMPTY_FORM);
+  const [activeTab, setActiveTab] = useState('agency');
 
   const {
     data: settings,
@@ -143,225 +137,65 @@ export const SettingsPage: React.FC = () => {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="min-w-0">
           <h1 className="text-2xl font-bold text-navy-900 tracking-tight">
-            Configurações da agência
+            Configurações
           </h1>
           <p className="text-sm text-slate-500 mt-0.5">
-            Dados cadastrais, identificação nas mensagens e dados bancários.
+            Gerencie os dados da agência e o pipeline operacional.
           </p>
         </div>
 
-        <div className="flex items-center gap-3 flex-shrink-0">
-          {isDirty && (
-            <span
-              className="text-xs font-medium text-amber-900 bg-amber-50 border border-amber-200 rounded-full px-2.5 py-1 whitespace-nowrap"
-              aria-live="polite"
+        {activeTab === 'agency' && (
+          <div className="flex items-center gap-3 flex-shrink-0">
+            {isDirty && (
+              <span
+                className="text-xs font-medium text-amber-900 bg-amber-50 border border-amber-200 rounded-full px-2.5 py-1 whitespace-nowrap"
+                aria-live="polite"
+              >
+                Alterações não salvas
+              </span>
+            )}
+            <Button
+              type="submit"
+              form="settings-form"
+              isLoading={updateMutation.isPending}
+              disabled={!isDirty}
+              icon={<Save className="w-4 h-4" aria-hidden="true" />}
             >
-              Alterações não salvas
-            </span>
-          )}
-          <Button
-            type="submit"
-            form="settings-form"
-            isLoading={updateMutation.isPending}
-            disabled={!isDirty}
-            icon={<Save className="w-4 h-4" aria-hidden="true" />}
-          >
-            Salvar alterações
-          </Button>
-        </div>
+              Salvar alterações
+            </Button>
+          </div>
+        )}
       </div>
 
-      <form id="settings-form" onSubmit={handleSubmit} className="space-y-6">
-        {/* Seção 1: Dados Gerais da Agência */}
-        <div className="bg-white border border-slate-200 rounded-xl p-5 sm:p-6 shadow-xs space-y-5">
-          <div className="flex items-center gap-2.5 pb-3 border-b border-slate-100">
-            <div className="w-8 h-8 rounded-lg bg-teal-50 text-teal-600 flex items-center justify-center">
-              <Building2 className="w-4 h-4" />
-            </div>
-            <div>
-              <h2 className="text-sm font-bold text-navy-900">
-                Perfil e identificação
-              </h2>
-              <p className="text-xs text-slate-500">
-                Aparece na assinatura das mensagens de WhatsApp e nos cabeçalhos do sistema.
-              </p>
-            </div>
-          </div>
+      <Tabs.Root value={activeTab} onValueChange={setActiveTab} className="flex flex-col">
+        <Tabs.List
+          className="flex flex-wrap border-b border-slate-200"
+          aria-label="Abas de configurações"
+        >
+          <Tabs.Trigger
+            value="agency"
+            className="px-4 py-2 text-sm font-medium border-b-2 border-transparent data-[state=active]:border-teal-500 data-[state=active]:text-teal-600 text-slate-500 hover:text-slate-700 outline-none focus-visible:ring-2 focus-visible:ring-teal-500 transition-colors"
+          >
+            Agência
+          </Tabs.Trigger>
+          <Tabs.Trigger
+            value="operational-stages"
+            className="px-4 py-2 text-sm font-medium border-b-2 border-transparent data-[state=active]:border-teal-500 data-[state=active]:text-teal-600 text-slate-500 hover:text-slate-700 outline-none focus-visible:ring-2 focus-visible:ring-teal-500 transition-colors"
+          >
+            Pipeline Operacional
+          </Tabs.Trigger>
+        </Tabs.List>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <Field label="Nome da agência" required className="sm:col-span-2">
-              {(props) => (
-                <input
-                  {...props}
-                  type="text"
-                  value={formData.agencyName}
-                  onChange={(e) =>
-                    setFormData({ ...formData, agencyName: e.target.value })
-                  }
-                  placeholder="Ex: Agência de Marketing Digital"
-                  className={controlClass + ' font-medium'}
-                />
-              )}
-            </Field>
+        <Tabs.Content value="agency" className="pt-6 outline-none">
+          <form id="settings-form" onSubmit={handleSubmit}>
+            <AgencyTab formData={formData} setFormData={setFormData} />
+          </form>
+        </Tabs.Content>
 
-            <Field label="E-mail de contato">
-              {(props) => (
-                <input
-                  {...props}
-                  type="email"
-                  value={formData.contactEmail || ''}
-                  onChange={(e) =>
-                    setFormData({ ...formData, contactEmail: e.target.value })
-                  }
-                  placeholder="contato@suaagencia.com.br"
-                  className={controlClass}
-                />
-              )}
-            </Field>
-
-            <Field label="Telefone / WhatsApp da agência">
-              {(props) => (
-                <input
-                  {...props}
-                  type="tel"
-                  inputMode="tel"
-                  value={maskPhoneInput(formData.phone || '')}
-                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                  placeholder="(11) 98765-4321"
-                  className={controlClass}
-                />
-              )}
-            </Field>
-          </div>
-        </div>
-
-        {/* Seção 2: Dados Financeiros & PIX (Padrão Brasileiro) */}
-        <div className="bg-white border border-slate-200 rounded-xl p-5 sm:p-6 shadow-xs space-y-5">
-          <div className="flex items-center gap-2.5 pb-3 border-b border-slate-100">
-            <div className="w-8 h-8 rounded-lg bg-teal-50 text-teal-600 flex items-center justify-center">
-              <CreditCard className="w-4 h-4" />
-            </div>
-            <div>
-              <h2 className="text-sm font-bold text-navy-900">
-                Dados financeiros e chave PIX
-              </h2>
-              <p className="text-xs text-slate-500">
-                Usados nos lembretes de vencimento e nas orientações de pagamento.
-              </p>
-            </div>
-          </div>
-
-          {/* Chave PIX */}
-          <div className="p-4 bg-teal-50/40 border border-teal-200/60 rounded-xl space-y-3">
-            <h3 className="text-xs font-bold text-teal-900 flex items-center gap-1.5">
-              <CheckCircle2 className="w-4 h-4 text-teal-700" aria-hidden="true" />
-              <span>Chave PIX principal</span>
-            </h3>
-
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              <Field label="Tipo da chave">
-                {(props) => (
-                  <select
-                    {...props}
-                    value={formData.pixKeyType || 'CNPJ'}
-                    onChange={(e) =>
-                      setFormData({ ...formData, pixKeyType: e.target.value })
-                    }
-                    className={controlClass + ' font-medium cursor-pointer'}
-                  >
-                    {PIX_KEY_TYPES.map((t) => (
-                      <option key={t.value} value={t.value}>
-                        {t.label}
-                      </option>
-                    ))}
-                  </select>
-                )}
-              </Field>
-
-              <Field label="Chave PIX" className="sm:col-span-2">
-                {(props) => (
-                  <input
-                    {...props}
-                    type="text"
-                    value={formData.pixKey || ''}
-                    onChange={(e) => setFormData({ ...formData, pixKey: e.target.value })}
-                    placeholder="Ex: 12.345.678/0001-90 ou financeiro@agencia.com.br"
-                    className={controlClass + ' font-mono'}
-                  />
-                )}
-              </Field>
-            </div>
-          </div>
-
-          {/* Dados Bancários Brasileiros */}
-          <div className="pt-2">
-            <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider mb-3">
-              Conta bancária (TED / depósito)
-            </h3>
-
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <Field label="Banco / instituição">
-                {(props) => (
-                  <input
-                    {...props}
-                    type="text"
-                    value={formData.bankName || ''}
-                    onChange={(e) =>
-                      setFormData({ ...formData, bankName: e.target.value })
-                    }
-                    placeholder="Ex: Itaú Unibanco (341)"
-                    className={controlClass}
-                  />
-                )}
-              </Field>
-
-              <Field label="Agência" hint="Inclua o dígito, se houver.">
-                {(props) => (
-                  <input
-                    {...props}
-                    type="text"
-                    value={formData.bankBranch || ''}
-                    onChange={(e) =>
-                      setFormData({ ...formData, bankBranch: e.target.value })
-                    }
-                    placeholder="Ex: 1234-5"
-                    className={controlClass + ' font-mono'}
-                  />
-                )}
-              </Field>
-
-              <Field label="Conta corrente" hint="Inclua o dígito.">
-                {(props) => (
-                  <input
-                    {...props}
-                    type="text"
-                    value={formData.bankAccount || ''}
-                    onChange={(e) =>
-                      setFormData({ ...formData, bankAccount: e.target.value })
-                    }
-                    placeholder="Ex: 56789-0"
-                    className={controlClass + ' font-mono'}
-                  />
-                )}
-              </Field>
-            </div>
-          </div>
-        </div>
-
-        {/* Informações Fixas do Sistema */}
-        <div className="p-4 bg-slate-100/70 border border-slate-200 rounded-xl text-xs text-slate-600 flex items-start gap-3">
-          <HelpCircle className="w-4 h-4 text-slate-500 mt-0.5 flex-shrink-0" />
-          <div className="space-y-1">
-            <p className="font-semibold text-navy-900">
-              Fuso horário fixo: Brasília (UTC−3)
-            </p>
-            <p className="text-slate-600">
-              Datas de vencimento, viradas de mês e cálculo de atraso seguem sempre o
-              horário de Brasília, independentemente do fuso do seu computador.
-            </p>
-          </div>
-        </div>
-      </form>
+        <Tabs.Content value="operational-stages" className="pt-6 outline-none">
+          <OperationalStagesTab />
+        </Tabs.Content>
+      </Tabs.Root>
     </div>
   );
 };

@@ -19,6 +19,9 @@ const DashboardPage = lazy(() =>
 const KanbanPage = lazy(() =>
   import('./components/Kanban/KanbanPage').then((m) => ({ default: m.KanbanPage }))
 );
+const OperationalPipelinePage = lazy(() =>
+  import('./components/OperationalPipeline/OperationalPipelinePage')
+);
 const UsersPage = lazy(() =>
   import('./components/Users/UsersPage').then((m) => ({ default: m.UsersPage }))
 );
@@ -49,6 +52,10 @@ export const App: React.FC = () => {
         <Route
           path="pipeline"
           element={<Suspense fallback={RouteFallback}>{<KanbanPage />}</Suspense>}
+        />
+        <Route
+          path="pipeline-operacional"
+          element={<Suspense fallback={RouteFallback}>{<OperationalPipelinePage />}</Suspense>}
         />
         <Route path="contratos" element={<ContractsPage />} />
         <Route path="financeiro" element={<FinancialPage />} />

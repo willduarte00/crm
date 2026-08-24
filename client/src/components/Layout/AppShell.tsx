@@ -17,12 +17,14 @@ import {
   KeyRound,
   Menu,
   X,
+  ListChecks,
 } from 'lucide-react';
 
 const NAV_ITEMS = [
   { to: '/', label: 'Dashboard', icon: LayoutDashboard },
   { to: '/clientes', label: 'Clientes', icon: Users },
-  { to: '/pipeline', label: 'Pipeline', icon: Kanban },
+  { to: '/pipeline', label: 'Pipeline comercial', icon: Kanban },
+  { to: '/pipeline-operacional', label: 'Pipeline operacional', icon: ListChecks },
   { to: '/contratos', label: 'Contratos', icon: FileText },
   { to: '/financeiro', label: 'Financeiro', icon: DollarSign },
 ];
@@ -35,7 +37,11 @@ const ADMIN_NAV_ITEMS = [
 /** Título exibido no cabeçalho mobile, derivado da rota atual. */
 function pageTitleFor(pathname: string): string {
   const match = [...NAV_ITEMS, ...ADMIN_NAV_ITEMS]
-    .filter((item) => (item.to === '/' ? pathname === '/' : pathname.startsWith(item.to)))
+    .filter((item) =>
+      item.to === '/'
+        ? pathname === '/'
+        : pathname === item.to || pathname.startsWith(item.to + '/')
+    )
     .sort((a, b) => b.to.length - a.to.length)[0];
   return match?.label ?? 'CRM';
 }
@@ -99,7 +105,7 @@ export const AppShell: React.FC = () => {
     const isActive =
       item.to === '/'
         ? location.pathname === '/'
-        : location.pathname.startsWith(item.to);
+        : location.pathname === item.to || location.pathname.startsWith(item.to + '/');
 
     return (
       <NavLink

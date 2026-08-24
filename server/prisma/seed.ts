@@ -44,6 +44,23 @@ async function main() {
     });
     console.log('✅ Configurações iniciais da agência criadas');
   }
+
+  // Garante etapas padrão do pipeline operacional
+  const stageCount = await prisma.operationalStage.count();
+  if (stageCount === 0) {
+    const defaultStages = [
+      { name: 'Onboarding',   color: 'blue',    position: 0 },
+      { name: 'Briefing',     color: 'amber',   position: 1 },
+      { name: 'Em Produção',  color: 'purple',  position: 2 },
+      { name: 'Aprovação',    color: 'emerald', position: 3 },
+      { name: 'Entregue',     color: 'teal',    position: 4 },
+    ];
+
+    for (const stage of defaultStages) {
+      await prisma.operationalStage.create({ data: stage });
+    }
+    console.log('✅ Etapas padrão do pipeline operacional criadas');
+  }
 }
 
 main()
