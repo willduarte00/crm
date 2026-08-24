@@ -198,7 +198,7 @@ export const SettingsPage: React.FC = () => {
                   onChange={(e) =>
                     setFormData({ ...formData, agencyName: e.target.value })
                   }
-                  placeholder="Ex: AdPrecision Marketing Digital"
+                  placeholder="Ex: Agência de Marketing Digital"
                   className={controlClass + ' font-medium'}
                 />
               )}

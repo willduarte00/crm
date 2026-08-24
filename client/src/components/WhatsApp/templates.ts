@@ -86,7 +86,7 @@ export function buildReplacements(
 ): Record<string, string> {
   return {
     '{nome}': data.nome || 'Cliente',
-    '{agencia}': data.agencia || 'AdPrecision',
+    '{agencia}': data.agencia || 'Minha Agência',
     '{valor}': formatWhatsAppValue(data),
     '{vencimento}': formatWhatsAppDueDate(data),
     '{mes_referencia}': data.mesReferencia

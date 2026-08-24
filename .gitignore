@@ -7,3 +7,6 @@ uploads/
 .DS_Store
 .prisma/
 *.tsbuildinfo
+
+# Logs das execuções de scripts/run-tasks.*
+.claude/task-runs/

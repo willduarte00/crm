@@ -1,7 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { NavLink, Outlet, useLocation } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '../../context/AuthContext';
 import { ChangePasswordModal } from '../Users/ChangePasswordModal';
+import { apiFetch } from '../../services/api';
+import type { AgencySettingsSummary } from '../../types/dashboard';
 import {
   LayoutDashboard,
   Users,
@@ -34,7 +37,7 @@ function pageTitleFor(pathname: string): string {
   const match = [...NAV_ITEMS, ...ADMIN_NAV_ITEMS]
     .filter((item) => (item.to === '/' ? pathname === '/' : pathname.startsWith(item.to)))
     .sort((a, b) => b.to.length - a.to.length)[0];
-  return match?.label ?? 'CRM Agência';
+  return match?.label ?? 'CRM';
 }
 
 export const AppShell: React.FC = () => {
@@ -45,6 +48,28 @@ export const AppShell: React.FC = () => {
 
   const isAdmin = user?.role === 'admin';
   const pageTitle = pageTitleFor(location.pathname);
+
+  // Nome da agência lido do servidor — qualquer usuário autenticado tem acesso.
+  const { data: settingsSummary } = useQuery<AgencySettingsSummary>({
+    queryKey: ['settings', 'summary'],
+    queryFn: () => apiFetch<AgencySettingsSummary>('/api/settings/summary'),
+    staleTime: 10 * 60 * 1000, // 10 min — o nome da agência quase nunca muda
+  });
+  const agencyName = settingsSummary?.agencyName ?? '';
+
+  // Iniciais do avatar: primeira letra das duas primeiras palavras do nome.
+  function agencyInitials(name: string): string {
+    const words = name.trim().split(/\s+/).filter(Boolean);
+    if (words.length === 0) return 'CR';
+    if (words.length === 1) return words[0].substring(0, 2).toUpperCase();
+    return (words[0][0] + words[1][0]).toUpperCase();
+  }
+
+  // Sincroniza o título da aba com o nome da agência quando ele chega.
+  useEffect(() => {
+    document.title = agencyName ? `${agencyName} — CRM` : 'CRM';
+  }, [agencyName]);
+
 
   // Fecha a gaveta ao navegar — no mobile ela cobre todo o conteúdo.
   useEffect(() => {
@@ -105,26 +130,28 @@ export const AppShell: React.FC = () => {
       )}
 
       {/*
-        Desktop: coluna fixa de 260px no fluxo.
+        Desktop: coluna fixa de 260px grudada no topo (sticky).
         Mobile/tablet: gaveta deslizante sobreposta, aberta pelo botão do header.
       */}
       <aside
         id="app-sidebar"
-        className={`fixed inset-y-0 left-0 z-40 w-[260px] flex-shrink-0 bg-navy-900 text-white flex flex-col justify-between border-r border-navy-800 transition-transform duration-200 ease-out lg:static lg:translate-x-0 ${
+        className={`fixed top-0 left-0 h-dvh z-40 w-[260px] flex-shrink-0 bg-navy-900 text-white flex flex-col justify-between border-r border-navy-800 transition-transform duration-200 ease-out lg:sticky lg:left-auto lg:translate-x-0 ${
           isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
         <div className="min-h-0 flex-1 flex flex-col">
           {/* Identidade da agência */}
           <div className="h-16 flex items-center gap-3 px-5 border-b border-navy-800/80 flex-shrink-0">
-            <div className="w-8 h-8 rounded-lg bg-teal-600 text-white font-bold flex items-center justify-center text-sm">
-              CR
+            <div className="w-8 h-8 rounded-lg bg-teal-600 text-white font-bold flex items-center justify-center text-sm flex-shrink-0">
+              {agencyInitials(agencyName || 'CRM')}
             </div>
-            <div className="min-w-0">
-              <div className="font-bold text-sm leading-tight text-white tracking-wide truncate">
-                CRM AGÊNCIA
+            <div className="min-w-0 flex-1">
+              <div
+                className="font-semibold text-sm leading-tight text-white truncate"
+                title={agencyName || 'CRM'}
+              >
+                {agencyName || 'CRM'}
               </div>
-              <div className="text-[11px] text-slate-400 truncate">Kinetic Enterprise</div>
             </div>
 
             <button
@@ -140,7 +167,7 @@ export const AppShell: React.FC = () => {
           {/* Navegação */}
           <nav
             aria-label="Navegação principal"
-            className="px-3 py-4 space-y-1 overflow-y-auto"
+            className="flex-1 min-h-0 px-3 py-4 space-y-1 overflow-y-auto overscroll-contain nav-scroll"
           >
             <div className="px-3 pb-2 text-[10px] font-semibold text-slate-400 uppercase tracking-wider">
               Principal
@@ -157,6 +184,7 @@ export const AppShell: React.FC = () => {
             )}
           </nav>
         </div>
+
 
         {/* Perfil e sessão */}
         <div className="p-3 border-t border-navy-800/80 bg-navy-950/40 flex-shrink-0">

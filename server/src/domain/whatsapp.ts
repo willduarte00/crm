@@ -71,7 +71,7 @@ export function interpolateWhatsAppMessage(
 
   const replacements: Record<string, string> = {
     '{nome}': data.nome || 'Cliente',
-    '{agencia}': data.agencia || 'AdPrecision',
+    '{agencia}': data.agencia || 'Minha Agência',
     '{valor}': data.valor || 'R$ 0,00',
     '{vencimento}': data.vencimento || 'a combinar',
     '{mes_referencia}': data.mes_referencia || 'mês corrente',

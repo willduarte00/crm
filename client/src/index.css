@@ -41,6 +41,12 @@
   .table-scroll {
     @apply overflow-x-auto overscroll-x-contain;
   }
+
+  /* Barra de rolagem discreta para o menu escuro da sidebar. */
+  .nav-scroll {
+    scrollbar-width: thin;
+    scrollbar-color: theme('colors.navy.700') transparent;
+  }
 }
 
 /* Respeita a preferência do sistema por menos movimento. */
