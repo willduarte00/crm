@@ -46,6 +46,40 @@ function pageTitleFor(pathname: string): string {
   return match?.label ?? 'CRM';
 }
 
+/** Helper functions for dynamic theming */
+function hexToRgb(hex: string): number[] {
+  const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+  return result
+    ? [parseInt(result[1], 16), parseInt(result[2], 16), parseInt(result[3], 16)]
+    : [13, 148, 136]; // Default teal-600
+}
+
+function mixColor(rgb: number[], mixWith: number[], amount: number): string {
+  const r = Math.round(rgb[0] + (mixWith[0] - rgb[0]) * amount);
+  const g = Math.round(rgb[1] + (mixWith[1] - rgb[1]) * amount);
+  const b = Math.round(rgb[2] + (mixWith[2] - rgb[2]) * amount);
+  return `${r} ${g} ${b}`;
+}
+
+function getShades(hex: string) {
+  const base = hexToRgb(hex);
+  const white = [255, 255, 255];
+  const black = [0, 0, 0];
+  return {
+    50: mixColor(base, white, 0.9),
+    100: mixColor(base, white, 0.8),
+    200: mixColor(base, white, 0.6),
+    300: mixColor(base, white, 0.4),
+    400: mixColor(base, white, 0.2),
+    500: mixColor(base, white, 0.1),
+    600: `${base[0]} ${base[1]} ${base[2]}`,
+    700: mixColor(base, black, 0.15),
+    800: mixColor(base, black, 0.3),
+    900: mixColor(base, black, 0.45),
+    950: mixColor(base, black, 0.6),
+  };
+}
+
 export const AppShell: React.FC = () => {
   const { user, logout } = useAuth();
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
@@ -62,6 +96,7 @@ export const AppShell: React.FC = () => {
     staleTime: 10 * 60 * 1000, // 10 min — o nome da agência quase nunca muda
   });
   const agencyName = settingsSummary?.agencyName ?? '';
+  const customShades = settingsSummary?.primaryColor ? getShades(settingsSummary.primaryColor) : null;
 
   // Iniciais do avatar: primeira letra das duas primeiras palavras do nome.
   function agencyInitials(name: string): string {
@@ -126,6 +161,24 @@ export const AppShell: React.FC = () => {
 
   return (
     <div className="min-h-dvh bg-slate-50 lg:flex">
+      {customShades && (
+        <style>{`
+          :root {
+            --tw-color-teal-50: ${customShades[50]};
+            --tw-color-teal-100: ${customShades[100]};
+            --tw-color-teal-200: ${customShades[200]};
+            --tw-color-teal-300: ${customShades[300]};
+            --tw-color-teal-400: ${customShades[400]};
+            --tw-color-teal-500: ${customShades[500]};
+            --tw-color-teal-600: ${customShades[600]};
+            --tw-color-teal-700: ${customShades[700]};
+            --tw-color-teal-800: ${customShades[800]};
+            --tw-color-teal-900: ${customShades[900]};
+            --tw-color-teal-950: ${customShades[950]};
+          }
+        `}</style>
+      )}
+
       {/* Fundo escurecido da gaveta no mobile */}
       {isSidebarOpen && (
         <div
@@ -147,18 +200,31 @@ export const AppShell: React.FC = () => {
       >
         <div className="min-h-0 flex-1 flex flex-col">
           {/* Identidade da agência */}
-          <div className="h-16 flex items-center gap-3 px-5 border-b border-navy-800/80 flex-shrink-0">
-            <div className="w-8 h-8 rounded-lg bg-teal-600 text-white font-bold flex items-center justify-center text-sm flex-shrink-0">
-              {agencyInitials(agencyName || 'CRM')}
-            </div>
-            <div className="min-w-0 flex-1">
-              <div
-                className="font-semibold text-sm leading-tight text-white truncate"
-                title={agencyName || 'CRM'}
-              >
-                {agencyName || 'CRM'}
+          <div className="h-16 flex items-center gap-3 px-5 border-b border-navy-800/80 flex-shrink-0 relative">
+            {settingsSummary?.logoUrl ? (
+              <div className="flex items-center justify-center min-w-0 flex-1 w-full">
+                <img 
+                  src={settingsSummary.logoUrl} 
+                  alt={agencyName || 'Logo da agência'} 
+                  className="max-h-8 max-w-full object-contain filter drop-shadow-sm" 
+                  onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                />
               </div>
-            </div>
+            ) : (
+              <>
+                <div className="w-8 h-8 rounded-lg bg-teal-600 text-white font-bold flex items-center justify-center text-sm flex-shrink-0">
+                  {agencyInitials(agencyName || 'CRM')}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div
+                    className="font-semibold text-sm leading-tight text-white truncate"
+                    title={agencyName || 'CRM'}
+                  >
+                    {agencyName || 'CRM'}
+                  </div>
+                </div>
+              </>
+            )}
 
             <button
               type="button"

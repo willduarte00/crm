@@ -13,6 +13,8 @@ const updateSettingsSchema = z.object({
   bankName: z.string().optional(),
   bankBranch: z.string().optional(),
   bankAccount: z.string().optional(),
+  logoUrl: z.string().optional(),
+  primaryColor: z.string().optional(),
 });
 
 // GET /api/settings (Admin only via requireAdmin)
@@ -73,5 +75,7 @@ settingsSummaryRouter.get('/', async (_req: Request, res: Response) => {
     bankName: settings?.bankName || null,
     bankBranch: settings?.bankBranch || null,
     bankAccount: settings?.bankAccount || null,
+    logoUrl: settings?.logoUrl || null,
+    primaryColor: settings?.primaryColor || null,
   });
 });

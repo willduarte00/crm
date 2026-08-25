@@ -140,6 +140,8 @@ model Settings {
   bankName     String?
   bankBranch   String?
   bankAccount  String?
+  logoUrl      String?
+  primaryColor String?
   updatedAt    DateTime @updatedAt
 
   @@map("settings")

@@ -69,6 +69,8 @@ export interface AgencySettingsSummary {
   bankName?: string | null;
   bankBranch?: string | null;
   bankAccount?: string | null;
+  logoUrl?: string | null;
+  primaryColor?: string | null;
 }
 
 export interface DashboardData {

@@ -13,6 +13,8 @@ const EMPTY_FORM: UpdateAgencySettingsInput = {
   bankName: '',
   bankBranch: '',
   bankAccount: '',
+  logoUrl: '',
+  primaryColor: '#0f172a',
 };
 import { apiFetch, errorMessage } from '../../services/api';
 import { Button } from '../ui/Button';
@@ -51,6 +53,8 @@ export const SettingsPage: React.FC = () => {
       bankName: settings.bankName || '',
       bankBranch: settings.bankBranch || '',
       bankAccount: settings.bankAccount || '',
+      logoUrl: settings.logoUrl || '',
+      primaryColor: settings.primaryColor || '#0f172a',
     };
     setFormData(next);
     setSavedData(next);
@@ -102,6 +106,8 @@ export const SettingsPage: React.FC = () => {
       bankName: formData.bankName?.trim() || undefined,
       bankBranch: formData.bankBranch?.trim() || undefined,
       bankAccount: formData.bankAccount?.trim() || undefined,
+      logoUrl: formData.logoUrl || undefined,
+      primaryColor: formData.primaryColor || undefined,
     });
   };
 

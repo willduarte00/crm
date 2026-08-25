@@ -17,11 +17,13 @@ export const ALLOWED_MIME_TYPES: Record<string, string[]> = {
     'application/msword',
   ],
   invoice: ['application/pdf', 'application/xml', 'text/xml'],
+  logo: ['image/jpeg', 'image/png', 'image/webp', 'image/svg+xml', 'image/gif'],
 };
 
 export const ALLOWED_EXTENSIONS: Record<string, string[]> = {
   contract: ['.pdf', '.docx', '.doc'],
   invoice: ['.pdf', '.xml'],
+  logo: ['.jpg', '.jpeg', '.png', '.webp', '.svg', '.gif'],
 };
 
 // Storage com nome em disco gerado por UUID
@@ -46,16 +48,21 @@ const fileFilter = (
   const mime = file.mimetype.toLowerCase();
 
   const isAllowedExt =
-    ALLOWED_EXTENSIONS.contract.includes(ext) || ALLOWED_EXTENSIONS.invoice.includes(ext);
+    ALLOWED_EXTENSIONS.contract.includes(ext) ||
+    ALLOWED_EXTENSIONS.invoice.includes(ext) ||
+    ALLOWED_EXTENSIONS.logo.includes(ext);
+
   const isAllowedMime =
-    ALLOWED_MIME_TYPES.contract.includes(mime) || ALLOWED_MIME_TYPES.invoice.includes(mime);
+    ALLOWED_MIME_TYPES.contract.includes(mime) ||
+    ALLOWED_MIME_TYPES.invoice.includes(mime) ||
+    ALLOWED_MIME_TYPES.logo.includes(mime);
 
   if (isAllowedExt && isAllowedMime) {
     cb(null, true);
   } else {
     cb(
       new Error(
-        'Tipo de arquivo não permitido. Apenas arquivos PDF, DOCX/DOC (contratos) e PDF/XML (notas fiscais) são aceitos.'
+        'Tipo de arquivo não permitido. Apenas arquivos suportados são aceitos.'
       )
     );
   }

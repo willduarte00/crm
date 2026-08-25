@@ -10,6 +10,8 @@ export interface AgencySettings {
   bankName?: string | null;
   bankBranch?: string | null;
   bankAccount?: string | null;
+  logoUrl?: string | null;
+  primaryColor?: string | null;
   updatedAt: string;
 }
 
@@ -22,4 +24,6 @@ export interface UpdateAgencySettingsInput {
   bankName?: string;
   bankBranch?: string;
   bankAccount?: string;
+  logoUrl?: string;
+  primaryColor?: string;
 }

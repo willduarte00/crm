@@ -121,6 +121,53 @@ filesRouter.post('/', handleUpload, async (req: Request, res: Response) => {
   }
 });
 
+// POST /api/files/logo - Upload de logotipo da agência
+filesRouter.post('/logo', handleUpload, async (req: Request, res: Response) => {
+  if (!req.file) {
+    return res.status(400).json({ error: 'Nenhum arquivo enviado.' });
+  }
+
+  try {
+    const ext = path.extname(req.file.originalname).toLowerCase();
+    const mime = req.file.mimetype.toLowerCase();
+
+    const isValidLogo =
+      ALLOWED_EXTENSIONS.logo.includes(ext) &&
+      ALLOWED_MIME_TYPES.logo.includes(mime);
+
+    if (!isValidLogo) {
+      await fs.promises.unlink(req.file.path).catch(() => {});
+      return res.status(400).json({
+        error: 'Formato inválido. Envie uma imagem válida (jpg, png, webp, svg, gif).',
+      });
+    }
+
+    // Apenas retornamos a URL/nome, o front-end salva em Settings
+    return res.status(201).json({
+      url: `/api/files/public/${req.file.filename}`
+    });
+  } catch (error) {
+    await fs.promises.unlink(req.file.path).catch(() => {});
+    return res.status(500).json({ error: 'Erro ao processar o logotipo.' });
+  }
+});
+
+// GET /api/files/public/:filename - Leitura pública para arquivos genéricos (ex: logo)
+filesRouter.get('/public/:filename', (req: Request, res: Response) => {
+  const { filename } = req.params;
+  const filePath = path.resolve(uploadDir, filename);
+
+  if (!fs.existsSync(filePath)) {
+    return res.status(404).json({ error: 'Arquivo não encontrado.' });
+  }
+
+  if (!filePath.startsWith(uploadDir)) {
+    return res.status(403).json({ error: 'Acesso não autorizado.' });
+  }
+
+  res.sendFile(filePath);
+});
+
 // GET /api/files/:id - Download autenticado com streaming e Content-Disposition
 filesRouter.get('/:id', async (req: Request, res: Response) => {
   const { id } = req.params;

@@ -3,6 +3,7 @@ import { Building2, CreditCard, CheckCircle2, HelpCircle } from 'lucide-react';
 import { Field, controlClass } from '../ui/Field';
 import { UpdateAgencySettingsInput } from '../../types/settings';
 import { maskPhoneInput } from '../../utils/formatters';
+import { apiFetch } from '../../services/api';
 
 interface AgencyTabProps {
   formData: UpdateAgencySettingsInput;
@@ -78,6 +79,80 @@ export const AgencyTab: React.FC<AgencyTabProps> = ({ formData, setFormData }) =
                 placeholder="(11) 98765-4321"
                 className={controlClass}
               />
+            )}
+          </Field>
+        </div>
+      </div>
+
+      {/* Seção: Identidade Visual */}
+      <div className="bg-white border border-slate-200 rounded-xl p-5 sm:p-6 shadow-xs space-y-5">
+        <div className="flex items-center gap-2.5 pb-3 border-b border-slate-100">
+          <div className="w-8 h-8 rounded-lg bg-teal-50 text-teal-600 flex items-center justify-center">
+            <Building2 className="w-4 h-4" />
+          </div>
+          <div>
+            <h2 className="text-sm font-bold text-navy-900">
+              Identidade visual
+            </h2>
+            <p className="text-xs text-slate-500">
+              Personalize a aparência do sistema com a marca da agência.
+            </p>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <Field label="Cor Principal">
+            {(props) => (
+              <div className="flex items-center gap-3">
+                <input
+                  {...props}
+                  type="color"
+                  value={formData.primaryColor || '#0f172a'}
+                  onChange={(e) =>
+                    setFormData({ ...formData, primaryColor: e.target.value })
+                  }
+                  className="w-12 h-12 p-1 rounded cursor-pointer border border-slate-200"
+                />
+                <span className="text-sm font-mono text-slate-600 uppercase">
+                  {formData.primaryColor || '#0f172a'}
+                </span>
+              </div>
+            )}
+          </Field>
+
+          <Field label="Logotipo" hint="Formatos: JPG, PNG, WEBP, SVG">
+            {(props) => (
+              <div className="space-y-3">
+                {formData.logoUrl && (
+                  <div className="w-32 h-32 bg-slate-50 rounded border border-slate-200 flex items-center justify-center overflow-hidden">
+                    <img src={formData.logoUrl} alt="Logotipo" className="max-w-full max-h-full object-contain" onError={(e) => { e.currentTarget.src = formData.logoUrl || '' }} />
+                  </div>
+                )}
+                <input
+                  {...props}
+                  type="file"
+                  accept="image/*"
+                  onChange={async (e) => {
+                    const file = e.target.files?.[0];
+                    if (!file) return;
+                    
+                    const fd = new FormData();
+                    fd.append('file', file);
+
+                    try {
+                      // Usar apiFetch para lidar com cookies (credentials: include) e auth
+                      const data = await apiFetch<{url: string}>('/api/files/logo', {
+                        method: 'POST',
+                        body: fd,
+                      });
+                      setFormData({ ...formData, logoUrl: data.url });
+                    } catch (error) {
+                      alert('Erro ao enviar imagem. Verifique se o formato e tamanho estão corretos.');
+                    }
+                  }}
+                  className="text-sm file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-teal-50 file:text-teal-700 hover:file:bg-teal-100"
+                />
+              </div>
             )}
           </Field>
         </div>
