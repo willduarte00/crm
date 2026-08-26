@@ -39,10 +39,25 @@ describe('Arquivos e Uploads — Testes de Integração (RF-12, Seção 6.2 e 6.
     id: '11111111-1111-1111-1111-111111111111',
     email: 'admin@agencia.com',
     name: 'Admin Teste',
-    role: 'admin',
     active: true,
     mustChangePassword: false,
     tokenVersion: 0,
+    groups: [
+      {
+        group: {
+          id: 'admin-group',
+          name: 'Admin',
+          permissions: [
+            'contract_files.view',
+            'contract_files.create',
+            'contract_files.delete',
+            'invoices.view',
+            'invoices.create',
+            'invoices.delete'
+          ],
+        },
+      },
+    ],
   };
 
   const testContract = {

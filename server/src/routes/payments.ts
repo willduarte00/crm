@@ -13,6 +13,8 @@ import {
   getEffectivePaymentStatus,
 } from '../domain/dates.js';
 import { getNextPaymentNumbers } from '../services/billingService.js';
+import { requirePermission, assertPermission } from '../middlewares/requirePermission.js';
+import { Permission } from '../domain/permissions.js';
 
 export const paymentsRouter = Router();
 
@@ -41,7 +43,7 @@ const updatePaymentSchema = z.object({
 });
 
 // GET /api/payments - Listagem paginada de cobranças com filtros e resumo (RF-27, RF-28, RF-32)
-paymentsRouter.get('/', async (req: Request, res: Response) => {
+paymentsRouter.get('/', requirePermission('payments.view'), async (req: Request, res: Response) => {
   const {
     page = '1',
     limit = '25',
@@ -209,7 +211,7 @@ paymentsRouter.get('/', async (req: Request, res: Response) => {
 });
 
 // GET /api/payments/:id - Detalhes da cobrança
-paymentsRouter.get('/:id', async (req: Request, res: Response) => {
+paymentsRouter.get('/:id', requirePermission('payments.view'), async (req: Request, res: Response) => {
   const { id } = req.params;
 
   const payment = await prisma.paymentRecord.findUnique({
@@ -238,7 +240,7 @@ paymentsRouter.get('/:id', async (req: Request, res: Response) => {
 });
 
 // POST /api/payments - Criação de cobrança avulsa manual
-paymentsRouter.post('/', async (req: Request, res: Response) => {
+paymentsRouter.post('/', requirePermission('payments.create'), async (req: Request, res: Response) => {
   const parseResult = createPaymentSchema.safeParse(req.body);
   if (!parseResult.success) {
     return res.status(400).json({
@@ -311,6 +313,21 @@ paymentsRouter.patch('/:id', async (req: Request, res: Response) => {
     });
   }
   const data = parseResult.data;
+
+  const intents: Permission[] = [];
+
+  const isMarkingPaidIntent =
+    data.status === 'Pago' ||
+    (!!data.paidDate && !!data.paymentMethod && data.status !== 'Cancelado' && data.status !== 'Pendente');
+
+  if (isMarkingPaidIntent || data.status === 'Pendente') intents.push('payments.settle');
+  if (data.status === 'Cancelado') intents.push('payments.cancel');
+  if (
+    data.amountCents !== undefined || data.dueDate !== undefined ||
+    data.referenceMonth !== undefined || data.notes !== undefined
+  ) intents.push('payments.update');
+
+  for (const intent of intents) assertPermission(req, intent);
 
   const existingPayment = await prisma.paymentRecord.findUnique({
     where: { id },

@@ -12,6 +12,8 @@ import {
   createPontualContractPayments,
 } from '../services/billingService.js';
 
+import { requirePermission } from '../middlewares/requirePermission.js';
+
 export const contractsRouter = Router();
 
 const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
@@ -48,7 +50,7 @@ const updateContractSchema = z.object({
 });
 
 // GET /api/contracts - Listagem de contratos com filtros
-contractsRouter.get('/', async (req: Request, res: Response) => {
+contractsRouter.get('/', requirePermission('contracts.view'), async (req: Request, res: Response) => {
   const { clientId, serviceType, status, billingType, search } = req.query;
 
   const where: any = {
@@ -118,7 +120,7 @@ contractsRouter.get('/', async (req: Request, res: Response) => {
 });
 
 // POST /api/contracts - Criação de contrato (RF-10 a RF-13)
-contractsRouter.post('/', async (req: Request, res: Response) => {
+contractsRouter.post('/', requirePermission('contracts.create'), async (req: Request, res: Response) => {
   const parseResult = createContractSchema.safeParse(req.body);
   if (!parseResult.success) {
     return res.status(400).json({
@@ -196,7 +198,7 @@ contractsRouter.post('/', async (req: Request, res: Response) => {
 });
 
 // GET /api/contracts/:id/payments - Dispara ensurePaymentRecords e lista cobranças do contrato (RF-20)
-contractsRouter.get('/:id/payments', async (req: Request, res: Response) => {
+contractsRouter.get('/:id/payments', requirePermission('contracts.view'), async (req: Request, res: Response) => {
   const { id } = req.params;
 
   const contract = await prisma.contract.findFirst({
@@ -212,7 +214,7 @@ contractsRouter.get('/:id/payments', async (req: Request, res: Response) => {
 });
 
 // GET /api/contracts/:id - Detalhes do contrato
-contractsRouter.get('/:id', async (req: Request, res: Response) => {
+contractsRouter.get('/:id', requirePermission('contracts.view'), async (req: Request, res: Response) => {
   const { id } = req.params;
 
   const contract = await prisma.contract.findFirst({
@@ -248,7 +250,7 @@ contractsRouter.get('/:id', async (req: Request, res: Response) => {
 });
 
 // PATCH /api/contracts/:id - Atualização de contrato
-contractsRouter.patch('/:id', async (req: Request, res: Response) => {
+contractsRouter.patch('/:id', requirePermission('contracts.update'), async (req: Request, res: Response) => {
   const { id } = req.params;
   const parseResult = updateContractSchema.safeParse(req.body);
   if (!parseResult.success) {
@@ -348,7 +350,7 @@ contractsRouter.patch('/:id', async (req: Request, res: Response) => {
 });
 
 // DELETE /api/contracts/:id - Soft delete
-contractsRouter.delete('/:id', async (req: Request, res: Response) => {
+contractsRouter.delete('/:id', requirePermission('contracts.delete'), async (req: Request, res: Response) => {
   const { id } = req.params;
 
   const existingContract = await prisma.contract.findFirst({

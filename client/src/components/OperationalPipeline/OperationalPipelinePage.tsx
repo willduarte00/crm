@@ -17,8 +17,8 @@ import { controlClassSm } from '../ui/Field';
 
 export default function OperationalPipelinePage() {
   const queryClient = useQueryClient();
-  const { user: currentUser } = useAuth();
-  const isAdmin = currentUser?.role === 'admin';
+  const { has } = useAuth();
+  const isAdmin = has('screen.configuracoes');
 
   // Filters
   const [searchTerm, setSearchTerm] = useState('');

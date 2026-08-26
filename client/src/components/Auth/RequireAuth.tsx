@@ -2,14 +2,16 @@ import React from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { ForceChangePasswordModal } from './ForceChangePasswordModal';
+import { NAVIGATION_ITEMS } from '../Layout/navigation';
 
 interface RequireAuthProps {
   children: React.ReactNode;
-  adminOnly?: boolean;
+  permission?: string;
+  anyPermission?: string[];
 }
 
-export const RequireAuth: React.FC<RequireAuthProps> = ({ children, adminOnly = false }) => {
-  const { user, isLoading } = useAuth();
+export const RequireAuth: React.FC<RequireAuthProps> = ({ children, permission, anyPermission }) => {
+  const { user, isLoading, has, hasAny } = useAuth();
 
   if (isLoading) {
     return (
@@ -37,8 +39,11 @@ export const RequireAuth: React.FC<RequireAuthProps> = ({ children, adminOnly = 
     return <ForceChangePasswordModal />;
   }
 
-  if (adminOnly && user.role !== 'admin') {
-    return <Navigate to="/" replace />;
+  const isDenied = (permission && !has(permission)) || (anyPermission && !hasAny(...anyPermission));
+
+  if (isDenied) {
+    const firstAllowed = NAVIGATION_ITEMS.find(item => has(item.permission));
+    return <Navigate to={firstAllowed?.to || '/'} replace />;
   }
 
   return <>{children}</>;

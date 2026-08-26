@@ -17,11 +17,16 @@ import {
   calculateServiceDistribution,
   calculateMetricComparison,
 } from '../domain/metrics.js';
+import { requireAnyPermission } from '../middlewares/requirePermission.js';
 
 export const dashboardRouter = Router();
 
 // GET /api/dashboard - Métricas, KPIs, alertas, gráficos e snapshot mensal (RF-40 a RF-49)
-dashboardRouter.get('/', async (_req: Request, res: Response) => {
+dashboardRouter.get('/', requireAnyPermission('dashboard.financial.view', 'dashboard.operational.view'), async (req: Request, res: Response) => {
+  const hasFinancial = req.user?.permissions.has('dashboard.financial.view');
+  const hasOperational = req.user?.permissions.has('dashboard.operational.view');
+  const hasBankView = req.user?.permissions.has('settings.bank.view');
+
   const today = getTodayCivilDate();
   const currentMonth = getCurrentReferenceMonth();
   const previousMonth = addMonthsToReferenceMonth(currentMonth, -1);
@@ -154,30 +159,38 @@ dashboardRouter.get('/', async (_req: Request, res: Response) => {
     current: {
       referenceMonth: currentMonth,
       today,
-      mrrCents,
-      receivedCents,
-      invoicedCents,
-      overdueCents,
-      overdueCount,
-      delinquencyRate,
-      activeClients,
+      ...(hasFinancial && {
+        mrrCents,
+        receivedCents,
+        invoicedCents,
+        overdueCents,
+        overdueCount,
+        delinquencyRate,
+      }),
+      ...(hasOperational && {
+        activeClients,
+      }),
     },
-    previous: previousSnapshot,
-    comparison,
-    alerts,
+    ...(hasFinancial && {
+      previous: previousSnapshot,
+      comparison,
+      alerts,
+    }),
     charts: {
-      billingHistory,
-      serviceDistribution,
+      ...(hasFinancial && { billingHistory }),
+      ...(hasOperational && { serviceDistribution }),
     },
     settings: {
       agencyName: settings?.agencyName || 'Minha Agência',
       contactEmail: settings?.contactEmail || null,
       phone: settings?.phone || null,
-      pixKey: settings?.pixKey || null,
-      pixKeyType: settings?.pixKeyType || null,
-      bankName: settings?.bankName || null,
-      bankBranch: settings?.bankBranch || null,
-      bankAccount: settings?.bankAccount || null,
+      ...(hasBankView && {
+        pixKey: settings?.pixKey || null,
+        pixKeyType: settings?.pixKeyType || null,
+        bankName: settings?.bankName || null,
+        bankBranch: settings?.bankBranch || null,
+        bankAccount: settings?.bankAccount || null,
+      }),
     },
   });
 });

@@ -2,7 +2,8 @@ export interface AuthUser {
   id: string;
   email: string;
   name: string;
-  role: string;
+  groups: { id: string; name: string; permissions: string[] }[];
+  permissions: Set<string>;
   mustChangePassword: boolean;
   active: boolean;
   tokenVersion: number;

@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState, useMemo, useCallback } from 'react';
 import { User, AuthResponse } from '../types';
 import { apiFetch } from '../services/api';
 
@@ -8,6 +8,8 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
+  has: (permission: string) => boolean;
+  hasAny: (...permissions: string[]) => boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -52,8 +54,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     await fetchCurrentUser();
   };
 
+  const userPermissions = useMemo(() => new Set(user?.permissions || []), [user?.permissions]);
+
+  const has = useCallback((permission: string) => {
+    if (!user) return false;
+    return userPermissions.has(permission);
+  }, [user, userPermissions]);
+
+  const hasAny = useCallback((...permissions: string[]) => {
+    if (!user) return false;
+    return permissions.some((p) => userPermissions.has(p));
+  }, [user, userPermissions]);
+
   return (
-    <AuthContext.Provider value={{ user, isLoading, login, logout, refreshUser }}>
+    <AuthContext.Provider value={{ user, isLoading, login, logout, refreshUser, has, hasAny }}>
       {children}
     </AuthContext.Provider>
   );

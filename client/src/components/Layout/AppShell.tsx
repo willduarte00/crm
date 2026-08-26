@@ -5,38 +5,19 @@ import { useAuth } from '../../context/AuthContext';
 import { ChangePasswordModal } from '../Users/ChangePasswordModal';
 import { apiFetch } from '../../services/api';
 import type { AgencySettingsSummary } from '../../types/dashboard';
+import { NAVIGATION_ITEMS } from './navigation';
+import { EmptyState } from '../ui/States';
 import {
-  LayoutDashboard,
-  Users,
-  Kanban,
-  FileText,
-  DollarSign,
-  ShieldCheck,
-  Settings,
   LogOut,
   KeyRound,
   Menu,
   X,
-  ListChecks,
+  ShieldCheck
 } from 'lucide-react';
-
-const NAV_ITEMS = [
-  { to: '/', label: 'Dashboard', icon: LayoutDashboard },
-  { to: '/clientes', label: 'Clientes', icon: Users },
-  { to: '/pipeline', label: 'Pipeline comercial', icon: Kanban },
-  { to: '/pipeline-operacional', label: 'Pipeline operacional', icon: ListChecks },
-  { to: '/contratos', label: 'Contratos', icon: FileText },
-  { to: '/financeiro', label: 'Financeiro', icon: DollarSign },
-];
-
-const ADMIN_NAV_ITEMS = [
-  { to: '/usuarios', label: 'Usuários', icon: ShieldCheck },
-  { to: '/configuracoes', label: 'Configurações', icon: Settings },
-];
 
 /** Título exibido no cabeçalho mobile, derivado da rota atual. */
 function pageTitleFor(pathname: string): string {
-  const match = [...NAV_ITEMS, ...ADMIN_NAV_ITEMS]
+  const match = NAVIGATION_ITEMS
     .filter((item) =>
       item.to === '/'
         ? pathname === '/'
@@ -81,13 +62,14 @@ function getShades(hex: string) {
 }
 
 export const AppShell: React.FC = () => {
-  const { user, logout } = useAuth();
+  const { user, logout, has } = useAuth();
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const location = useLocation();
 
-  const isAdmin = user?.role === 'admin';
   const pageTitle = pageTitleFor(location.pathname);
+  
+  const allowedNavItems = NAVIGATION_ITEMS.filter(item => has(item.permission));
 
   // Nome da agência lido do servidor — qualquer usuário autenticado tem acesso.
   const { data: settingsSummary } = useQuery<AgencySettingsSummary>({
@@ -110,7 +92,6 @@ export const AppShell: React.FC = () => {
   useEffect(() => {
     document.title = agencyName ? `${agencyName} — CRM` : 'CRM';
   }, [agencyName]);
-
 
   // Fecha a gaveta ao navegar — no mobile ela cobre todo o conteúdo.
   useEffect(() => {
@@ -135,7 +116,7 @@ export const AppShell: React.FC = () => {
     };
   }, [isSidebarOpen]);
 
-  const renderNavLink = (item: (typeof NAV_ITEMS)[number]) => {
+  const renderNavLink = (item: (typeof NAVIGATION_ITEMS)[number]) => {
     const Icon = item.icon;
     const isActive =
       item.to === '/'
@@ -242,21 +223,11 @@ export const AppShell: React.FC = () => {
             className="flex-1 min-h-0 px-3 py-4 space-y-1 overflow-y-auto overscroll-contain nav-scroll"
           >
             <div className="px-3 pb-2 text-[10px] font-semibold text-slate-400 uppercase tracking-wider">
-              Principal
+              Menu
             </div>
-            {NAV_ITEMS.map(renderNavLink)}
-
-            {isAdmin && (
-              <div className="pt-4 space-y-1">
-                <div className="px-3 pb-2 text-[10px] font-semibold text-slate-400 uppercase tracking-wider">
-                  Administração
-                </div>
-                {ADMIN_NAV_ITEMS.map(renderNavLink)}
-              </div>
-            )}
+            {allowedNavItems.map(renderNavLink)}
           </nav>
         </div>
-
 
         {/* Perfil e sessão */}
         <div className="p-3 border-t border-navy-800/80 bg-navy-950/40 flex-shrink-0">
@@ -274,8 +245,11 @@ export const AppShell: React.FC = () => {
                   <div className="text-[10px] text-slate-400 truncate">{user?.email}</div>
                 </div>
               </div>
-              <span className="text-[10px] px-1.5 py-0.5 rounded bg-navy-700 text-slate-200 font-medium flex-shrink-0">
-                {user?.role === 'admin' ? 'Admin' : 'Membro'}
+              <span 
+                className="text-[10px] px-1.5 py-0.5 rounded bg-navy-700 text-slate-200 font-medium flex-shrink-0 max-w-[120px] truncate"
+                title={user?.groups?.map(g => g.name).join(', ') || 'Sem grupo'}
+              >
+                {user?.groups?.length ? user.groups.map(g => g.name).join(', ') : 'Sem grupo'}
               </span>
             </div>
 
@@ -337,9 +311,19 @@ export const AppShell: React.FC = () => {
           largura da viewport e criem scroll horizontal na página inteira.
         */}
         <main className="flex-1 min-w-0 flex flex-col">
-          <div className="flex-1 min-w-0 flex flex-col p-4 sm:p-6 lg:p-8 max-w-app mx-auto w-full">
-            <Outlet />
-          </div>
+          {allowedNavItems.length > 0 ? (
+            <div className="flex-1 min-w-0 flex flex-col p-4 sm:p-6 lg:p-8 max-w-app mx-auto w-full">
+              <Outlet />
+            </div>
+          ) : (
+            <div className="flex-1 flex items-center justify-center p-6 min-h-0" role="alert">
+              <EmptyState
+                icon={<ShieldCheck className="w-6 h-6" />}
+                title="Nenhum acesso liberado"
+                message="Procure o administrador."
+              />
+            </div>
+          )}
         </main>
       </div>
 

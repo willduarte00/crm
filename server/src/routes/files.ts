@@ -8,6 +8,8 @@ import {
   ALLOWED_EXTENSIONS,
   ALLOWED_MIME_TYPES,
 } from '../middlewares/upload.js';
+import { requirePermission, assertPermission } from '../middlewares/requirePermission.js';
+import { Permission } from '../domain/permissions.js';
 
 export const filesRouter = Router();
 
@@ -43,6 +45,22 @@ filesRouter.post('/', handleUpload, async (req: Request, res: Response) => {
   }
 
   try {
+    if (contractId) {
+      try {
+        assertPermission(req, 'contract_files.create');
+      } catch (err) {
+        await fs.promises.unlink(req.file.path).catch(() => {});
+        throw err;
+      }
+    } else if (paymentRecordId) {
+      try {
+        assertPermission(req, 'invoices.create');
+      } catch (err) {
+        await fs.promises.unlink(req.file.path).catch(() => {});
+        throw err;
+      }
+    }
+
     const ext = path.extname(req.file.originalname).toLowerCase();
     const mime = req.file.mimetype.toLowerCase();
 
@@ -188,8 +206,11 @@ filesRouter.get('/:id', async (req: Request, res: Response) => {
     },
   });
 
-  // Se não encontrou, busca em InvoiceFile
-  if (!fileRecord) {
+  let fileType: 'contract' | 'invoice' | null = null;
+  if (fileRecord) {
+    fileType = 'contract';
+  } else {
+    // Se não encontrou, busca em InvoiceFile
     fileRecord = await prisma.invoiceFile.findUnique({
       where: { id },
       select: {
@@ -199,10 +220,19 @@ filesRouter.get('/:id', async (req: Request, res: Response) => {
         fileSize: true,
       },
     });
+    if (fileRecord) {
+      fileType = 'invoice';
+    }
   }
 
   if (!fileRecord) {
     return res.status(404).json({ error: 'Arquivo não encontrado.' });
+  }
+
+  if (fileType === 'contract') {
+    assertPermission(req, 'contract_files.view');
+  } else if (fileType === 'invoice') {
+    assertPermission(req, 'invoices.view');
   }
 
   const filePath = path.resolve(uploadDir, fileRecord.storedName);
@@ -240,7 +270,17 @@ filesRouter.delete('/:id', async (req: Request, res: Response) => {
     where: { id },
   });
 
+  const invoiceFile = !contractFile
+    ? await prisma.invoiceFile.findUnique({ where: { id } })
+    : null;
+
+  if (!contractFile && !invoiceFile) {
+    return res.status(404).json({ error: 'Arquivo não encontrado.' });
+  }
+
   if (contractFile) {
+    assertPermission(req, 'contract_files.delete');
+
     await prisma.contractFile.delete({
       where: { id },
     });
@@ -251,12 +291,9 @@ filesRouter.delete('/:id', async (req: Request, res: Response) => {
     return res.json({ success: true, message: 'Arquivo de contrato excluído com sucesso.' });
   }
 
-  // Verifica se é InvoiceFile
-  const invoiceFile = await prisma.invoiceFile.findUnique({
-    where: { id },
-  });
-
   if (invoiceFile) {
+    assertPermission(req, 'invoices.delete');
+
     await prisma.invoiceFile.delete({
       where: { id },
     });

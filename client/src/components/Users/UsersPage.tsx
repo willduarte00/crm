@@ -192,7 +192,7 @@ export const UsersPage: React.FC = () => {
                 <tr className="border-b border-slate-200 bg-slate-50/80 text-xs font-semibold text-slate-600 uppercase tracking-wider">
                   <th scope="col" className="py-3 px-4">Nome</th>
                   <th scope="col" className="py-3 px-4">E-mail</th>
-                  <th scope="col" className="py-3 px-4">Papel</th>
+                  <th scope="col" className="py-3 px-4">Grupos</th>
                   <th scope="col" className="py-3 px-4">Status</th>
                   <th scope="col" className="py-3 px-4">Criado em</th>
                   <th scope="col" className="py-3 px-4 text-right">Ações</th>
@@ -226,14 +226,16 @@ export const UsersPage: React.FC = () => {
                       </td>
                       <td className="py-3.5 px-4 text-slate-600">{u.email}</td>
                       <td className="py-3.5 px-4">
-                        {u.role === 'admin' ? (
-                          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-navy-100 text-navy-800 border border-navy-200">
-                            Administrador
-                          </span>
+                        {u.groups && u.groups.length > 0 ? (
+                          <div className="flex flex-wrap gap-1">
+                            {u.groups.map(g => (
+                              <span key={g.id} className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-700 border border-slate-200">
+                                {g.name}
+                              </span>
+                            ))}
+                          </div>
                         ) : (
-                          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-700 border border-slate-200">
-                            Membro
-                          </span>
+                          <span className="text-xs text-slate-400 italic">Sem grupo</span>
                         )}
                       </td>
                       <td className="py-3.5 px-4">

@@ -4,6 +4,7 @@ import bcrypt from 'bcryptjs';
 import { z } from 'zod';
 import { prisma } from '../prisma.js';
 import { setAuthCookie, clearAuthCookie } from '../middlewares/requireAuth.js';
+import { mergePermissions } from '../domain/permissions.js';
 
 export const authRouter = Router();
 
@@ -32,6 +33,9 @@ authRouter.post('/login', loginLimiter, async (req: Request, res: Response) => {
 
   const user = await prisma.user.findUnique({
     where: { email: email.toLowerCase().trim() },
+    include: {
+      groups: { select: { group: { select: { id: true, name: true, permissions: true } } } },
+    },
   });
 
   if (!user || !user.active) {
@@ -45,13 +49,17 @@ authRouter.post('/login', loginLimiter, async (req: Request, res: Response) => {
 
   setAuthCookie(res, { id: user.id, tokenVersion: user.tokenVersion });
 
+  const groups = user.groups ? user.groups.map((g) => g.group) : [];
+  const permissions = [...mergePermissions(groups)];
+
   return res.json({
     user: {
       id: user.id,
       email: user.email,
       name: user.name,
-      role: user.role,
       mustChangePassword: user.mustChangePassword,
+      groups: groups.map((g) => ({ id: g.id, name: g.name })),
+      permissions,
     },
   });
 });
@@ -73,8 +81,9 @@ authRouter.get('/me', (req: Request, res: Response) => {
       id: req.user.id,
       email: req.user.email,
       name: req.user.name,
-      role: req.user.role,
       mustChangePassword: req.user.mustChangePassword,
+      groups: req.user.groups.map(({ id, name }) => ({ id, name })),
+      permissions: [...req.user.permissions],
     },
   });
 });
@@ -120,8 +129,9 @@ authRouter.post('/change-password', async (req: Request, res: Response) => {
       id: updatedUser.id,
       email: updatedUser.email,
       name: updatedUser.name,
-      role: updatedUser.role,
       mustChangePassword: false,
+      groups: req.user.groups.map(({ id, name }) => ({ id, name })),
+      permissions: [...req.user.permissions],
     },
   });
 });

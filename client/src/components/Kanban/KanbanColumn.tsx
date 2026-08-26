@@ -8,6 +8,7 @@ interface KanbanColumnProps {
   stage: PipelineStage;
   clients: Client[];
   onCardClick: (client: Client) => void;
+  isDragDisabled?: boolean;
 }
 
 const STAGE_CONFIG: Record<
@@ -50,6 +51,7 @@ export const KanbanColumn: React.FC<KanbanColumnProps> = ({
   stage,
   clients,
   onCardClick,
+  isDragDisabled,
 }) => {
   const config = STAGE_CONFIG[stage] || {
     dotColor: 'bg-slate-400',
@@ -96,6 +98,7 @@ export const KanbanColumn: React.FC<KanbanColumnProps> = ({
                 client={client}
                 index={index}
                 onClick={onCardClick}
+                isDragDisabled={isDragDisabled}
               />
             ))}
 

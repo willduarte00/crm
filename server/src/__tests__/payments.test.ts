@@ -46,6 +46,8 @@ describe('Cobranças e Pagamentos — Testes de Integração (RF-20 a RF-32)', (
     active: true,
     mustChangePassword: false,
     tokenVersion: 0,
+  groups: [{ group: { id: 'g-admin', name: 'Admin', permissions: ['clients.view', 'clients.create', 'clients.update', 'clients.delete', 'clients.stage.update', 'clients.owner.update', 'clients.batch_reassign', 'clients.export', 'logs.view', 'logs.create', 'contracts.view', 'contracts.create', 'contracts.update', 'contracts.delete', 'contract_files.view', 'contract_files.create', 'contract_files.delete', 'payments.view', 'payments.create', 'payments.update', 'payments.settle', 'payments.cancel', 'payments.export', 'invoices.view', 'invoices.create', 'invoices.delete', 'dashboard.financial.view', 'dashboard.operational.view', 'settings.view', 'settings.update', 'settings.bank.view', 'users.view_basic', 'users.view', 'users.manage', 'groups.view', 'groups.manage'] } }],
+
     passwordHash: 'hash',
     createdAt: new Date(),
   };

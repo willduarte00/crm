@@ -5,6 +5,7 @@ import { useDebouncedValue } from '../../hooks/useDebouncedValue';
 import { Button, IconButton } from '../ui/Button';
 import { LoadingState, EmptyState, ErrorState } from '../ui/States';
 import { controlClassSm } from '../ui/Field';
+import { useAuth } from '../../context/AuthContext';
 import { PaginatedPaymentsResponse } from '../../types/payment';
 import {
   formatDateBR,
@@ -63,6 +64,7 @@ function pageWindow(current: number, total: number): (number | 'gap')[] {
 }
 
 export const FinancialPage: React.FC = () => {
+  const { has } = useAuth();
   const [page, setPage] = useState(1);
   const [statusFilter, setStatusFilter] = useState('all');
   const [referenceMonthFilter, setReferenceMonthFilter] = useState('');
@@ -79,7 +81,8 @@ export const FinancialPage: React.FC = () => {
   // Busca configurações da agência para obter chave PIX
   const { data: settings } = useQuery<AgencySettings>({
     queryKey: ['settings'],
-    queryFn: () => apiFetch<AgencySettings>('/api/settings').catch(() => null as any),
+    queryFn: () => apiFetch<AgencySettings>('/api/settings/billing'),
+    enabled: has('settings.bank.view'),
   });
 
   // Volta para a primeira página sempre que a busca efetiva muda.
@@ -181,22 +184,26 @@ export const FinancialPage: React.FC = () => {
           </p>
         </div>
         <div className="flex items-center gap-2 flex-shrink-0">
-          <Button
-            variant="secondary"
-            onClick={handleExport}
-            isLoading={isExporting}
-            icon={<Download className="w-4 h-4" aria-hidden="true" />}
-          >
-            <span className="hidden sm:inline">Exportar CSV</span>
-            <span className="sm:hidden">CSV</span>
-          </Button>
+          {has('payments.export') && (
+            <Button
+              variant="secondary"
+              onClick={handleExport}
+              isLoading={isExporting}
+              icon={<Download className="w-4 h-4" aria-hidden="true" />}
+            >
+              <span className="hidden sm:inline">Exportar CSV</span>
+              <span className="sm:hidden">CSV</span>
+            </Button>
+          )}
 
-          <Button
-            onClick={() => setIsCreateModalOpen(true)}
-            icon={<Plus className="w-4 h-4" aria-hidden="true" />}
-          >
-            Nova cobrança
-          </Button>
+          {has('payments.create') && (
+            <Button
+              onClick={() => setIsCreateModalOpen(true)}
+              icon={<Plus className="w-4 h-4" aria-hidden="true" />}
+            >
+              Nova cobrança
+            </Button>
+          )}
         </div>
       </div>
 
@@ -378,7 +385,7 @@ export const FinancialPage: React.FC = () => {
                 <Button variant="secondary" size="sm" onClick={handleClearFilters}>
                   Limpar filtros
                 </Button>
-              ) : (
+              ) : has('payments.create') ? (
                 <Button
                   size="sm"
                   onClick={() => setIsCreateModalOpen(true)}
@@ -386,7 +393,7 @@ export const FinancialPage: React.FC = () => {
                 >
                   Nova cobrança
                 </Button>
-              )
+              ) : undefined
             }
           />
         ) : (
@@ -491,7 +498,7 @@ export const FinancialPage: React.FC = () => {
                         >
                           <MessageSquare className="w-4 h-4" aria-hidden="true" />
                         </IconButton>
-                        {p.status !== 'Pago' && p.status !== 'Cancelado' && (
+                        {has('payments.settle') && p.status !== 'Pago' && p.status !== 'Cancelado' && (
                           <button
                             type="button"
                             onClick={() => handleOpenDetails(p.id)}

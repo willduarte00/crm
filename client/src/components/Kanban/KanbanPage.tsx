@@ -8,6 +8,7 @@ import {
 } from '../../types/client';
 import { User } from '../../types';
 import { apiFetch, AppApiError, errorMessage } from '../../services/api';
+import { useAuth } from '../../context/AuthContext';
 import { useDebouncedValue } from '../../hooks/useDebouncedValue';
 import { useConfirm } from '../ui/ConfirmDialog';
 import { Button, IconButton } from '../ui/Button';
@@ -39,6 +40,7 @@ const LEAD_SOURCES: LeadSource[] = [
 
 export const KanbanPage: React.FC = () => {
   const confirm = useConfirm();
+  const { has } = useAuth();
 
   const [clients, setClients] = useState<Client[]>([]);
   const [users, setUsers] = useState<User[]>([]);
@@ -63,11 +65,12 @@ export const KanbanPage: React.FC = () => {
 
   // Carregar usuários para filtro e modais
   const fetchUsers = async () => {
+    if (!has('users.view_basic')) return;
     try {
-      const data = await apiFetch<User[]>('/api/users');
+      const data = await apiFetch<User[]>('/api/users/basic');
       setUsers(data);
     } catch {
-      // Ignora erro se não for admin (RF-08)
+      // Ignora erro
     }
   };
 
@@ -407,6 +410,7 @@ export const KanbanPage: React.FC = () => {
                   stage={stage}
                   clients={columnsData[stage]}
                   onCardClick={handleCardClick}
+                  isDragDisabled={!has('clients.stage.update')}
                 />
               ))}
             </div>

@@ -33,6 +33,10 @@ RUN npx prisma generate
 # Copia build do servidor
 COPY --from=server-builder /app/server/dist ./dist
 
+# Copia fontes TypeScript necessários para o seed (tsx executa .ts diretamente)
+COPY --from=server-builder /app/server/src ./src
+COPY --from=server-builder /app/server/tsconfig.json ./tsconfig.json
+
 # Copia build do cliente para a pasta pública do Express
 COPY --from=client-builder /app/client/dist ./public-client
 

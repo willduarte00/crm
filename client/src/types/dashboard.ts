@@ -1,13 +1,13 @@
 export interface CurrentMetrics {
   referenceMonth: string; // YYYY-MM
   today: string; // YYYY-MM-DD
-  mrrCents: number;
-  receivedCents: number;
-  invoicedCents: number;
-  overdueCents: number;
-  overdueCount: number;
-  delinquencyRate: number; // percentual ex: 4.8
-  activeClients: number;
+  mrrCents?: number;
+  receivedCents?: number;
+  invoicedCents?: number;
+  overdueCents?: number;
+  overdueCount?: number;
+  delinquencyRate?: number; // percentual ex: 4.8
+  activeClients?: number;
 }
 
 export interface MetricSnapshot {
@@ -75,15 +75,15 @@ export interface AgencySettingsSummary {
 
 export interface DashboardData {
   current: CurrentMetrics;
-  previous: MetricSnapshot | null;
-  comparison: DashboardComparison | null;
-  alerts: {
+  previous?: MetricSnapshot | null;
+  comparison?: DashboardComparison | null;
+  alerts?: {
     overdue: PaymentAlertItem[];
     upcoming7Days: PaymentAlertItem[];
   };
-  charts: {
+  charts?: {
     billingHistory: BillingHistoryItem[];
     serviceDistribution: ServiceDistributionItem[];
   };
-  settings: AgencySettingsSummary;
+  settings?: AgencySettingsSummary;
 }

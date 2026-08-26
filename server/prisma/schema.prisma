@@ -13,7 +13,6 @@ model User {
   email              String           @unique
   passwordHash       String
   name               String
-  role               String           @default("membro") // admin | membro
   active             Boolean          @default(true)
   mustChangePassword Boolean          @default(false)
   tokenVersion       Int              @default(0)
@@ -21,6 +20,7 @@ model User {
   ownedClients              Client[]
   interactionLogs           InteractionLog[]
   ownedOperationalTasks     OperationalTask[]
+  groups             UserGroup[]
 
   @@map("users")
 }
@@ -201,4 +201,29 @@ model OperationalTask {
   @@index([stageId])
   @@index([deletedAt])
   @@map("operational_tasks")
+}
+
+model Group {
+  id          String      @id @default(uuid())
+  name        String      @unique
+  description String?
+  isSystem    Boolean     @default(false)
+  permissions String[]
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  users       UserGroup[]
+
+  @@map("groups")
+}
+
+model UserGroup {
+  userId    String
+  groupId   String
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  group     Group    @relation(fields: [groupId], references: [id], onDelete: Restrict)
+
+  @@id([userId, groupId])
+  @@index([groupId])
+  @@map("user_groups")
 }

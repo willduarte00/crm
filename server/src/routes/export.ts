@@ -36,8 +36,10 @@ function formatDateTimeBR(date: Date | null | undefined): string {
   return `${day}/${month}/${year} ${hours}:${minutes}`;
 }
 
+import { requirePermission } from '../middlewares/requirePermission.js';
+
 // GET /api/export/clients - Exportação de clientes em CSV
-exportRouter.get('/clients', async (_req: Request, res: Response) => {
+exportRouter.get('/clients', requirePermission('clients.export'), async (_req: Request, res: Response) => {
   const clients = await prisma.client.findMany({
     where: { deletedAt: null },
     include: {
@@ -96,7 +98,7 @@ exportRouter.get('/clients', async (_req: Request, res: Response) => {
 });
 
 // GET /api/export/payments - Exportação de cobranças em CSV
-exportRouter.get('/payments', async (req: Request, res: Response) => {
+exportRouter.get('/payments', requirePermission('payments.export'), async (req: Request, res: Response) => {
   const { status, referenceMonth, search } = req.query;
 
   const today = getTodayCivilDate();

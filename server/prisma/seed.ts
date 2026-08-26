@@ -1,6 +1,7 @@
 import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 import dotenv from 'dotenv';
+import { ADMIN_PERMISSIONS, FINANCEIRO_PERMISSIONS, OPERACIONAL_PERMISSIONS } from '../src/domain/defaultGroups.js';
 
 dotenv.config();
 
@@ -10,18 +11,57 @@ async function main() {
   const adminEmail = process.env.ADMIN_EMAIL || 'admin@agencia.com';
   const adminPassword = process.env.ADMIN_PASSWORD || 'admin123456';
 
-  const existingAdmin = await prisma.user.findUnique({
+  // Seed dos Grupos
+  const adminGroup = await prisma.group.upsert({
+    where: { name: 'Admin' },
+    update: {
+      isSystem: true,
+      permissions: ADMIN_PERMISSIONS,
+    },
+    create: {
+      name: 'Admin',
+      description: 'Acesso total ao sistema',
+      isSystem: true,
+      permissions: ADMIN_PERMISSIONS,
+    },
+  });
+
+  const operacionalGroup = await prisma.group.upsert({
+    where: { name: 'Operacional' },
+    update: {
+      permissions: OPERACIONAL_PERMISSIONS,
+    },
+    create: {
+      name: 'Operacional',
+      description: 'Gestão de clientes e pipeline',
+      permissions: OPERACIONAL_PERMISSIONS,
+    },
+  });
+
+  const financeiroGroup = await prisma.group.upsert({
+    where: { name: 'Financeiro' },
+    update: {
+      permissions: FINANCEIRO_PERMISSIONS,
+    },
+    create: {
+      name: 'Financeiro',
+      description: 'Gestão de contratos e cobranças',
+      permissions: FINANCEIRO_PERMISSIONS,
+    },
+  });
+  console.log('✅ Grupos semeados');
+
+  let existingAdmin = await prisma.user.findUnique({
     where: { email: adminEmail },
   });
 
   if (!existingAdmin) {
     const passwordHash = await bcrypt.hash(adminPassword, 12);
-    await prisma.user.create({
+    existingAdmin = await prisma.user.create({
       data: {
         email: adminEmail,
         passwordHash,
         name: 'Administrador',
-        role: 'admin',
         active: true,
         mustChangePassword: false,
         tokenVersion: 0,
@@ -31,6 +71,22 @@ async function main() {
   } else {
     console.log(`ℹ️ Usuário administrador já existe (${adminEmail})`);
   }
+
+  // Vincular admin ao grupo Admin
+  await prisma.userGroup.upsert({
+    where: {
+      userId_groupId: {
+        userId: existingAdmin.id,
+        groupId: adminGroup.id,
+      },
+    },
+    update: {},
+    create: {
+      userId: existingAdmin.id,
+      groupId: adminGroup.id,
+    },
+  });
+  console.log('✅ Usuário administrador vinculado ao grupo Admin');
 
   // Garante configurações padrão da agência
   const settingsCount = await prisma.settings.count();

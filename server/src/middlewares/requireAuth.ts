@@ -3,6 +3,7 @@ import jwt from 'jsonwebtoken';
 import { env } from '../env.js';
 import { prisma } from '../prisma.js';
 import { AuthUser } from '../types/express.js';
+import { mergePermissions } from '../domain/permissions.js';
 
 interface JwtPayload {
   id: string;
@@ -82,10 +83,10 @@ export async function requireAuth(req: Request, res: Response, next: NextFunctio
         id: true,
         email: true,
         name: true,
-        role: true,
         active: true,
         mustChangePassword: true,
         tokenVersion: true,
+        groups: { select: { group: { select: { id: true, name: true, permissions: true } } } },
       },
     });
 
@@ -94,14 +95,18 @@ export async function requireAuth(req: Request, res: Response, next: NextFunctio
       return res.status(401).json({ error: 'Sessão inválida ou expirada' });
     }
 
+    const groups = user.groups ? user.groups.map((g) => g.group) : [];
+    const permissions = mergePermissions(groups);
+
     const authUser: AuthUser = {
       id: user.id,
       email: user.email,
       name: user.name,
-      role: user.role,
       mustChangePassword: user.mustChangePassword,
       active: user.active,
       tokenVersion: user.tokenVersion,
+      groups,
+      permissions,
     };
 
     req.user = authUser;

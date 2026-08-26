@@ -8,6 +8,7 @@ import {
 } from '../../types/client';
 import { User } from '../../types';
 import { apiFetch, apiDownload, errorMessage } from '../../services/api';
+import { useAuth } from '../../context/AuthContext';
 import { useDebouncedValue } from '../../hooks/useDebouncedValue';
 import { useConfirm } from '../ui/ConfirmDialog';
 import { Button, IconButton } from '../ui/Button';
@@ -119,6 +120,7 @@ const PRIORITY_LABELS: Record<Priority, string> = {
 
 export const ClientsPage: React.FC = () => {
   const confirm = useConfirm();
+  const { has } = useAuth();
 
   const [clients, setClients] = useState<Client[]>([]);
   const [users, setUsers] = useState<User[]>([]);
@@ -157,12 +159,12 @@ export const ClientsPage: React.FC = () => {
   const requestIdRef = useRef(0);
 
   const fetchUsers = async () => {
+    if (!has('users.view_basic')) return;
     try {
-      const data = await apiFetch<User[]>('/api/users');
+      const data = await apiFetch<User[]>('/api/users/basic');
       setUsers(data);
     } catch {
-      // Membros não-admin não têm acesso à lista de usuários; os filtros
-      // por responsável simplesmente não são populados.
+      // Falhas silenciosas para o filtro
     }
   };
 
@@ -327,22 +329,26 @@ export const ClientsPage: React.FC = () => {
         </div>
 
         <div className="flex items-center gap-2 flex-shrink-0">
-          <Button
-            variant="secondary"
-            onClick={handleExport}
-            isLoading={isExporting}
-            icon={<Download className="w-4 h-4" aria-hidden="true" />}
-          >
-            <span className="hidden sm:inline">Exportar CSV</span>
-            <span className="sm:hidden">CSV</span>
-          </Button>
+          {has('clients.export') && (
+            <Button
+              variant="secondary"
+              onClick={handleExport}
+              isLoading={isExporting}
+              icon={<Download className="w-4 h-4" aria-hidden="true" />}
+            >
+              <span className="hidden sm:inline">Exportar CSV</span>
+              <span className="sm:hidden">CSV</span>
+            </Button>
+          )}
 
-          <Button
-            onClick={handleOpenNew}
-            icon={<UserPlus className="w-4 h-4" aria-hidden="true" />}
-          >
-            Novo cliente
-          </Button>
+          {has('clients.create') && (
+            <Button
+              onClick={handleOpenNew}
+              icon={<UserPlus className="w-4 h-4" aria-hidden="true" />}
+            >
+              Novo cliente
+            </Button>
+          )}
         </div>
       </div>
 
@@ -508,7 +514,7 @@ export const ClientsPage: React.FC = () => {
                 membro ativo para que voltem a ter dono.
               </span>
             </div>
-            {clients.length > 0 && (
+            {clients.length > 0 && has('clients.batch_reassign') && (
               <Button
                 size="sm"
                 onClick={() => setIsBatchReassignOpen(true)}
@@ -550,7 +556,7 @@ export const ClientsPage: React.FC = () => {
                 <Button variant="secondary" size="sm" onClick={handleClearFilters}>
                   Limpar filtros
                 </Button>
-              ) : (
+              ) : has('clients.create') ? (
                 <Button
                   size="sm"
                   onClick={handleOpenNew}
@@ -558,7 +564,7 @@ export const ClientsPage: React.FC = () => {
                 >
                   Novo cliente
                 </Button>
-              )
+              ) : undefined
             }
           />
         ) : (
@@ -730,21 +736,25 @@ export const ClientsPage: React.FC = () => {
                           >
                             <Eye className="w-4 h-4" aria-hidden="true" />
                           </IconButton>
-                          <IconButton
-                            label={`Editar ${c.name}`}
-                            onClick={() => handleOpenEdit(c)}
-                          >
-                            <Edit2 className="w-4 h-4" aria-hidden="true" />
-                          </IconButton>
-                          <IconButton
-                            label={`Excluir ${c.name}`}
-                            tone="danger"
-                            onClick={() => handleDelete(c)}
-                            isLoading={deletingId === c.id}
-                            disabled={deletingId !== null}
-                          >
-                            <Trash2 className="w-4 h-4" aria-hidden="true" />
-                          </IconButton>
+                          {has('clients.update') && (
+                            <IconButton
+                              label={`Editar ${c.name}`}
+                              onClick={() => handleOpenEdit(c)}
+                            >
+                              <Edit2 className="w-4 h-4" aria-hidden="true" />
+                            </IconButton>
+                          )}
+                          {has('clients.delete') && (
+                            <IconButton
+                              label={`Excluir ${c.name}`}
+                              tone="danger"
+                              onClick={() => handleDelete(c)}
+                              isLoading={deletingId === c.id}
+                              disabled={deletingId !== null}
+                            >
+                              <Trash2 className="w-4 h-4" aria-hidden="true" />
+                            </IconButton>
+                          )}
                         </div>
                       </td>
                     </tr>

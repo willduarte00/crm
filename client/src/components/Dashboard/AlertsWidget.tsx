@@ -15,7 +15,7 @@ import { WhatsAppModal, WhatsAppModalData } from '../WhatsApp/WhatsAppModal';
 interface AlertsWidgetProps {
   overdue: PaymentAlertItem[];
   upcoming7Days: PaymentAlertItem[];
-  settings: AgencySettingsSummary;
+  settings?: AgencySettingsSummary;
 }
 
 export const AlertsWidget: React.FC<AlertsWidgetProps> = ({
@@ -34,9 +34,9 @@ export const AlertsWidget: React.FC<AlertsWidgetProps> = ({
       vencimento: alert.dueDate,
       mesReferencia: alert.referenceMonth,
       numeroCobranca: alert.number,
-      agencia: settings.agencyName,
-      chavePix: settings.pixKey,
-      tipoChavePix: settings.pixKeyType,
+      agencia: settings?.agencyName || '',
+      chavePix: settings?.pixKey || '',
+      tipoChavePix: settings?.pixKeyType || '',
     });
   };
 

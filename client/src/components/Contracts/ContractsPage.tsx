@@ -8,6 +8,7 @@ import { Button, IconButton } from '../ui/Button';
 import { LoadingState, EmptyState, ErrorState } from '../ui/States';
 import { controlClassSm } from '../ui/Field';
 import { formatDateBR, formatCurrencyBRL } from '../../utils/formatters';
+import { useAuth } from '../../context/AuthContext';
 import { ContractModal } from './ContractModal';
 import { ContractFilesModal } from './ContractFilesModal';
 import {
@@ -25,6 +26,7 @@ import { toast } from 'sonner';
 
 export const ContractsPage: React.FC = () => {
   const confirm = useConfirm();
+  const { has } = useAuth();
 
   const [contracts, setContracts] = useState<Contract[]>([]);
   const [clients, setClients] = useState<Client[]>([]);
@@ -161,16 +163,18 @@ export const ContractsPage: React.FC = () => {
           </p>
         </div>
 
-        <Button
-          onClick={() => {
-            setContractToEdit(null);
-            setIsContractModalOpen(true);
-          }}
-          icon={<Plus className="w-4 h-4" aria-hidden="true" />}
-          className="self-start sm:self-auto flex-shrink-0"
-        >
-          Novo contrato
-        </Button>
+        {has('contracts.create') && (
+          <Button
+            onClick={() => {
+              setContractToEdit(null);
+              setIsContractModalOpen(true);
+            }}
+            icon={<Plus className="w-4 h-4" aria-hidden="true" />}
+            className="self-start sm:self-auto flex-shrink-0"
+          >
+            Novo contrato
+          </Button>
+        )}
       </div>
 
       {/* Cards de Métricas */}
@@ -329,7 +333,7 @@ export const ContractsPage: React.FC = () => {
                 <Button variant="secondary" size="sm" onClick={handleClearFilters}>
                   Limpar filtros
                 </Button>
-              ) : (
+              ) : has('contracts.create') ? (
                 <Button
                   size="sm"
                   onClick={() => {
@@ -340,7 +344,7 @@ export const ContractsPage: React.FC = () => {
                 >
                   Novo contrato
                 </Button>
-              )
+              ) : undefined
             }
           />
         ) : (
@@ -473,24 +477,28 @@ export const ContractsPage: React.FC = () => {
                       {/* Ações */}
                       <td className="py-3 px-4 text-right">
                         <div className="flex items-center justify-end gap-0.5">
-                          <IconButton
-                            label={'Editar contrato de ' + ct.serviceType}
-                            onClick={() => {
-                              setContractToEdit(ct);
-                              setIsContractModalOpen(true);
-                            }}
-                          >
-                            <Edit2 className="w-4 h-4" aria-hidden="true" />
-                          </IconButton>
-                          <IconButton
-                            label={'Excluir contrato de ' + ct.serviceType}
-                            tone="danger"
-                            onClick={() => handleDeleteContract(ct)}
-                            isLoading={deletingId === ct.id}
-                            disabled={deletingId !== null}
-                          >
-                            <Trash2 className="w-4 h-4" aria-hidden="true" />
-                          </IconButton>
+                          {has('contracts.update') && (
+                            <IconButton
+                              label={'Editar contrato de ' + ct.serviceType}
+                              onClick={() => {
+                                setContractToEdit(ct);
+                                setIsContractModalOpen(true);
+                              }}
+                            >
+                              <Edit2 className="w-4 h-4" aria-hidden="true" />
+                            </IconButton>
+                          )}
+                          {has('contracts.delete') && (
+                            <IconButton
+                              label={'Excluir contrato de ' + ct.serviceType}
+                              tone="danger"
+                              onClick={() => handleDeleteContract(ct)}
+                              isLoading={deletingId === ct.id}
+                              disabled={deletingId !== null}
+                            >
+                              <Trash2 className="w-4 h-4" aria-hidden="true" />
+                            </IconButton>
+                          )}
                         </div>
                       </td>
                     </tr>

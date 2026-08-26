@@ -31,6 +31,7 @@ import {
   DollarSign,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { useAuth } from '../../context/AuthContext';
 import { Modal } from '../ui/Modal';
 import { Button, IconButton } from '../ui/Button';
 import { Field, controlClass } from '../ui/Field';
@@ -54,6 +55,7 @@ export const PaymentDetailsModal: React.FC<PaymentDetailsModalProps> = ({
   onPaymentUpdated,
 }) => {
   const confirm = useConfirm();
+  const { has } = useAuth();
 
   const [payment, setPayment] = useState<PaymentRecord | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -423,7 +425,7 @@ export const PaymentDetailsModal: React.FC<PaymentDetailsModalProps> = ({
           <Button variant="secondary" onClick={onClose} disabled={isSubmitting}>
             Fechar
           </Button>
-          {isOpenForSettlement && (
+          {isOpenForSettlement && has('payments.settle') && (
             <Button
               type="submit"
               form={formId}
@@ -506,15 +508,17 @@ export const PaymentDetailsModal: React.FC<PaymentDetailsModalProps> = ({
                       />
                       <span>Pagamento confirmado</span>
                     </h3>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={handleReopenPayment}
-                      disabled={isSubmitting}
-                      className="text-emerald-800 hover:bg-emerald-100"
-                    >
-                      Reabrir
-                    </Button>
+                    {has('payments.update') && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={handleReopenPayment}
+                        disabled={isSubmitting}
+                        className="text-emerald-800 hover:bg-emerald-100"
+                      >
+                        Reabrir
+                      </Button>
+                    )}
                   </div>
 
                   <dl className="grid grid-cols-2 gap-4 text-xs">
@@ -557,124 +561,128 @@ export const PaymentDetailsModal: React.FC<PaymentDetailsModalProps> = ({
                     <strong className="text-navy-900">{payment.number}</strong> ficou
                     reservado no histórico e não será reutilizado.
                   </p>
-                  <div className="pt-1">
-                    <Button
-                      variant="secondary"
-                      size="sm"
-                      onClick={handleReopenPayment}
-                      disabled={isSubmitting}
-                    >
-                      Reabrir cobrança
-                    </Button>
-                  </div>
+                  {has('payments.update') && (
+                    <div className="pt-1">
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        onClick={handleReopenPayment}
+                        disabled={isSubmitting}
+                      >
+                        Reabrir cobrança
+                      </Button>
+                    </div>
+                  )}
                 </div>
               ) : (
-                <form
-                  id={formId}
-                  onSubmit={handleMarkAsPaid}
-                  className="border border-slate-200 rounded-lg p-5 space-y-4 bg-white"
-                >
-                  <h3 className="text-sm font-bold text-navy-900 flex items-center gap-2 border-b border-slate-100 pb-3">
-                    <DollarSign className="w-4 h-4 text-teal-600" aria-hidden="true" />
-                    <span>Registrar pagamento</span>
-                  </h3>
+                <div className="border border-slate-200 rounded-lg p-5 space-y-4 bg-white">
+                  {has('payments.settle') && (
+                    <form id={formId} onSubmit={handleMarkAsPaid} className="space-y-4">
+                      <h3 className="text-sm font-bold text-navy-900 flex items-center gap-2 border-b border-slate-100 pb-3">
+                        <DollarSign className="w-4 h-4 text-teal-600" aria-hidden="true" />
+                        <span>Registrar pagamento</span>
+                      </h3>
 
-                  <div className="p-3.5 bg-slate-50 border border-slate-200 rounded-lg">
-                    <Field
-                      label="Valor recebido"
-                      required
-                      hint="Ajuste para registrar desconto ou pagamento parcial."
-                    >
-                      {(props) => (
-                        <div className="relative flex items-center">
-                          <span
-                            className="absolute left-3 text-base font-bold text-slate-500 pointer-events-none"
-                            aria-hidden="true"
-                          >
-                            R$
-                          </span>
-                          <input
-                            {...props}
-                            type="text"
-                            inputMode="numeric"
-                            value={amountStr}
-                            onChange={handleAmountChange}
-                            placeholder="0,00"
-                            className="w-full pl-10 pr-3 py-1.5 bg-transparent text-lg font-bold text-navy-900 tabular-nums border-b-2 border-slate-300 focus:border-teal-600 focus:outline-none transition-colors"
-                          />
-                        </div>
-                      )}
-                    </Field>
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <Field label="Data do pagamento" required>
-                      {(props) => (
-                        <div className="relative">
-                          <Calendar
-                            className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none"
-                            aria-hidden="true"
-                          />
-                          <input
-                            {...props}
-                            type="date"
-                            value={paidDate}
-                            onChange={(e) => setPaidDate(e.target.value)}
-                            className={`${controlClass} pl-9`}
-                          />
-                        </div>
-                      )}
-                    </Field>
-
-                    <Field label="Forma de pagamento" required>
-                      {(props) => (
-                        <select
-                          {...props}
-                          value={paymentMethod}
-                          onChange={(e) =>
-                            setPaymentMethod(e.target.value as PaymentMethod)
-                          }
-                          className={controlClass}
+                      <div className="p-3.5 bg-slate-50 border border-slate-200 rounded-lg">
+                        <Field
+                          label="Valor recebido"
+                          required
+                          hint="Ajuste para registrar desconto ou pagamento parcial."
                         >
-                          <option value="" disabled>
-                            Selecione…
-                          </option>
-                          {PAYMENT_METHODS.map((method) => (
-                            <option key={method} value={method}>
-                              {PAYMENT_METHOD_LABELS[method]}
-                            </option>
-                          ))}
-                        </select>
-                      )}
-                    </Field>
-                  </div>
+                          {(props) => (
+                            <div className="relative flex items-center">
+                              <span
+                                className="absolute left-3 text-base font-bold text-slate-500 pointer-events-none"
+                                aria-hidden="true"
+                              >
+                                R$
+                              </span>
+                              <input
+                                {...props}
+                                type="text"
+                                inputMode="numeric"
+                                value={amountStr}
+                                onChange={handleAmountChange}
+                                placeholder="0,00"
+                                className="w-full pl-10 pr-3 py-1.5 bg-transparent text-lg font-bold text-navy-900 tabular-nums border-b-2 border-slate-300 focus:border-teal-600 focus:outline-none transition-colors"
+                              />
+                            </div>
+                          )}
+                        </Field>
+                      </div>
 
-                  <Field label="Observações internas">
-                    {(props) => (
-                      <textarea
-                        {...props}
-                        value={notes}
-                        onChange={(e) => setNotes(e.target.value)}
-                        placeholder="Ex: desconto negociado por WhatsApp"
-                        rows={2}
-                        className={`${controlClass} resize-none`}
-                      />
-                    )}
-                  </Field>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <Field label="Data do pagamento" required>
+                          {(props) => (
+                            <div className="relative">
+                              <Calendar
+                                className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none"
+                                aria-hidden="true"
+                              />
+                              <input
+                                {...props}
+                                type="date"
+                                value={paidDate}
+                                onChange={(e) => setPaidDate(e.target.value)}
+                                className={`${controlClass} pl-9`}
+                              />
+                            </div>
+                          )}
+                        </Field>
 
-                  <div className="pt-3 border-t border-slate-100">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={handleCancelPayment}
-                      disabled={isSubmitting}
-                      icon={<Ban className="w-3.5 h-3.5" aria-hidden="true" />}
-                      className="text-rose-700 hover:bg-rose-50 hover:text-rose-800"
-                    >
-                      Cancelar esta cobrança
-                    </Button>
-                  </div>
-                </form>
+                        <Field label="Forma de pagamento" required>
+                          {(props) => (
+                            <select
+                              {...props}
+                              value={paymentMethod}
+                              onChange={(e) =>
+                                setPaymentMethod(e.target.value as PaymentMethod)
+                              }
+                              className={controlClass}
+                            >
+                              <option value="" disabled>
+                                Selecione…
+                              </option>
+                              {PAYMENT_METHODS.map((method) => (
+                                <option key={method} value={method}>
+                                  {PAYMENT_METHOD_LABELS[method]}
+                                </option>
+                              ))}
+                            </select>
+                          )}
+                        </Field>
+                      </div>
+
+                      <Field label="Observações internas">
+                        {(props) => (
+                          <textarea
+                            {...props}
+                            value={notes}
+                            onChange={(e) => setNotes(e.target.value)}
+                            placeholder="Ex: desconto negociado por WhatsApp"
+                            rows={2}
+                            className={`${controlClass} resize-none`}
+                          />
+                        )}
+                      </Field>
+                    </form>
+                  )}
+
+                  {has('payments.cancel') && (
+                    <div className={has('payments.settle') ? "pt-3 border-t border-slate-100" : ""}>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={handleCancelPayment}
+                        disabled={isSubmitting}
+                        icon={<Ban className="w-3.5 h-3.5" aria-hidden="true" />}
+                        className="text-rose-700 hover:bg-rose-50 hover:text-rose-800"
+                      >
+                        Cancelar esta cobrança
+                      </Button>
+                    </div>
+                  )}
+                </div>
               )}
             </div>
 
@@ -686,38 +694,40 @@ export const PaymentDetailsModal: React.FC<PaymentDetailsModalProps> = ({
                   <span>Nota fiscal</span>
                 </h3>
 
-                <div className="border-2 border-dashed border-slate-300 hover:border-teal-500 rounded-lg p-5 text-center transition-colors bg-white">
-                  <input
-                    type="file"
-                    ref={fileInputRef}
-                    accept=".pdf,.xml,application/pdf,text/xml,application/xml"
-                    onChange={handleInvoiceUpload}
-                    disabled={isUploading}
-                    className="sr-only"
-                    id="invoice-file-input"
-                  />
-                  <label
-                    htmlFor="invoice-file-input"
-                    className="cursor-pointer flex flex-col items-center justify-center gap-1.5"
-                  >
-                    <div
-                      className="w-9 h-9 rounded-full bg-teal-50 text-teal-700 flex items-center justify-center border border-teal-100"
-                      aria-hidden="true"
+                {has('invoices.create') && (
+                  <div className="border-2 border-dashed border-slate-300 hover:border-teal-500 rounded-lg p-5 text-center transition-colors bg-white">
+                    <input
+                      type="file"
+                      ref={fileInputRef}
+                      accept=".pdf,.xml,application/pdf,text/xml,application/xml"
+                      onChange={handleInvoiceUpload}
+                      disabled={isUploading}
+                      className="sr-only"
+                      id="invoice-file-input"
+                    />
+                    <label
+                      htmlFor="invoice-file-input"
+                      className="cursor-pointer flex flex-col items-center justify-center gap-1.5"
                     >
-                      {isUploading ? (
-                        <Loader2 className="w-4 h-4 animate-spin" />
-                      ) : (
-                        <Upload className="w-4 h-4" />
-                      )}
-                    </div>
-                    <span className="text-xs font-bold text-navy-900">
-                      {isUploading ? 'Enviando…' : 'Anexar nota fiscal'}
-                    </span>
-                    <span className="text-[10px] text-slate-500">
-                      PDF ou XML, até 10 MB
-                    </span>
-                  </label>
-                </div>
+                      <div
+                        className="w-9 h-9 rounded-full bg-teal-50 text-teal-700 flex items-center justify-center border border-teal-100"
+                        aria-hidden="true"
+                      >
+                        {isUploading ? (
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                        ) : (
+                          <Upload className="w-4 h-4" />
+                        )}
+                      </div>
+                      <span className="text-xs font-bold text-navy-900">
+                        {isUploading ? 'Enviando…' : 'Anexar nota fiscal'}
+                      </span>
+                      <span className="text-[10px] text-slate-500">
+                        PDF ou XML, até 10 MB
+                      </span>
+                    </label>
+                  </div>
+                )}
 
                 <div>
                   <h4 className="text-[11px] font-bold text-slate-600 uppercase tracking-wider mb-2">
@@ -774,16 +784,18 @@ export const PaymentDetailsModal: React.FC<PaymentDetailsModalProps> = ({
                             >
                               <Download className="w-3.5 h-3.5" aria-hidden="true" />
                             </IconButton>
-                            <IconButton
-                              label={`Excluir ${inv.originalName}`}
-                              tone="danger"
-                              onClick={() => handleDeleteInvoice(inv)}
-                              isLoading={isDeletingFile === inv.id}
-                              disabled={isDeletingFile !== null}
-                              className="!p-1.5"
-                            >
-                              <Trash2 className="w-3.5 h-3.5" aria-hidden="true" />
-                            </IconButton>
+                            {has('invoices.delete') && (
+                              <IconButton
+                                label={`Excluir ${inv.originalName}`}
+                                tone="danger"
+                                onClick={() => handleDeleteInvoice(inv)}
+                                isLoading={isDeletingFile === inv.id}
+                                disabled={isDeletingFile !== null}
+                                className="!p-1.5"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" aria-hidden="true" />
+                              </IconButton>
+                            )}
                           </div>
                         </li>
                       ))}

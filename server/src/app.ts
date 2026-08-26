@@ -1,10 +1,10 @@
 import express from 'express';
+import 'express-async-errors';
 import cookieParser from 'cookie-parser';
 import cors from 'cors';
 import path from 'path';
 import fs from 'fs';
 import { requireAuth } from './middlewares/requireAuth.js';
-import { requireAdmin } from './middlewares/requireAdmin.js';
 import { errorHandler } from './middlewares/errorHandler.js';
 import { authRouter } from './routes/auth.js';
 import { usersRouter } from './routes/users.js';
@@ -17,6 +17,8 @@ import { dashboardRouter } from './routes/dashboard.js';
 import { exportRouter } from './routes/export.js';
 import { operationalStagesRouter } from './routes/operationalStages.js';
 import { operationalTasksRouter } from './routes/operationalTasks.js';
+import { groupsRouter } from './routes/groups.js';
+import { permissionsRouter } from './routes/permissions.js';
 
 export const app = express();
 
@@ -42,12 +44,12 @@ app.use('/api', requireAuth);
 app.use('/api/auth', authRouter);
 
 // Leitura dos dados da agência liberada a qualquer usuário autenticado.
-// Precisa vir ANTES do mount com requireAdmin: o Express casa na ordem.
+// Precisa vir ANTES do mount protegido por permissao: o Express casa na ordem.
 app.use('/api/settings/summary', settingsSummaryRouter);
 
-// Rotas administrativas protegidas (declaradas em um só lugar com requireAdmin)
-app.use('/api/users', requireAdmin, usersRouter);
-app.use('/api/settings', requireAdmin, settingsRouter);
+// Rotas administrativas (agora a permissão é declarada dentro de cada router)
+app.use('/api/users', usersRouter);
+app.use('/api/settings', settingsRouter);
 
 // Rotas gerais da aplicação
 app.use('/api/clients', clientsRouter);
@@ -58,6 +60,10 @@ app.use('/api/dashboard', dashboardRouter);
 app.use('/api/export', exportRouter);
 app.use('/api/operational-stages', operationalStagesRouter);
 app.use('/api/operational-tasks', operationalTasksRouter);
+
+// Grupos e permissões
+app.use('/api/groups', groupsRouter);
+app.use('/api/permissions', permissionsRouter);
 
 // Servindo build do React na mesma origem (se existir)
 const clientDist = path.resolve(process.cwd(), 'public-client');

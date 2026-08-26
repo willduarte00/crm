@@ -1,7 +1,7 @@
 import { Router, Request, Response } from 'express';
 import { z } from 'zod';
 import { prisma } from '../prisma.js';
-import { requireAdmin } from '../middlewares/requireAdmin.js';
+import { requirePermission } from '../middlewares/requirePermission.js';
 
 export const operationalStagesRouter = Router();
 
@@ -43,7 +43,7 @@ operationalStagesRouter.get('/', async (_req: Request, res: Response) => {
 });
 
 // POST /api/operational-stages — somente admin
-operationalStagesRouter.post('/', requireAdmin, async (req: Request, res: Response) => {
+operationalStagesRouter.post('/', requirePermission('settings.update'), async (req: Request, res: Response) => {
   const data = createStageSchema.parse(req.body);
 
   const existing = await prisma.operationalStage.findUnique({
@@ -81,7 +81,7 @@ operationalStagesRouter.post('/', requireAdmin, async (req: Request, res: Respon
 });
 
 // PATCH /api/operational-stages/reorder — somente admin (DEVE vir antes de /:id)
-operationalStagesRouter.patch('/reorder', requireAdmin, async (req: Request, res: Response) => {
+operationalStagesRouter.patch('/reorder', requirePermission('settings.update'), async (req: Request, res: Response) => {
   const { ids } = reorderSchema.parse(req.body);
 
   await prisma.$transaction(
@@ -108,7 +108,7 @@ operationalStagesRouter.patch('/reorder', requireAdmin, async (req: Request, res
 });
 
 // PATCH /api/operational-stages/:id — somente admin
-operationalStagesRouter.patch('/:id', requireAdmin, async (req: Request, res: Response) => {
+operationalStagesRouter.patch('/:id', requirePermission('settings.update'), async (req: Request, res: Response) => {
   const { id } = req.params;
   const data = updateStageSchema.parse(req.body);
 
@@ -168,7 +168,7 @@ operationalStagesRouter.patch('/:id', requireAdmin, async (req: Request, res: Re
 });
 
 // DELETE /api/operational-stages/:id — somente admin
-operationalStagesRouter.delete('/:id', requireAdmin, async (req: Request, res: Response) => {
+operationalStagesRouter.delete('/:id', requirePermission('settings.update'), async (req: Request, res: Response) => {
   const { id } = req.params;
 
   const stage = await prisma.operationalStage.findUnique({ where: { id } });

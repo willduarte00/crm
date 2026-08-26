@@ -18,6 +18,8 @@ import {
   DocumentType,
 } from '../domain/clients.js';
 
+import { requirePermission } from '../middlewares/requirePermission.js';
+
 export const clientsRouter = Router();
 
 const createClientSchema = z.object({
@@ -73,7 +75,7 @@ const createLogSchema = z.object({
 });
 
 // GET /api/clients - Listagem paginada com busca e filtros (RF-01 a RF-06c)
-clientsRouter.get('/', async (req: Request, res: Response) => {
+clientsRouter.get('/', requirePermission('clients.view'), async (req: Request, res: Response) => {
   const page = Math.max(1, parseInt(req.query.page as string, 10) || 1);
   const limit = Math.max(1, Math.min(1000, parseInt(req.query.limit as string, 10) || 25));
   const skip = (page - 1) * limit;
@@ -161,7 +163,6 @@ clientsRouter.get('/', async (req: Request, res: Response) => {
             name: true,
             email: true,
             active: true,
-            role: true,
           },
         },
         _count: {
@@ -186,7 +187,7 @@ clientsRouter.get('/', async (req: Request, res: Response) => {
 });
 
 // POST /api/clients - Criar cliente/lead (RF-01 a RF-06c)
-clientsRouter.post('/', async (req: Request, res: Response) => {
+clientsRouter.post('/', requirePermission('clients.create'), async (req: Request, res: Response) => {
   const data = createClientSchema.parse(req.body);
 
   const cleanDoc = normalizeDocument(data.documentNumber, data.documentType);
@@ -249,7 +250,6 @@ clientsRouter.post('/', async (req: Request, res: Response) => {
           name: true,
           email: true,
           active: true,
-          role: true,
         },
       },
     },
@@ -259,7 +259,7 @@ clientsRouter.post('/', async (req: Request, res: Response) => {
 });
 
 // POST /api/clients/batch-reassign - Reatribuição em lote (RF-06c)
-clientsRouter.post('/batch-reassign', async (req: Request, res: Response) => {
+clientsRouter.post('/batch-reassign', requirePermission('clients.batch_reassign'), async (req: Request, res: Response) => {
   const { clientIds, newOwnerId } = batchReassignSchema.parse(req.body);
 
   let ownerIdToSet: string | null = null;
@@ -297,7 +297,7 @@ clientsRouter.post('/batch-reassign', async (req: Request, res: Response) => {
 });
 
 // GET /api/clients/:id - Detalhes do cliente
-clientsRouter.get('/:id', async (req: Request, res: Response) => {
+clientsRouter.get('/:id', requirePermission('clients.view'), async (req: Request, res: Response) => {
   const { id } = req.params;
 
   const client = await prisma.client.findFirst({
@@ -312,7 +312,6 @@ clientsRouter.get('/:id', async (req: Request, res: Response) => {
           name: true,
           email: true,
           active: true,
-          role: true,
         },
       },
       interactionLogs: {
@@ -323,7 +322,6 @@ clientsRouter.get('/:id', async (req: Request, res: Response) => {
               id: true,
               name: true,
               email: true,
-              role: true,
             },
           },
         },
@@ -345,7 +343,7 @@ clientsRouter.get('/:id', async (req: Request, res: Response) => {
 });
 
 // PATCH /api/clients/:id - Atualizar cliente
-clientsRouter.patch('/:id', async (req: Request, res: Response) => {
+clientsRouter.patch('/:id', requirePermission('clients.update'), async (req: Request, res: Response) => {
   const { id } = req.params;
   const data = updateClientSchema.parse(req.body);
 
@@ -433,7 +431,6 @@ clientsRouter.patch('/:id', async (req: Request, res: Response) => {
           name: true,
           email: true,
           active: true,
-          role: true,
         },
       },
     },
@@ -443,7 +440,7 @@ clientsRouter.patch('/:id', async (req: Request, res: Response) => {
 });
 
 // DELETE /api/clients/:id - Soft delete (RF-01, deletedAt)
-clientsRouter.delete('/:id', async (req: Request, res: Response) => {
+clientsRouter.delete('/:id', requirePermission('clients.delete'), async (req: Request, res: Response) => {
   const { id } = req.params;
 
   const existingClient = await prisma.client.findFirst({
@@ -468,7 +465,7 @@ clientsRouter.delete('/:id', async (req: Request, res: Response) => {
 });
 
 // PATCH /api/clients/:id/stage - Mudar etapa do funil (RF-05)
-clientsRouter.patch('/:id/stage', async (req: Request, res: Response) => {
+clientsRouter.patch('/:id/stage', requirePermission('clients.stage.update'), async (req: Request, res: Response) => {
   const { id } = req.params;
   const { stage } = changeStageSchema.parse(req.body);
 
@@ -490,7 +487,6 @@ clientsRouter.patch('/:id/stage', async (req: Request, res: Response) => {
           name: true,
           email: true,
           active: true,
-          role: true,
         },
       },
     },
@@ -500,7 +496,7 @@ clientsRouter.patch('/:id/stage', async (req: Request, res: Response) => {
 });
 
 // PATCH /api/clients/:id/owner - Atribuir ou remover responsável (RF-06a)
-clientsRouter.patch('/:id/owner', async (req: Request, res: Response) => {
+clientsRouter.patch('/:id/owner', requirePermission('clients.owner.update'), async (req: Request, res: Response) => {
   const { id } = req.params;
   const { ownerId } = changeOwnerSchema.parse(req.body);
 
@@ -540,7 +536,6 @@ clientsRouter.patch('/:id/owner', async (req: Request, res: Response) => {
           name: true,
           email: true,
           active: true,
-          role: true,
         },
       },
     },
@@ -550,7 +545,7 @@ clientsRouter.patch('/:id/owner', async (req: Request, res: Response) => {
 });
 
 // GET /api/clients/:id/logs - Timeline de anotações (RF-06)
-clientsRouter.get('/:id/logs', async (req: Request, res: Response) => {
+clientsRouter.get('/:id/logs', requirePermission('logs.view'), async (req: Request, res: Response) => {
   const { id } = req.params;
 
   const client = await prisma.client.findFirst({
@@ -570,7 +565,6 @@ clientsRouter.get('/:id/logs', async (req: Request, res: Response) => {
           id: true,
           name: true,
           email: true,
-          role: true,
         },
       },
     },
@@ -580,7 +574,7 @@ clientsRouter.get('/:id/logs', async (req: Request, res: Response) => {
 });
 
 // POST /api/clients/:id/logs - Registrar anotação na timeline (RF-06)
-clientsRouter.post('/:id/logs', async (req: Request, res: Response) => {
+clientsRouter.post('/:id/logs', requirePermission('logs.create'), async (req: Request, res: Response) => {
   const { id } = req.params;
   const { content, type } = createLogSchema.parse(req.body);
 
@@ -605,7 +599,6 @@ clientsRouter.post('/:id/logs', async (req: Request, res: Response) => {
           id: true,
           name: true,
           email: true,
-          role: true,
         },
       },
     },

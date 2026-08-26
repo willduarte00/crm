@@ -8,39 +8,59 @@ export const usersRouter = Router();
 const createUserSchema = z.object({
   name: z.string().min(1, 'Nome é obrigatório'),
   email: z.string().email('E-mail inválido'),
-  role: z.enum(['admin', 'membro']).default('membro'),
+  groupIds: z.array(z.string().uuid()).default([]),
   password: z.string().min(8, 'Senha deve ter no mínimo 8 caracteres'),
 });
 
 const updateUserSchema = z.object({
   name: z.string().min(1).optional(),
   email: z.string().email().optional(),
-  role: z.enum(['admin', 'membro']).optional(),
+  groupIds: z.array(z.string().uuid()).optional(),
   active: z.boolean().optional(),
   password: z.string().min(8).optional(),
 });
 
+import { requirePermission } from '../middlewares/requirePermission.js';
+
 // GET /api/users - Listar usuários
-usersRouter.get('/', async (_req: Request, res: Response) => {
+usersRouter.get('/', requirePermission('users.view'), async (_req: Request, res: Response) => {
   const users = await prisma.user.findMany({
     select: {
       id: true,
       name: true,
       email: true,
-      role: true,
       active: true,
       mustChangePassword: true,
       createdAt: true,
+      groups: { select: { group: { select: { id: true, name: true } } } },
     },
     orderBy: { createdAt: 'desc' },
   });
 
+  const formattedUsers = users.map(user => {
+    const { groups, ...rest } = user;
+    return {
+      ...rest,
+      groups: groups.map(g => g.group),
+    };
+  });
+
+  return res.json(formattedUsers);
+});
+
+// GET /api/users/basic - Listar usuários básicos (RF-22)
+usersRouter.get('/basic', requirePermission('users.view_basic'), async (_req: Request, res: Response) => {
+  const users = await prisma.user.findMany({
+    where: { active: true },
+    select: { id: true, name: true },
+    orderBy: { name: 'asc' },
+  });
   return res.json(users);
 });
 
 // POST /api/users - Criar usuário (RF-09c: senha inicial definida pelo admin)
-usersRouter.post('/', async (req: Request, res: Response) => {
-  const { name, email, role, password } = createUserSchema.parse(req.body);
+usersRouter.post('/', requirePermission('users.manage'), async (req: Request, res: Response) => {
+  const { name, email, groupIds, password } = createUserSchema.parse(req.body);
 
   const existingUser = await prisma.user.findUnique({
     where: { email: email.toLowerCase().trim() },
@@ -50,67 +70,88 @@ usersRouter.post('/', async (req: Request, res: Response) => {
     return res.status(400).json({ error: 'E-mail já cadastrado' });
   }
 
+  if (groupIds.length > 0) {
+    const count = await prisma.group.count({ where: { id: { in: groupIds } } });
+    if (count !== groupIds.length) {
+      return res.status(400).json({ error: 'Um ou mais grupos fornecidos não existem' });
+    }
+  }
+
   const passwordHash = await bcrypt.hash(password, 12);
 
   const user = await prisma.user.create({
     data: {
       name,
       email: email.toLowerCase().trim(),
-      role,
       passwordHash,
       active: true,
       mustChangePassword: true, // Obrigatório trocar no primeiro acesso
       tokenVersion: 0,
+      groups: {
+        create: groupIds.map((groupId) => ({ groupId })),
+      },
     },
     select: {
       id: true,
       name: true,
       email: true,
-      role: true,
       active: true,
       mustChangePassword: true,
       createdAt: true,
+      groups: { select: { group: { select: { id: true, name: true } } } },
     },
   });
 
-  return res.status(201).json(user);
+  const formattedUser = {
+    ...user,
+    groups: user.groups.map(g => g.group),
+  };
+
+  return res.status(201).json(formattedUser);
 });
 
 // PATCH /api/users/:id - Atualizar usuário (RF-09, RF-09a, RF-09b)
-usersRouter.patch('/:id', async (req: Request, res: Response) => {
+usersRouter.patch('/:id', requirePermission('users.manage'), async (req: Request, res: Response) => {
   const { id } = req.params;
   const data = updateUserSchema.parse(req.body);
 
   const targetUser = await prisma.user.findUnique({
     where: { id },
+    include: { groups: true }
   });
 
   if (!targetUser) {
     return res.status(404).json({ error: 'Usuário não encontrado' });
   }
 
-  // RF-09a: Ninguém altera o próprio papel
-  if (req.user && req.user.id === targetUser.id && data.role !== undefined && data.role !== targetUser.role) {
-    return res.status(422).json({ error: 'Não é possível alterar o próprio papel' });
+  if (data.groupIds !== undefined && data.groupIds.length > 0) {
+    const count = await prisma.group.count({ where: { id: { in: data.groupIds } } });
+    if (count !== data.groupIds.length) {
+      return res.status(400).json({ error: 'Um ou mais grupos fornecidos não existem' });
+    }
   }
 
-  // RF-09: O último admin ativo não pode ser rebaixado nem desativado
-  const isCurrentlyActiveAdmin = targetUser.role === 'admin' && targetUser.active === true;
-  const isBeingDemoted = data.role !== undefined && data.role !== 'admin';
-  const isBeingDeactivated = data.active === false;
+  // RF-28: Ninguém altera os próprios grupos
+  if (req.user && req.user.id === targetUser.id && data.groupIds !== undefined) {
+    return res.status(422).json({ error: 'Não é possível alterar os próprios grupos' });
+  }
 
-  if (isCurrentlyActiveAdmin && (isBeingDemoted || isBeingDeactivated)) {
-    const activeAdminCount = await prisma.user.count({
-      where: {
-        role: 'admin',
-        active: true,
-      },
-    });
+  // RF-10: O último admin ativo não pode ser removido nem desativado
+  const adminGroup = await prisma.group.findFirst({ where: { isSystem: true } });
+  if (adminGroup) {
+    const isTargetActiveAdmin = targetUser.active &&
+      targetUser.groups.some((g) => g.groupId === adminGroup.id);
+    const losesAdmin = data.groupIds !== undefined && !data.groupIds.includes(adminGroup.id);
 
-    if (activeAdminCount <= 1) {
-      return res.status(422).json({
-        error: 'Não é possível desativar ou rebaixar o único administrador ativo',
+    if (isTargetActiveAdmin && (losesAdmin || data.active === false)) {
+      const activeAdmins = await prisma.user.count({
+        where: { active: true, groups: { some: { groupId: adminGroup.id } } },
       });
+      if (activeAdmins <= 1) {
+        return res.status(422).json({
+          error: 'Não é possível desativar ou remover o único administrador ativo',
+        });
+      }
     }
   }
 
@@ -118,7 +159,6 @@ usersRouter.patch('/:id', async (req: Request, res: Response) => {
   const updatePayload: {
     name?: string;
     email?: string;
-    role?: string;
     active?: boolean;
     passwordHash?: string;
     mustChangePassword?: boolean;
@@ -127,7 +167,6 @@ usersRouter.patch('/:id', async (req: Request, res: Response) => {
 
   if (data.name !== undefined) updatePayload.name = data.name;
   if (data.email !== undefined) updatePayload.email = data.email.toLowerCase().trim();
-  if (data.role !== undefined) updatePayload.role = data.role;
   if (data.active !== undefined) {
     updatePayload.active = data.active;
     // RF-09b: Desativar incrementa tokenVersion e derruba a sessão aberta
@@ -143,19 +182,41 @@ usersRouter.patch('/:id', async (req: Request, res: Response) => {
     updatePayload.tokenVersion = { increment: 1 };
   }
 
-  const updatedUser = await prisma.user.update({
+  await prisma.$transaction(async (tx) => {
+    if (data.groupIds !== undefined) {
+      await tx.userGroup.deleteMany({ where: { userId: id } });
+      if (data.groupIds.length > 0) {
+        await tx.userGroup.createMany({
+          data: data.groupIds.map(groupId => ({ userId: id, groupId }))
+        });
+      }
+    }
+    
+    if (Object.keys(updatePayload).length > 0) {
+      await tx.user.update({
+        where: { id },
+        data: updatePayload
+      });
+    }
+  });
+
+  const updatedUser = await prisma.user.findUnique({
     where: { id },
-    data: updatePayload,
     select: {
       id: true,
       name: true,
       email: true,
-      role: true,
       active: true,
       mustChangePassword: true,
       createdAt: true,
-    },
+      groups: { select: { group: { select: { id: true, name: true } } } },
+    }
   });
 
-  return res.json(updatedUser);
+  const formattedUser = {
+    ...updatedUser,
+    groups: updatedUser!.groups.map(g => g.group),
+  };
+
+  return res.json(formattedUser);
 });

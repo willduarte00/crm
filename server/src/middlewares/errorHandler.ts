@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { ZodError } from 'zod';
+import { ForbiddenError } from './requirePermission.js';
 
 export function errorHandler(
   err: Error,
@@ -14,6 +15,13 @@ export function errorHandler(
         path: e.path.join('.'),
         message: e.message,
       })),
+    });
+  }
+
+  if (err instanceof ForbiddenError) {
+    return res.status(403).json({
+      error: 'Você não tem permissão para executar esta ação.',
+      requiredPermission: err.requiredPermission,
     });
   }
 

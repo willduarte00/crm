@@ -17,8 +17,24 @@ const updateSettingsSchema = z.object({
   primaryColor: z.string().optional(),
 });
 
-// GET /api/settings (Admin only via requireAdmin)
-settingsRouter.get('/', async (_req: Request, res: Response) => {
+import { requirePermission } from '../middlewares/requirePermission.js';
+
+// GET /api/settings/billing
+settingsRouter.get('/billing', requirePermission('settings.bank.view'), async (_req: Request, res: Response) => {
+  const settings = await prisma.settings.findFirst();
+
+  return res.json({
+    agencyName: settings?.agencyName || 'Minha Agência',
+    pixKey: settings?.pixKey || null,
+    pixKeyType: settings?.pixKeyType || null,
+    bankName: settings?.bankName || null,
+    bankBranch: settings?.bankBranch || null,
+    bankAccount: settings?.bankAccount || null,
+  });
+});
+
+// GET /api/settings
+settingsRouter.get('/', requirePermission('settings.view'), async (_req: Request, res: Response) => {
   let settings = await prisma.settings.findFirst();
   if (!settings) {
     settings = await prisma.settings.create({
@@ -30,8 +46,8 @@ settingsRouter.get('/', async (_req: Request, res: Response) => {
   return res.json(settings);
 });
 
-// PUT /api/settings (Admin only via requireAdmin)
-settingsRouter.put('/', async (req: Request, res: Response) => {
+// PUT /api/settings
+settingsRouter.put('/', requirePermission('settings.update'), async (req: Request, res: Response) => {
   const data = updateSettingsSchema.parse(req.body);
   const settings = await prisma.settings.findFirst();
 

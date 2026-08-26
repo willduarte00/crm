@@ -9,6 +9,7 @@ import {
 import { Contract } from '../../types/contract';
 import { User } from '../../types';
 import { apiFetch, apiDownload, errorMessage } from '../../services/api';
+import { useAuth } from '../../context/AuthContext';
 import { useDialogBehavior } from '../../hooks/useDialogBehavior';
 import { useConfirm } from '../ui/ConfirmDialog';
 import { Button, IconButton } from '../ui/Button';
@@ -81,6 +82,7 @@ export const ClientDetailsModal: React.FC<ClientDetailsModalProps> = ({
   users,
 }) => {
   const confirm = useConfirm();
+  const { has } = useAuth();
   const panelRef = useDialogBehavior(isOpen, onClose);
 
   const [client, setClient] = useState<Client | null>(null);
@@ -138,7 +140,9 @@ export const ClientDetailsModal: React.FC<ClientDetailsModalProps> = ({
   useEffect(() => {
     if (isOpen && clientId) {
       fetchClientDetails();
-      fetchContracts();
+      if (has('contracts.view')) {
+        fetchContracts();
+      }
       setActiveTab('geral');
       setNewLogContent('');
     } else {
@@ -146,7 +150,7 @@ export const ClientDetailsModal: React.FC<ClientDetailsModalProps> = ({
       setLogs([]);
       setContracts([]);
     }
-  }, [isOpen, clientId]);
+  }, [isOpen, clientId, has]);
 
   if (!isOpen) return null;
 
@@ -386,13 +390,15 @@ export const ClientDetailsModal: React.FC<ClientDetailsModalProps> = ({
               <span>Dados e histórico</span>
             </Tabs.Trigger>
 
-            <Tabs.Trigger
-              value="contratos"
-              className="py-3 px-4 text-xs font-semibold text-slate-600 hover:text-navy-900 border-b-2 border-transparent data-[state=active]:border-teal-600 data-[state=active]:text-teal-700 transition-colors flex items-center gap-2 whitespace-nowrap flex-shrink-0"
-            >
-              <FileCode2 className="w-4 h-4" />
-              <span>Contratos ({contracts.length})</span>
-            </Tabs.Trigger>
+            {has('contracts.view') && (
+              <Tabs.Trigger
+                value="contratos"
+                className="py-3 px-4 text-xs font-semibold text-slate-600 hover:text-navy-900 border-b-2 border-transparent data-[state=active]:border-teal-600 data-[state=active]:text-teal-700 transition-colors flex items-center gap-2 whitespace-nowrap flex-shrink-0"
+              >
+                <FileCode2 className="w-4 h-4" />
+                <span>Contratos ({contracts.length})</span>
+              </Tabs.Trigger>
+            )}
 
             <Tabs.Trigger
               value="whatsapp"
@@ -569,9 +575,6 @@ export const ClientDetailsModal: React.FC<ClientDetailsModalProps> = ({
                                   <span className="text-xs font-bold text-navy-900">
                                     {log.user.name}
                                   </span>
-                                  <span className="text-[10px] text-slate-500">
-                                    ({log.user.role})
-                                  </span>
                                 </div>
                                 <span className="text-[11px] tabular-nums text-slate-500 font-medium">
                                   {formatDateTimeBR(log.createdAt)}
@@ -593,20 +596,21 @@ export const ClientDetailsModal: React.FC<ClientDetailsModalProps> = ({
           </Tabs.Content>
 
           {/* Conteúdo Aba 2: Contrato & Arquivos (RF-10 a RF-13) */}
-          <Tabs.Content
-            value="contratos"
-            className="flex-1 overflow-y-auto p-6 focus:outline-none bg-slate-50/50 space-y-4"
-          >
-            {/* Header da Aba de Contratos */}
-            <div className="flex items-center justify-between bg-white p-4 rounded-lg border border-slate-200 shadow-xs">
-              <div>
-                <h3 className="text-xs font-bold text-navy-900 uppercase tracking-wider">
-                  Contratos e anexos assinados
-                </h3>
-                <p className="text-xs text-slate-500 mt-0.5">
-                  Serviços contratados, vigência, valores e documentos.
-                </p>
-              </div>
+          {has('contracts.view') && (
+            <Tabs.Content
+              value="contratos"
+              className="flex-1 overflow-y-auto p-6 focus:outline-none bg-slate-50/50 space-y-4"
+            >
+              {/* Header da Aba de Contratos */}
+              <div className="flex items-center justify-between bg-white p-4 rounded-lg border border-slate-200 shadow-xs">
+                <div>
+                  <h3 className="text-xs font-bold text-navy-900 uppercase tracking-wider">
+                    Contratos e anexos assinados
+                  </h3>
+                  <p className="text-xs text-slate-500 mt-0.5">
+                    Serviços contratados, vigência, valores e documentos.
+                  </p>
+                </div>
               <Button
                 size="sm"
                 onClick={() => {
@@ -833,7 +837,8 @@ export const ClientDetailsModal: React.FC<ClientDetailsModalProps> = ({
                 })}
               </div>
             )}
-          </Tabs.Content>
+            </Tabs.Content>
+          )}
 
           {/* Conteúdo Aba 3: WhatsApp (RF-50 a RF-53) */}
           <Tabs.Content

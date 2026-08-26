@@ -34,12 +34,27 @@ describe('Dashboard & Exportação — Testes de Integração (RF-40 a RF-53)', 
     id: '11111111-1111-1111-1111-111111111111',
     email: 'membro@agencia.com',
     name: 'Membro Teste',
-    role: 'membro',
     active: true,
     mustChangePassword: false,
     tokenVersion: 0,
     passwordHash: 'hash',
     createdAt: new Date(),
+    groups: [
+      {
+        group: {
+          id: 'admin-group',
+          name: 'Admin',
+          permissions: [
+            'dashboard.financial.view',
+            'dashboard.operational.view',
+            'clients.export',
+            'payments.export',
+            'settings.view',
+            'settings.bank.view'
+          ],
+        },
+      },
+    ],
   };
 
   const createToken = (user: { id: string; tokenVersion: number }) =>

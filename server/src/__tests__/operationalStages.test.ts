@@ -38,6 +38,7 @@ const adminUser = {
   email: 'admin@agencia.com',
   name: 'Admin Teste',
   role: 'admin',
+  groups: [{ group: { id: 'g-admin', name: 'Admin', permissions: ['settings.update'] } }],
   active: true,
   mustChangePassword: false,
   tokenVersion: 0,

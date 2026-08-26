@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { User, Role } from '../../types';
+import { User, Group } from '../../types';
 import { apiFetch, errorMessage } from '../../services/api';
 import { UserCheck } from 'lucide-react';
 import { toast } from 'sonner';
@@ -27,9 +27,10 @@ export const UserModal: React.FC<UserModalProps> = ({
 }) => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
-  const [role, setRole] = useState<Role>('membro');
+  const [groupIds, setGroupIds] = useState<string[]>([]);
   const [password, setPassword] = useState('');
   const [active, setActive] = useState(true);
+  const [availableGroups, setAvailableGroups] = useState<Group[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -41,18 +42,24 @@ export const UserModal: React.FC<UserModalProps> = ({
     if (userToEdit) {
       setName(userToEdit.name);
       setEmail(userToEdit.email);
-      setRole(userToEdit.role);
+      setGroupIds(userToEdit.groups?.map((g) => g.id) || []);
       setActive(userToEdit.active);
       setPassword('');
     } else {
       setName('');
       setEmail('');
-      setRole('membro');
+      setGroupIds([]);
       setActive(true);
       setPassword('');
     }
     setError(null);
   }, [userToEdit, isOpen]);
+
+  useEffect(() => {
+    if (isOpen && availableGroups.length === 0) {
+      apiFetch<Group[]>('/api/groups').then(setAvailableGroups).catch(() => {});
+    }
+  }, [isOpen, availableGroups.length]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -75,8 +82,7 @@ export const UserModal: React.FC<UserModalProps> = ({
       if (isEditing) {
         const payload: Record<string, unknown> = { name, email, active };
 
-        // O backend recusa a alteração do próprio papel (RF-09a); nem enviamos.
-        if (!isSelf) payload.role = role;
+        if (!isSelf) payload.groupIds = groupIds;
         if (password) payload.password = password;
 
         await apiFetch(`/api/users/${userToEdit.id}`, {
@@ -88,7 +94,7 @@ export const UserModal: React.FC<UserModalProps> = ({
       } else {
         await apiFetch('/api/users', {
           method: 'POST',
-          body: JSON.stringify({ name, email, role, password }),
+          body: JSON.stringify({ name, email, groupIds, password }),
         });
 
         toast.success('Usuário criado.');
@@ -110,7 +116,7 @@ export const UserModal: React.FC<UserModalProps> = ({
       title={isEditing ? 'Editar usuário' : 'Novo usuário'}
       description={
         isEditing
-          ? 'Atualize os dados, o papel de acesso ou o status da conta.'
+          ? 'Atualize os dados, os grupos de acesso ou o status da conta.'
           : 'Defina os dados de acesso e a senha inicial.'
       }
       icon={<UserCheck className="w-5 h-5" aria-hidden="true" />}
@@ -157,23 +163,39 @@ export const UserModal: React.FC<UserModalProps> = ({
           )}
         </Field>
 
-        <Field
-          label="Papel de acesso"
-          hint={isSelf ? 'Você não pode alterar o seu próprio papel.' : undefined}
-        >
-          {(props) => (
-            <select
-              {...props}
-              value={role}
-              disabled={isSelf}
-              onChange={(e) => setRole(e.target.value as Role)}
-              className={controlClass}
-            >
-              <option value="membro">Membro — clientes, contratos e faturamento</option>
-              <option value="admin">Administrador — também gerencia usuários e agência</option>
-            </select>
+        <fieldset className="space-y-2">
+          <legend className="block text-xs font-semibold text-slate-700 mb-1.5">
+            Grupos de acesso
+          </legend>
+          <div className="space-y-2">
+            {availableGroups.map((group) => (
+              <label key={group.id} className="flex items-start gap-2 text-sm text-slate-700 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={groupIds.includes(group.id)}
+                  disabled={isSelf}
+                  onChange={(e) => {
+                    if (e.target.checked) {
+                      setGroupIds([...groupIds, group.id]);
+                    } else {
+                      setGroupIds(groupIds.filter((id) => id !== group.id));
+                    }
+                  }}
+                  className="mt-0.5 text-teal-600 focus:ring-teal-600 rounded"
+                />
+                <span>{group.name}</span>
+              </label>
+            ))}
+            {availableGroups.length === 0 && (
+              <p className="text-sm text-slate-500 italic">Carregando grupos...</p>
+            )}
+          </div>
+          {isSelf && (
+            <p className="text-xs text-slate-500 mt-1">
+              Você não pode alterar os seus próprios grupos.
+            </p>
           )}
-        </Field>
+        </fieldset>
 
         {isEditing && (
           <fieldset>

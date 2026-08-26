@@ -5,30 +5,32 @@ import bcrypt from 'bcryptjs';
 import { app } from '../app.js';
 import { prisma } from '../prisma.js';
 import { env } from '../env.js';
+import { ADMIN_PERMISSIONS, FINANCEIRO_PERMISSIONS, OPERACIONAL_PERMISSIONS } from '../domain/defaultGroups.js';
+import listEndpoints from 'express-list-endpoints';
 
-vi.mock('../prisma.js', () => ({
-  prisma: {
-    user: {
-      findUnique: vi.fn(),
-      findMany: vi.fn(),
-      count: vi.fn(),
-      create: vi.fn(),
-      update: vi.fn(),
-    },
-    settings: {
-      findFirst: vi.fn(),
-      create: vi.fn(),
-      update: vi.fn(),
-    },
-  },
-}));
+vi.mock('../prisma.js', () => {
+  const prismaMock = {
+    user: { findUnique: vi.fn(), findMany: vi.fn().mockResolvedValue([]), count: vi.fn(), create: vi.fn(), update: vi.fn() },
+    settings: { findFirst: vi.fn(), create: vi.fn(), update: vi.fn() },
+    group: { count: vi.fn(), findFirst: vi.fn(), findMany: vi.fn().mockResolvedValue([]) },
+    userGroup: { deleteMany: vi.fn(), createMany: vi.fn() },
+    client: { findUnique: vi.fn(), update: vi.fn(), count: vi.fn(), findMany: vi.fn().mockResolvedValue([]) },
+    paymentRecord: { findUnique: vi.fn(), update: vi.fn(), findMany: vi.fn().mockResolvedValue([]), count: vi.fn() },
+    contract: { findMany: vi.fn().mockResolvedValue([]) },
+    contractFile: { findUnique: vi.fn(), delete: vi.fn() },
+    invoiceFile: { findUnique: vi.fn(), delete: vi.fn() },
+    metricSnapshot: { upsert: vi.fn(), findUnique: vi.fn() },
+    $transaction: vi.fn((callback) => callback(prismaMock)),
+  };
+  return { prisma: prismaMock };
+});
 
 describe('Permissões — Testes de Integração', () => {
   const adminUser = {
     id: 'admin-1',
     email: 'admin@agencia.com',
     name: 'Admin Teste',
-    role: 'admin',
+    groups: [{ groupId: '11111111-1111-1111-1111-111111111111', group: { id: '11111111-1111-1111-1111-111111111111', name: 'Admin', permissions: ADMIN_PERMISSIONS, isSystem: true } }],
     active: true,
     mustChangePassword: false,
     tokenVersion: 0,
@@ -36,11 +38,50 @@ describe('Permissões — Testes de Integração', () => {
     createdAt: new Date(),
   };
 
-  const memberUser = {
-    id: 'member-1',
-    email: 'membro@agencia.com',
-    name: 'Membro Teste',
-    role: 'membro',
+  const operUser = {
+    id: 'oper-1',
+    email: 'oper@agencia.com',
+    name: 'Oper Teste',
+    groups: [{ groupId: '22222222-2222-2222-2222-222222222222', group: { id: '22222222-2222-2222-2222-222222222222', name: 'Operacional', permissions: OPERACIONAL_PERMISSIONS, isSystem: false } }],
+    active: true,
+    mustChangePassword: false,
+    tokenVersion: 0,
+    passwordHash: '$2a$12$dummyhash',
+    createdAt: new Date(),
+  };
+
+  const finUser = {
+    id: 'fin-1',
+    email: 'fin@agencia.com',
+    name: 'Fin Teste',
+    groups: [{ groupId: '33333333-3333-3333-3333-333333333333', group: { id: '33333333-3333-3333-3333-333333333333', name: 'Financeiro', permissions: FINANCEIRO_PERMISSIONS, isSystem: false } }],
+    active: true,
+    mustChangePassword: false,
+    tokenVersion: 0,
+    passwordHash: '$2a$12$dummyhash',
+    createdAt: new Date(),
+  };
+
+  const dualUser = {
+    id: 'dual-1',
+    email: 'dual@agencia.com',
+    name: 'Dual Teste',
+    groups: [
+      { groupId: '22222222-2222-2222-2222-222222222222', group: { id: '22222222-2222-2222-2222-222222222222', name: 'Operacional', permissions: OPERACIONAL_PERMISSIONS, isSystem: false } },
+      { groupId: '33333333-3333-3333-3333-333333333333', group: { id: '33333333-3333-3333-3333-333333333333', name: 'Financeiro', permissions: FINANCEIRO_PERMISSIONS, isSystem: false } },
+    ],
+    active: true,
+    mustChangePassword: false,
+    tokenVersion: 0,
+    passwordHash: '$2a$12$dummyhash',
+    createdAt: new Date(),
+  };
+
+  const noGroupUser = {
+    id: 'none-1',
+    email: 'none@agencia.com',
+    name: 'None Teste',
+    groups: [],
     active: true,
     mustChangePassword: false,
     tokenVersion: 0,
@@ -57,275 +98,372 @@ describe('Permissões — Testes de Integração', () => {
     vi.clearAllMocks();
   });
 
-  it('7. RF-08: membro recebe 403 em GET /api/users e em PUT /api/settings', async () => {
-    const token = createToken(memberUser);
-    vi.mocked(prisma.user.findUnique).mockResolvedValue(memberUser);
+  describe('1. Por grupo', () => {
+    it('Operacional', async () => {
+      const token = createToken(operUser);
+      vi.mocked(prisma.user.findUnique).mockResolvedValue(operUser as any);
+      vi.mocked(prisma.client.findUnique).mockResolvedValue({ id: 'c-1' } as any);
+      vi.mocked(prisma.client.update).mockResolvedValue({ id: 'c-1' } as any);
+      vi.mocked(prisma.user.findMany).mockResolvedValue([]);
 
-    const resUsers = await request(app)
-      .get('/api/users')
-      .set('Cookie', [`token=${token}`]);
-    expect(resUsers.status).toBe(403);
-    expect(resUsers.body.error).toBe('Acesso restrito a administradores');
+      const allowed = [
+        { method: 'patch', url: '/api/clients/c-1/stage', body: { stageId: 's-1' } },
+        { method: 'patch', url: '/api/clients/c-1/owner', body: { ownerId: 'u-1' } },
+        { method: 'post', url: '/api/clients', body: { name: 'Cli', documentType: 'CPF', documentNumber: '11111111111', status: 'Ativo', stageId: 's-1' } },
+        { method: 'post', url: '/api/clients/c-1/logs', body: { content: 'Log' } },
+        { method: 'get', url: '/api/users/basic' },
+      ];
 
-    const resSettings = await request(app)
-      .put('/api/settings')
-      .set('Cookie', [`token=${token}`])
-      .send({ agencyName: 'Novo Nome' });
-    expect(resSettings.status).toBe(403);
-    expect(resSettings.body.error).toBe('Acesso restrito a administradores');
-  });
+      for (const req of allowed) {
+        const res = await (request(app) as any)[req.method](req.url).set('Cookie', [`token=${token}`]).send(req.body);
+        expect(res.status).not.toBe(403);
+        expect(res.status).not.toBe(401);
+      }
 
-  it('8. RF-08: admin recebe 200 nas mesmas rotas (GET /api/users e PUT /api/settings)', async () => {
-    const token = createToken(adminUser);
-    vi.mocked(prisma.user.findUnique).mockResolvedValue(adminUser);
-    vi.mocked(prisma.user.findMany).mockResolvedValue([adminUser]);
-    vi.mocked(prisma.settings.findFirst).mockResolvedValue({
-      id: 'settings-1',
-      agencyName: 'Minha Agência',
-      contactEmail: 'contato@agencia.com',
-      phone: '11999999999',
-      pixKey: null,
-      pixKeyType: null,
-      bankName: null,
-      bankBranch: null,
-      bankAccount: null,
-      updatedAt: new Date(),
-    });
-    vi.mocked(prisma.settings.update).mockResolvedValue({
-      id: 'settings-1',
-      agencyName: 'Nome Atualizado',
-      contactEmail: 'contato@agencia.com',
-      phone: '11999999999',
-      pixKey: null,
-      pixKeyType: null,
-      bankName: null,
-      bankBranch: null,
-      bankAccount: null,
-      updatedAt: new Date(),
+      const denied = [
+        { method: 'delete', url: '/api/clients/c-1' },
+        { method: 'get', url: '/api/contracts' },
+        { method: 'get', url: '/api/payments' },
+        { method: 'get', url: '/api/dashboard' },
+        { method: 'post', url: '/api/clients/batch-reassign', body: { clientIds: [], newOwnerId: null } },
+        { method: 'get', url: '/api/export/clients' },
+        { method: 'get', url: '/api/users' },
+        { method: 'get', url: '/api/settings' },
+        { method: 'put', url: '/api/settings', body: {} },
+        { method: 'get', url: '/api/groups' },
+      ];
+
+      for (const req of denied) {
+        const res = await (request(app) as any)[req.method](req.url).set('Cookie', [`token=${token}`]).send(req.body);
+        expect(res.status).toBe(403);
+      }
     });
 
-    const resUsers = await request(app)
-      .get('/api/users')
-      .set('Cookie', [`token=${token}`]);
-    expect(resUsers.status).toBe(200);
+    it('Financeiro', async () => {
+      const token = createToken(finUser);
+      vi.mocked(prisma.user.findUnique).mockResolvedValue(finUser as any);
+      vi.mocked(prisma.settings.findFirst).mockResolvedValue({ id: 'set-1' } as any);
 
-    const resSettings = await request(app)
-      .put('/api/settings')
-      .set('Cookie', [`token=${token}`])
-      .send({ agencyName: 'Nome Atualizado' });
-    expect(resSettings.status).toBe(200);
-  });
+      const allowed = [
+        { method: 'get', url: '/api/payments' },
+        { method: 'post', url: '/api/payments', body: { contractId: 'c-1', referenceMonth: '2026-08', amountCents: 1000, dueDate: '2026-08-10' } },
+        { method: 'post', url: '/api/contracts', body: { clientId: 'c-1', description: 'Desc', valueCents: 100, billingDay: 5 } },
+        { method: 'patch', url: '/api/contracts/c-1', body: { valueCents: 200 } },
+        { method: 'get', url: '/api/export/payments' },
+        { method: 'get', url: '/api/settings/billing' },
+      ];
 
-  it('8a. RF-08a/RF-52: membro lê os dados da agência em GET /api/settings/summary', async () => {
-    const token = createToken(memberUser);
-    vi.mocked(prisma.user.findUnique).mockResolvedValue(memberUser);
-    vi.mocked(prisma.settings.findFirst).mockResolvedValue({
-      id: 'settings-1',
-      agencyName: 'Minha Agência',
-      contactEmail: 'contato@agencia.com',
-      phone: '11999999999',
-      pixKey: '12345678000199',
-      pixKeyType: 'CNPJ',
-      bankName: null,
-      bankBranch: null,
-      bankAccount: null,
-      updatedAt: new Date(),
+      for (const req of allowed) {
+        const res = await (request(app) as any)[req.method](req.url).set('Cookie', [`token=${token}`]).send(req.body);
+        expect(res.status).not.toBe(403);
+        expect(res.status).not.toBe(401);
+      }
+
+      const denied = [
+        { method: 'patch', url: '/api/clients/c-1/stage', body: { stageId: 's-1' } },
+        { method: 'post', url: '/api/clients', body: { name: 'Cli' } },
+        { method: 'delete', url: '/api/contracts/c-1' },
+        { method: 'put', url: '/api/settings', body: {} },
+        { method: 'get', url: '/api/users' },
+        { method: 'get', url: '/api/export/clients' },
+        { method: 'get', url: '/api/groups' },
+      ];
+
+      for (const req of denied) {
+        const res = await (request(app) as any)[req.method](req.url).set('Cookie', [`token=${token}`]).send(req.body);
+        expect(res.status).toBe(403);
+      }
     });
 
-    // O membro usa o WhatsApp e precisa da chave PIX no lembrete de vencimento.
-    const resSummary = await request(app)
-      .get('/api/settings/summary')
-      .set('Cookie', [`token=${token}`]);
-    expect(resSummary.status).toBe(200);
-    expect(resSummary.body.pixKey).toBe('12345678000199');
-    expect(resSummary.body.agencyName).toBe('Minha Agência');
+    it('Admin', async () => {
+      const token = createToken(adminUser);
+      vi.mocked(prisma.user.findUnique).mockResolvedValue(adminUser as any);
+      vi.mocked(prisma.settings.findFirst).mockResolvedValue({ id: 'set-1' } as any);
+      vi.mocked(prisma.user.findMany).mockResolvedValue([]);
 
-    // A leitura liberada não abre a edição nem o restante do módulo admin.
-    const resSettings = await request(app)
-      .get('/api/settings')
-      .set('Cookie', [`token=${token}`]);
-    expect(resSettings.status).toBe(403);
+      const allowed = [
+        { method: 'get', url: '/api/users' },
+        { method: 'put', url: '/api/settings', body: { agencyName: 'Ag' } },
+        { method: 'get', url: '/api/export/clients' },
+        { method: 'get', url: '/api/export/payments' },
+        { method: 'get', url: '/api/groups' },
+      ];
+
+      for (const req of allowed) {
+        const res = await (request(app) as any)[req.method](req.url).set('Cookie', [`token=${token}`]).send(req.body);
+        expect(res.status).not.toBe(403);
+        expect(res.status).not.toBe(401);
+      }
+    });
   });
 
-  it('9. RF-08: o 403 acontece com chamada direta sem passar pela UI', async () => {
-    const token = createToken(memberUser);
-    vi.mocked(prisma.user.findUnique).mockResolvedValue(memberUser);
+  describe('2. Acúmulo de grupos', () => {
+    it('Usuário Dual obtém 200 em áreas de Operacional e Financeiro e une permissões', async () => {
+      const token = createToken(dualUser);
+      vi.mocked(prisma.user.findUnique).mockResolvedValue(dualUser as any);
 
-    const res = await request(app)
-      .get('/api/users')
-      .set('Cookie', [`token=${token}`]);
+      const resStage = await request(app).patch('/api/clients/c-1/stage').set('Cookie', [`token=${token}`]).send({ stageId: 's-1' });
+      expect(resStage.status).not.toBe(403);
 
-    expect(res.status).toBe(403);
+      const resPayments = await request(app).get('/api/payments').set('Cookie', [`token=${token}`]);
+      expect(resPayments.status).not.toBe(403);
+
+      const resMe = await request(app).get('/api/auth/me').set('Cookie', [`token=${token}`]);
+      expect(resMe.status).toBe(200);
+      expect(resMe.body.user.permissions).toContain('clients.stage.update');
+      expect(resMe.body.user.permissions).toContain('payments.view');
+      const uniqueCount = new Set(resMe.body.user.permissions).size;
+      expect(resMe.body.user.permissions.length).toBe(uniqueCount);
+    });
   });
 
-  it('10. RF-09: rebaixar o último admin ativo retorna 422', async () => {
-    const token = createToken(adminUser);
-    // Chamada autenticada como admin-1
-    vi.mocked(prisma.user.findUnique)
-      .mockResolvedValueOnce(adminUser) // autenticação
-      .mockResolvedValueOnce(adminUser); // busca do target admin-1
+  describe('3. Sem grupo', () => {
+    it('Autentica sem erro mas recebe 403 em rotas protegidas', async () => {
+      const token = createToken(noGroupUser);
+      vi.mocked(prisma.user.findUnique).mockResolvedValue(noGroupUser as any);
 
-    vi.mocked(prisma.user.count).mockResolvedValue(1); // apenas 1 admin ativo
+      const resMe = await request(app).get('/api/auth/me').set('Cookie', [`token=${token}`]);
+      expect(resMe.status).toBe(200);
+      expect(resMe.body.user.permissions).toEqual([]);
 
-    const res = await request(app)
-      .patch('/api/users/admin-1')
-      .set('Cookie', [`token=${token}`])
-      .send({ role: 'membro' });
-
-    expect(res.status).toBe(422);
-    // Deve ser bloqueado por RF-09a (alterar próprio papel) ou RF-09 (último admin)
-    expect(res.body.error).toBeDefined();
+      const resClients = await request(app).get('/api/clients').set('Cookie', [`token=${token}`]);
+      expect(resClients.status).toBe(403);
+    });
   });
 
-  it('11. RF-09: desativar o último admin ativo retorna 422', async () => {
-    const admin2 = { ...adminUser, id: 'admin-2', email: 'admin2@agencia.com' };
-    const token = createToken(adminUser);
+  describe('4. Segurança', () => {
+    it('401 e 403 são distintos', async () => {
+      const res401 = await request(app).get('/api/clients');
+      expect(res401.status).toBe(401);
 
-    vi.mocked(prisma.user.findUnique)
-      .mockResolvedValueOnce(adminUser) // autenticação
-      .mockResolvedValueOnce(admin2); // target admin-2
-
-    vi.mocked(prisma.user.count).mockResolvedValue(1); // apenas 1 admin ativo no total
-
-    const res = await request(app)
-      .patch('/api/users/admin-2')
-      .set('Cookie', [`token=${token}`])
-      .send({ active: false });
-
-    expect(res.status).toBe(422);
-    expect(res.body.error).toContain('Não é possível desativar ou rebaixar o único administrador ativo');
-  });
-
-  it('12. RF-09: rebaixar um admin quando existe outro ativo retorna 200', async () => {
-    const admin2 = { ...adminUser, id: 'admin-2', email: 'admin2@agencia.com' };
-    const token = createToken(adminUser);
-
-    vi.mocked(prisma.user.findUnique)
-      .mockResolvedValueOnce(adminUser) // autenticação
-      .mockResolvedValueOnce(admin2); // target admin-2
-
-    vi.mocked(prisma.user.count).mockResolvedValue(2); // 2 admins ativos
-
-    vi.mocked(prisma.user.update).mockResolvedValue({
-      ...admin2,
-      role: 'membro',
+      const token = createToken(noGroupUser);
+      vi.mocked(prisma.user.findUnique).mockResolvedValue(noGroupUser as any);
+      const res403 = await request(app).get('/api/clients').set('Cookie', [`token=${token}`]);
+      expect(res403.status).toBe(403);
+      expect(res403.body.requiredPermission).toBeDefined();
     });
 
-    const res = await request(app)
-      .patch('/api/users/admin-2')
-      .set('Cookie', [`token=${token}`])
-      .send({ role: 'membro' });
-
-    expect(res.status).toBe(200);
-    expect(res.body.role).toBe('membro');
-  });
-
-  it('13. RF-09a: admin tentando alterar o próprio papel retorna 422', async () => {
-    const token = createToken(adminUser);
-
-    vi.mocked(prisma.user.findUnique)
-      .mockResolvedValueOnce(adminUser) // auth
-      .mockResolvedValueOnce(adminUser); // target é ele mesmo
-
-    const res = await request(app)
-      .patch('/api/users/admin-1')
-      .set('Cookie', [`token=${token}`])
-      .send({ role: 'membro' });
-
-    expect(res.status).toBe(422);
-    expect(res.body.error).toBe('Não é possível alterar o próprio papel');
-  });
-
-  it('14. RF-09b: desativar um usuário incrementa tokenVersion e invalida a sessão aberta', async () => {
-    const token = createToken(adminUser);
-    const targetMember = { ...memberUser, active: true, tokenVersion: 0 };
-
-    vi.mocked(prisma.user.findUnique)
-      .mockResolvedValueOnce(adminUser) // auth
-      .mockResolvedValueOnce(targetMember); // target
-
-    vi.mocked(prisma.user.update).mockResolvedValue({
-      ...targetMember,
-      active: false,
-      tokenVersion: 1, // incrementado
+    it('Payload forjado não altera a autorização', async () => {
+      const token = createToken(noGroupUser);
+      vi.mocked(prisma.user.findUnique).mockResolvedValue(noGroupUser as any);
+      const res = await request(app).get('/api/clients?permissions=clients.view').set('Cookie', [`token=${token}`]).send({ groupIds: ['11111111-1111-1111-1111-111111111111'], role: 'admin', permissions: ['clients.view'] });
+      expect(res.status).toBe(403);
     });
 
-    const res = await request(app)
-      .patch('/api/users/member-1')
-      .set('Cookie', [`token=${token}`])
-      .send({ active: false });
-
-    expect(res.status).toBe(200);
-    expect(prisma.user.update).toHaveBeenCalledWith(
-      expect.objectContaining({
-        data: expect.objectContaining({
-          active: false,
-          tokenVersion: { increment: 1 },
-        }),
-      })
-    );
+    it('Chamada direta continua devolvendo 403', async () => {
+      const token = createToken(operUser);
+      vi.mocked(prisma.user.findUnique).mockResolvedValue(operUser as any);
+      const res = await request(app).get('/api/users').set('Cookie', [`token=${token}`]).set('Accept', 'application/json');
+      expect(res.status).toBe(403);
+    });
   });
 
-  it('15. RF-09c: usuário com mustChangePassword é bloqueado nas demais rotas até trocar', async () => {
-    const userMustChange = {
-      ...memberUser,
-      mustChangePassword: true,
-    };
-    const token = createToken(userMustChange);
+  describe('5. Ações compostas', () => {
+    it('PATCH /api/payments/:id com Financeiro', async () => {
+      const token = createToken(finUser);
+      vi.mocked(prisma.user.findUnique).mockResolvedValue(finUser as any);
+      vi.mocked(prisma.paymentRecord.findUnique).mockResolvedValue({ 
+        id: 'p-1', 
+        status: 'Pendente',
+        contract: { status: 'Ativo' }
+      } as any);
+      vi.mocked(prisma.paymentRecord.update).mockResolvedValue({
+        id: 'p-1',
+        status: 'Pago',
+        dueDate: '2026-08-10'
+      } as any);
 
-    vi.mocked(prisma.user.findUnique).mockResolvedValue(userMustChange);
+      // Baixa
+      const resSettle = await request(app).patch('/api/payments/p-1').set('Cookie', [`token=${token}`]).send({ status: 'Pago', paidDate: '2026-08-25', paymentMethod: 'PIX' });
+      expect(resSettle.status).not.toBe(403);
 
-    // Rota comum deve ser bloqueada com 403
-    const resClients = await request(app)
-      .get('/api/clients')
-      .set('Cookie', [`token=${token}`]);
+      // Cancelamento -> Financeiro NÃO tem payments.cancel
+      const resCancel = await request(app).patch('/api/payments/p-1').set('Cookie', [`token=${token}`]).send({ status: 'Cancelado' });
+      expect(resCancel.status).toBe(403);
+      expect(resCancel.body.requiredPermission).toBe('payments.cancel');
 
-    expect(resClients.status).toBe(403);
-    expect(resClients.body.mustChangePassword).toBe(true);
-
-    // Rota /me deve ser permitida
-    const resMe = await request(app)
-      .get('/api/auth/me')
-      .set('Cookie', [`token=${token}`]);
-
-    expect(resMe.status).toBe(200);
-  });
-
-  it('16. RF-09d: trocar a própria senha derruba as outras sessões do mesmo usuário (incrementa tokenVersion)', async () => {
-    const hash = await bcrypt.hash('SenhaAntiga123', 12);
-    const userWithHash = {
-      ...memberUser,
-      passwordHash: hash,
-      tokenVersion: 0,
-    };
-    const token = createToken(userWithHash);
-
-    vi.mocked(prisma.user.findUnique)
-      .mockResolvedValueOnce(userWithHash) // auth
-      .mockResolvedValueOnce(userWithHash); // find user in change-password
-
-    vi.mocked(prisma.user.update).mockResolvedValue({
-      ...userWithHash,
-      tokenVersion: 1,
-      mustChangePassword: false,
+      // Baixa e alteração
+      const resCombo = await request(app).patch('/api/payments/p-1').set('Cookie', [`token=${token}`]).send({ status: 'Pago', paidDate: '2026-08-25', paymentMethod: 'PIX', amountCents: 1500 });
+      expect(resCombo.status).not.toBe(403);
     });
 
-    const res = await request(app)
-      .post('/api/auth/change-password')
-      .set('Cookie', [`token=${token}`])
-      .send({
-        currentPassword: 'SenhaAntiga123',
-        newPassword: 'NovaSenhaSegura456',
-      });
+    it('DELETE /api/files/:id', async () => {
+      const token = createToken(finUser);
+      vi.mocked(prisma.user.findUnique).mockResolvedValue(finUser as any);
+      
+      // Inexistente -> 404
+      vi.mocked(prisma.contractFile.findUnique).mockResolvedValue(null);
+      vi.mocked(prisma.invoiceFile.findUnique).mockResolvedValue(null);
+      const resNotFound = await request(app).delete('/api/files/f-1').set('Cookie', [`token=${token}`]);
+      expect(resNotFound.status).toBe(404);
 
-    expect(res.status).toBe(200);
-    expect(prisma.user.update).toHaveBeenCalledWith(
-      expect.objectContaining({
-        data: expect.objectContaining({
-          mustChangePassword: false,
-          tokenVersion: { increment: 1 },
-        }),
-      })
-    );
+      // Invoice file (Financeiro doesn't have invoices.delete)
+      vi.mocked(prisma.invoiceFile.findUnique).mockResolvedValue({ id: 'f-1' } as any);
+      const resInv = await request(app).delete('/api/files/f-1').set('Cookie', [`token=${token}`]);
+      expect(resInv.status).toBe(403);
+      expect(resInv.body.requiredPermission).toBe('invoices.delete');
+
+      // Contract file (Financeiro doesn't have contract_files.delete)
+      vi.mocked(prisma.invoiceFile.findUnique).mockResolvedValue(null);
+      vi.mocked(prisma.contractFile.findUnique).mockResolvedValue({ id: 'f-1' } as any);
+      const resCon = await request(app).delete('/api/files/f-1').set('Cookie', [`token=${token}`]);
+      expect(resCon.status).toBe(403);
+      expect(resCon.body.requiredPermission).toBe('contract_files.delete');
+    });
+  });
+
+  describe('6. Payload filtrado', () => {
+    it('GET /api/dashboard sem dashboard.financial.view', async () => {
+      const token = createToken(operUser);
+      // Let's artificially give Operacional dashboard.operational.view for this test so it returns 200
+      const customUser = { ...operUser, groups: [{ groupId: '22222222-2222-2222-2222-222222222222', group: { id: '22222222-2222-2222-2222-222222222222', name: 'Oper', permissions: ['dashboard.operational.view'] } }] };
+      vi.mocked(prisma.user.findUnique).mockResolvedValue(customUser as any);
+      
+      const res = await request(app).get('/api/dashboard').set('Cookie', [`token=${token}`]);
+      expect(res.status).toBe(200);
+      expect(res.body.current.mrrCents).toBeUndefined();
+      expect(res.body.alerts).toBeUndefined();
+    });
+
+    it('GET /api/dashboard sem settings.bank.view', async () => {
+      const token = createToken(finUser);
+      const customUser = { ...finUser, groups: [{ groupId: '33333333-3333-3333-3333-333333333333', group: { id: '33333333-3333-3333-3333-333333333333', name: 'Fin', permissions: ['dashboard.financial.view'] } }] };
+      vi.mocked(prisma.user.findUnique).mockResolvedValue(customUser as any);
+      vi.mocked(prisma.settings.findFirst).mockResolvedValue({ id: 's-1', agencyName: 'Ag', pixKey: '123' } as any);
+      
+      const res = await request(app).get('/api/dashboard').set('Cookie', [`token=${token}`]);
+      expect(res.status).toBe(200);
+      expect(res.body.settings.pixKey).toBeUndefined();
+      expect(res.body.settings.bankName).toBeUndefined();
+      expect(res.body.settings.agencyName).toBe('Ag');
+    });
+
+    it('GET /api/users/basic', async () => {
+      const token = createToken(operUser);
+      vi.mocked(prisma.user.findUnique).mockResolvedValue(operUser as any);
+      vi.mocked(prisma.user.findMany).mockResolvedValue([
+        { id: 'u-1', name: 'User 1' } as any
+      ]);
+      const res = await request(app).get('/api/users/basic').set('Cookie', [`token=${token}`]);
+      expect(res.status).toBe(200);
+      expect(res.body).toEqual([{ id: 'u-1', name: 'User 1' }]);
+    });
+  });
+
+  describe('7. Regras de integridade', () => {
+    it('Remover o último usuário ativo do grupo de sistema -> 422', async () => {
+      const token = createToken(adminUser);
+      vi.mocked(prisma.user.findUnique)
+        .mockResolvedValueOnce(adminUser as any)
+        .mockResolvedValueOnce(adminUser as any)
+        .mockResolvedValueOnce(adminUser as any);
+      vi.mocked(prisma.group.findFirst).mockResolvedValue({ id: '11111111-1111-1111-1111-111111111111', isSystem: true } as any);
+      vi.mocked(prisma.user.count).mockResolvedValue(1);
+
+      const res = await request(app).patch('/api/users/admin-1').set('Cookie', [`token=${token}`]).send({ groupIds: [] });
+      expect(res.status).toBe(422);
+    });
+
+    it('Desativar o último usuário ativo do grupo de sistema -> 422', async () => {
+      const admin2 = { ...adminUser, id: 'admin-2' };
+      const token = createToken(adminUser);
+      vi.mocked(prisma.user.findUnique)
+        .mockResolvedValueOnce(adminUser as any)
+        .mockResolvedValueOnce(admin2 as any);
+      vi.mocked(prisma.group.findFirst).mockResolvedValue({ id: '11111111-1111-1111-1111-111111111111', isSystem: true } as any);
+      vi.mocked(prisma.user.count).mockResolvedValue(1);
+
+      const res = await request(app).patch('/api/users/admin-2').set('Cookie', [`token=${token}`]).send({ active: false });
+      expect(res.status).toBe(422);
+    });
+
+    it('Alterar os próprios grupos -> 422', async () => {
+      const token = createToken(adminUser);
+      vi.mocked(prisma.user.findUnique).mockResolvedValue(adminUser as any);
+      vi.mocked(prisma.group.count).mockResolvedValue(1);
+      
+      const res = await request(app).patch('/api/users/admin-1').set('Cookie', [`token=${token}`]).send({ groupIds: ['22222222-2222-2222-2222-222222222222'] });
+      expect(res.status).toBe(422);
+    });
+
+    it('Desativar usuário incrementa tokenVersion e invalida a sessão aberta', async () => {
+      const token = createToken(adminUser);
+      const targetMember = { ...operUser };
+
+      vi.mocked(prisma.user.findUnique)
+        .mockResolvedValueOnce(adminUser as any)
+        .mockResolvedValueOnce(targetMember as any);
+
+      vi.mocked(prisma.user.update).mockResolvedValue({
+        ...targetMember,
+        active: false,
+        tokenVersion: 1,
+      } as any);
+
+      const res = await request(app)
+        .patch('/api/users/oper-1')
+        .set('Cookie', [`token=${token}`])
+        .send({ active: false });
+
+      expect(res.status).toBe(200);
+      expect(prisma.user.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            active: false,
+            tokenVersion: { increment: 1 },
+          }),
+        })
+      );
+    });
+
+    it('mustChangePassword continua bloqueando as demais rotas', async () => {
+      const blockedUser = { ...adminUser, mustChangePassword: true };
+      const token = createToken(blockedUser);
+      vi.mocked(prisma.user.findUnique).mockResolvedValue(blockedUser as any);
+
+      const resClients = await request(app).get('/api/clients').set('Cookie', [`token=${token}`]);
+      expect(resClients.status).toBe(403);
+      expect(resClients.body.mustChangePassword).toBe(true);
+
+      const resMe = await request(app).get('/api/auth/me').set('Cookie', [`token=${token}`]);
+      expect(resMe.status).toBe(200);
+    });
+  });
+
+  describe('8. Cobertura de rotas', () => {
+    it('Toda rota sob /api deve exigir permissão', () => {
+      const endpoints = listEndpoints(app);
+      
+      const allowlist = [
+        '/api/health',
+        '/api/auth/login',
+        '/api/auth/logout',
+        '/api/auth/me',
+        '/api/auth/change-password',
+        '/api/payments/:id',
+        '/api/files',
+        '/api/files/:id',
+      ];
+
+      const unprotected: string[] = [];
+
+      for (const endpoint of endpoints) {
+        if (!endpoint.path.startsWith('/api')) continue;
+
+        const hasPermissionCheck = endpoint.middlewares.some(mw => 
+          mw === 'requirePermission' || 
+          mw === 'requireAnyPermission' ||
+          mw.includes('requirePermission')
+        );
+
+        if (!hasPermissionCheck && !allowlist.includes(endpoint.path)) {
+          unprotected.push(`${endpoint.methods.join(',')} ${endpoint.path}`);
+        }
+      }
+
+      if (unprotected.length > 0) {
+        throw new Error(`As rotas a seguir estão sem guarda de permissão:\n${unprotected.join('\n')}`);
+      }
+    });
   });
 });

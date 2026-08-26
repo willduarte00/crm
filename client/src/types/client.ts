@@ -37,7 +37,6 @@ export interface InteractionLog {
     id: string;
     name: string;
     email: string;
-    role: string;
   };
 }
 
@@ -58,7 +57,6 @@ export interface Client {
     name: string;
     email: string;
     active: boolean;
-    role: string;
   } | null;
   notes?: string | null;
   createdAt: string;

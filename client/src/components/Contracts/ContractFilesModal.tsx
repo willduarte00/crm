@@ -12,6 +12,7 @@ import {
   Loader2,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { useAuth } from '../../context/AuthContext';
 import { Modal } from '../ui/Modal';
 import { Button, IconButton } from '../ui/Button';
 import { FormAlert } from '../ui/States';
@@ -34,6 +35,7 @@ export const ContractFilesModal: React.FC<ContractFilesModalProps> = ({
   onFilesUpdated,
 }) => {
   const confirm = useConfirm();
+  const { has } = useAuth();
 
   const [files, setFiles] = useState<ContractFile[]>([]);
   const [isUploading, setIsUploading] = useState(false);
@@ -169,38 +171,40 @@ export const ContractFilesModal: React.FC<ContractFilesModalProps> = ({
         {error && <FormAlert>{error}</FormAlert>}
 
         {/* Área de upload */}
-        <div className="border-2 border-dashed border-slate-300 hover:border-teal-500 rounded-lg p-6 text-center transition-colors bg-slate-50/60">
-          <input
-            type="file"
-            ref={fileInputRef}
-            accept=".pdf,.docx,.doc,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/msword"
-            onChange={handleFileUpload}
-            disabled={isUploading}
-            className="sr-only"
-            id="contract-file-input"
-          />
-          <label
-            htmlFor="contract-file-input"
-            className="cursor-pointer flex flex-col items-center justify-center gap-2"
-          >
-            <div
-              className="w-10 h-10 rounded-full bg-teal-50 text-teal-700 flex items-center justify-center border border-teal-100"
-              aria-hidden="true"
+        {has('contract_files.create') && (
+          <div className="border-2 border-dashed border-slate-300 hover:border-teal-500 rounded-lg p-6 text-center transition-colors bg-slate-50/60">
+            <input
+              type="file"
+              ref={fileInputRef}
+              accept=".pdf,.docx,.doc,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/msword"
+              onChange={handleFileUpload}
+              disabled={isUploading}
+              className="sr-only"
+              id="contract-file-input"
+            />
+            <label
+              htmlFor="contract-file-input"
+              className="cursor-pointer flex flex-col items-center justify-center gap-2"
             >
-              {isUploading ? (
-                <Loader2 className="w-5 h-5 animate-spin" />
-              ) : (
-                <Upload className="w-5 h-5" />
-              )}
-            </div>
-            <span className="text-sm font-bold text-navy-900">
-              {isUploading ? 'Enviando documento…' : 'Selecionar arquivo'}
-            </span>
-            <span className="text-[11px] text-slate-500">
-              PDF, DOC ou DOCX, até 10 MB.
-            </span>
-          </label>
-        </div>
+              <div
+                className="w-10 h-10 rounded-full bg-teal-50 text-teal-700 flex items-center justify-center border border-teal-100"
+                aria-hidden="true"
+              >
+                {isUploading ? (
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                ) : (
+                  <Upload className="w-5 h-5" />
+                )}
+              </div>
+              <span className="text-sm font-bold text-navy-900">
+                {isUploading ? 'Enviando documento…' : 'Selecionar arquivo'}
+              </span>
+              <span className="text-[11px] text-slate-500">
+                PDF, DOC ou DOCX, até 10 MB.
+              </span>
+            </label>
+          </div>
+        )}
 
         {/* Lista de anexos */}
         <div>
@@ -258,15 +262,17 @@ export const ContractFilesModal: React.FC<ContractFilesModalProps> = ({
                     >
                       <Download className="w-4 h-4" aria-hidden="true" />
                     </IconButton>
-                    <IconButton
-                      label={`Excluir ${file.originalName}`}
-                      tone="danger"
-                      onClick={() => handleDeleteFile(file)}
-                      isLoading={isDeleting === file.id}
-                      disabled={isDeleting !== null}
-                    >
-                      <Trash2 className="w-4 h-4" aria-hidden="true" />
-                    </IconButton>
+                    {has('contract_files.delete') && (
+                      <IconButton
+                        label={`Excluir ${file.originalName}`}
+                        tone="danger"
+                        onClick={() => handleDeleteFile(file)}
+                        isLoading={isDeleting === file.id}
+                        disabled={isDeleting !== null}
+                      >
+                        <Trash2 className="w-4 h-4" aria-hidden="true" />
+                      </IconButton>
+                    )}
                   </div>
                 </li>
               ))}

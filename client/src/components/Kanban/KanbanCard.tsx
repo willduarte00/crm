@@ -8,6 +8,7 @@ interface KanbanCardProps {
   client: Client;
   index: number;
   onClick: (client: Client) => void;
+  isDragDisabled?: boolean;
 }
 
 const PRIORITY_BARS: Record<Priority, string> = {
@@ -40,14 +41,14 @@ function getInitials(name: string): string {
   return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
 }
 
-export const KanbanCard: React.FC<KanbanCardProps> = ({ client, index, onClick }) => {
+export const KanbanCard: React.FC<KanbanCardProps> = ({ client, index, onClick, isDragDisabled }) => {
   const priorityBarColor = PRIORITY_BARS[client.priority] || PRIORITY_BARS.media;
   const sourceStyle =
     LEAD_SOURCE_STYLES[client.leadSource] || LEAD_SOURCE_STYLES.Outro;
   const priorityInfo = PRIORITY_LABELS[client.priority] || PRIORITY_LABELS.media;
 
   return (
-    <Draggable draggableId={client.id} index={index}>
+    <Draggable draggableId={client.id} index={index} isDragDisabled={isDragDisabled}>
       {(provided, snapshot) => (
         <div
           ref={provided.innerRef}

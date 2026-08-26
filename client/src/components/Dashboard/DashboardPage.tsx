@@ -104,77 +104,89 @@ export const DashboardPage: React.FC = () => {
       {/* Bento Grid dos KPIs Principais (RF-40 a RF-44, RF-48) */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
         {/* 1. MRR */}
-        <KpiCard
-          title="MRR (Mensalidade)"
-          value={formatCurrencyBRL(current.mrrCents)}
-          icon={TrendingUp}
-          iconBgColor="bg-teal-50"
-          iconColor="text-teal-600"
-          comparison={comparison?.mrr}
-          subtitle="Contratos recorrentes ativos"
-        />
+        {current.mrrCents !== undefined && (
+          <KpiCard
+            title="MRR (Mensalidade)"
+            value={formatCurrencyBRL(current.mrrCents)}
+            icon={TrendingUp}
+            iconBgColor="bg-teal-50"
+            iconColor="text-teal-600"
+            comparison={comparison?.mrr}
+            subtitle="Contratos recorrentes ativos"
+          />
+        )}
 
         {/* 2. Recebido no Mês (Caixa) */}
-        <KpiCard
-          title="Recebido (Caixa)"
-          value={formatCurrencyBRL(current.receivedCents)}
-          icon={Wallet}
-          iconBgColor="bg-emerald-50"
-          iconColor="text-emerald-600"
-          comparison={comparison?.received}
-          subtitle="Pagamentos baixados no mês"
-        />
+        {current.receivedCents !== undefined && (
+          <KpiCard
+            title="Recebido (Caixa)"
+            value={formatCurrencyBRL(current.receivedCents)}
+            icon={Wallet}
+            iconBgColor="bg-emerald-50"
+            iconColor="text-emerald-600"
+            comparison={comparison?.received}
+            subtitle="Pagamentos baixados no mês"
+          />
+        )}
 
         {/* 3. Faturado no Mês (Competência) */}
-        <KpiCard
-          title="Faturado (Competência)"
-          value={formatCurrencyBRL(current.invoicedCents)}
-          icon={Receipt}
-          iconBgColor="bg-blue-50"
-          iconColor="text-blue-600"
-          comparison={comparison?.invoiced}
-          subtitle="Competência do mês corrente"
-        />
+        {current.invoicedCents !== undefined && (
+          <KpiCard
+            title="Faturado (Competência)"
+            value={formatCurrencyBRL(current.invoicedCents)}
+            icon={Receipt}
+            iconBgColor="bg-blue-50"
+            iconColor="text-blue-600"
+            comparison={comparison?.invoiced}
+            subtitle="Competência do mês corrente"
+          />
+        )}
 
         {/* 4. Inadimplência */}
-        <KpiCard
-          title="Inadimplência"
-          value={formatCurrencyBRL(current.overdueCents)}
-          icon={AlertTriangle}
-          iconBgColor="bg-rose-50"
-          iconColor="text-rose-600"
-          comparison={comparison?.overdue}
-          subtitle={`${current.delinquencyRate}% taxa (${current.overdueCount} pendentes)`}
-          isDelinquency
-        />
+        {current.overdueCents !== undefined && (
+          <KpiCard
+            title="Inadimplência"
+            value={formatCurrencyBRL(current.overdueCents)}
+            icon={AlertTriangle}
+            iconBgColor="bg-rose-50"
+            iconColor="text-rose-600"
+            comparison={comparison?.overdue}
+            subtitle={`${current.delinquencyRate}% taxa (${current.overdueCount} pendentes)`}
+            isDelinquency
+          />
+        )}
 
         {/* 5. Clientes Ativos */}
-        <KpiCard
-          title="Clientes Ativos"
-          value={current.activeClients}
-          icon={Users}
-          iconBgColor="bg-slate-100"
-          iconColor="text-slate-700"
-          comparison={comparison?.activeClients}
-          subtitle="Com contratos em vigência"
-        />
+        {current.activeClients !== undefined && (
+          <KpiCard
+            title="Clientes Ativos"
+            value={current.activeClients}
+            icon={Users}
+            iconBgColor="bg-slate-100"
+            iconColor="text-slate-700"
+            comparison={comparison?.activeClients}
+            subtitle="Com contratos em vigência"
+          />
+        )}
       </div>
 
       {/* Seção Gráficos e Alertas */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Gráficos Recharts (2 colunas) */}
         <div className="lg:col-span-2 space-y-6">
-          <BillingChart data={charts.billingHistory} />
-          <ServicesChart data={charts.serviceDistribution} />
+          {charts?.billingHistory && <BillingChart data={charts.billingHistory} />}
+          {charts?.serviceDistribution && <ServicesChart data={charts.serviceDistribution} />}
         </div>
 
         {/* Widget de Alertas (1 coluna) */}
         <div className="lg:col-span-1">
-          <AlertsWidget
-            overdue={alerts.overdue}
-            upcoming7Days={alerts.upcoming7Days}
-            settings={settings}
-          />
+          {alerts && (
+            <AlertsWidget
+              overdue={alerts.overdue}
+              upcoming7Days={alerts.upcoming7Days}
+              settings={settings}
+            />
+          )}
         </div>
       </div>
     </div>
