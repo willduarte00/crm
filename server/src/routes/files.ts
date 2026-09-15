@@ -116,7 +116,14 @@ filesRouter.post('/', handleUpload, async (req: Request, res: Response) => {
         },
       });
 
-      return res.status(201).json(contractFile);
+      return res.status(201).json({
+        id: contractFile.id,
+        contractId: contractFile.contractId,
+        originalName: contractFile.originalName,
+        fileSize: contractFile.fileSize,
+        mimeType: contractFile.mimeType,
+        uploadedAt: contractFile.uploadedAt,
+      });
     }
 
     if (paymentRecordId) {
@@ -151,7 +158,14 @@ filesRouter.post('/', handleUpload, async (req: Request, res: Response) => {
         },
       });
 
-      return res.status(201).json(invoiceFile);
+      return res.status(201).json({
+        id: invoiceFile.id,
+        paymentRecordId: invoiceFile.paymentRecordId,
+        originalName: invoiceFile.originalName,
+        fileSize: invoiceFile.fileSize,
+        mimeType: invoiceFile.mimeType,
+        uploadedAt: invoiceFile.uploadedAt,
+      });
     }
   } catch (error) {
     await fs.promises.unlink(req.file.path).catch(() => {});
@@ -206,14 +220,20 @@ filesRouter.post('/logo', requirePermission('settings.update'), handleUploadLogo
 // GET /api/files/public/:filename - Leitura pública para arquivos genéricos (ex: logo)
 filesRouter.get('/public/:filename', (req: Request, res: Response) => {
   const { filename } = req.params;
-  const filePath = path.resolve(uploadDir, filename);
-
-  if (!fs.existsSync(filePath)) {
+  
+  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\.(png|jpe?g|webp)$/i.test(filename)) {
     return res.status(404).json({ error: 'Arquivo não encontrado.' });
   }
 
-  if (!filePath.startsWith(uploadDir)) {
-    return res.status(403).json({ error: 'Acesso não autorizado.' });
+  const logoDir = path.resolve(uploadDir, 'logo');
+  const filePath = path.resolve(logoDir, filename);
+
+  if (!filePath.startsWith(logoDir + path.sep)) {
+    return res.status(404).json({ error: 'Arquivo não encontrado.' });
+  }
+
+  if (!fs.existsSync(filePath)) {
+    return res.status(404).json({ error: 'Arquivo não encontrado.' });
   }
 
   setFileResponseHeaders(res, { isPublic: true });
@@ -276,7 +296,7 @@ filesRouter.get('/:id', async (req: Request, res: Response) => {
   }
 
   // Previne path traversal
-  if (!filePath.startsWith(uploadDir)) {
+  if (!filePath.startsWith(uploadDir + path.sep)) {
     return res.status(403).json({ error: 'Acesso não autorizado ao caminho do arquivo.' });
   }
 
@@ -321,7 +341,9 @@ filesRouter.delete('/:id', async (req: Request, res: Response) => {
     });
 
     const filePath = path.resolve(uploadDir, contractFile.storedName);
-    await fs.promises.unlink(filePath).catch(() => {});
+    if (filePath.startsWith(uploadDir + path.sep)) {
+      await fs.promises.unlink(filePath).catch(() => {});
+    }
 
     return res.json({ success: true, message: 'Arquivo de contrato excluído com sucesso.' });
   }
@@ -334,7 +356,9 @@ filesRouter.delete('/:id', async (req: Request, res: Response) => {
     });
 
     const filePath = path.resolve(uploadDir, invoiceFile.storedName);
-    await fs.promises.unlink(filePath).catch(() => {});
+    if (filePath.startsWith(uploadDir + path.sep)) {
+      await fs.promises.unlink(filePath).catch(() => {});
+    }
 
     return res.json({ success: true, message: 'Arquivo de nota fiscal excluído com sucesso.' });
   }

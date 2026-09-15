@@ -26,10 +26,26 @@ export const ALLOWED_EXTENSIONS: Record<string, string[]> = {
   logo: ['.jpg', '.jpeg', '.png', '.webp'],
 };
 
+const logoDir = path.resolve(uploadDir, 'logo');
+if (!fs.existsSync(logoDir)) {
+  fs.mkdirSync(logoDir, { recursive: true });
+}
+
 // Storage com nome em disco gerado por UUID
 const storage = multer.diskStorage({
   destination: (_req, _file, cb) => {
     cb(null, uploadDir);
+  },
+  filename: (_req, file, cb) => {
+    const ext = path.extname(file.originalname).toLowerCase();
+    const storedName = `${crypto.randomUUID()}${ext}`;
+    cb(null, storedName);
+  },
+});
+
+const logoStorage = multer.diskStorage({
+  destination: (_req, _file, cb) => {
+    cb(null, logoDir);
   },
   filename: (_req, file, cb) => {
     const ext = path.extname(file.originalname).toLowerCase();
@@ -77,7 +93,7 @@ export const uploadMiddleware = multer({
 });
 
 export const uploadLogoMiddleware = multer({
-  storage,
+  storage: logoStorage,
   limits: {
     fileSize: 2 * 1024 * 1024, // 2 MB
   },

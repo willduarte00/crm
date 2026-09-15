@@ -111,7 +111,15 @@ export async function ensurePaymentRecords(
     include: {
       paymentRecords: {
         include: {
-          invoices: true,
+          invoices: {
+            select: {
+              id: true,
+              originalName: true,
+              fileSize: true,
+              mimeType: true,
+              uploadedAt: true,
+            },
+          },
         },
         orderBy: { dueDate: 'asc' },
       },
@@ -183,6 +191,13 @@ export async function ensurePaymentRecords(
     include: {
       invoices: {
         orderBy: { uploadedAt: 'desc' },
+        select: {
+          id: true,
+          originalName: true,
+          fileSize: true,
+          mimeType: true,
+          uploadedAt: true,
+        },
       },
     },
     orderBy: { dueDate: 'asc' },

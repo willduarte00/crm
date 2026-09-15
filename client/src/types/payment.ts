@@ -16,7 +16,6 @@ export const PAYMENT_METHOD_LABELS: Record<PaymentMethod, string> = {
 export interface InvoiceFile {
   id: string;
   paymentRecordId: string;
-  storedName: string;
   originalName: string;
   fileSize: number;
   mimeType: string;

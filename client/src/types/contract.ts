@@ -18,7 +18,6 @@ export type ContractStatus = (typeof CONTRACT_STATUSES)[number];
 export interface ContractFile {
   id: string;
   contractId: string;
-  storedName: string;
   originalName: string;
   fileSize: number;
   mimeType: string;

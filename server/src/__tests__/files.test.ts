@@ -273,11 +273,13 @@ describe('Arquivos e Uploads — Testes de Integração (RF-12, Seção 6.2 e 6.
 
   it('10. GET /api/files/public/:filename responde com CSP e nosniff', async () => {
     const uploadDir = path.resolve(process.cwd(), env.UPLOAD_DIR || './uploads');
-    if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
-    const fakeLogoPath = path.resolve(uploadDir, 'logo.png');
+    const logoDir = path.resolve(uploadDir, 'logo');
+    if (!fs.existsSync(logoDir)) fs.mkdirSync(logoDir, { recursive: true });
+    const fakeLogoName = '12345678-1234-1234-1234-1234567890ab.png';
+    const fakeLogoPath = path.resolve(logoDir, fakeLogoName);
     fs.writeFileSync(fakeLogoPath, 'fake image data');
 
-    const res = await request(app).get('/api/files/public/logo.png');
+    const res = await request(app).get(`/api/files/public/${fakeLogoName}`);
 
     expect(res.status).toBe(200);
     expect(res.header['content-security-policy']).toBe("default-src 'none'; sandbox");
@@ -285,5 +287,15 @@ describe('Arquivos e Uploads — Testes de Integração (RF-12, Seção 6.2 e 6.
     expect(res.header['cache-control']).toContain('public, max-age=3600');
     
     if (fs.existsSync(fakeLogoPath)) fs.unlinkSync(fakeLogoPath);
+  });
+
+  it('11. GET /api/files/public/<uuid>.pdf retorna 404', async () => {
+    const res = await request(app).get('/api/files/public/12345678-1234-1234-1234-1234567890ab.pdf');
+    expect(res.status).toBe(404);
+  });
+
+  it('12. GET /api/files/public/../x.png retorna 404', async () => {
+    const res = await request(app).get('/api/files/public/%2E%2E%2Fx.png');
+    expect(res.status).toBe(404);
   });
 });

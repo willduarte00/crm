@@ -249,6 +249,7 @@ describe('Contratos — Testes de Integração (RF-10 a RF-13)', () => {
     expect(Array.isArray(res.body)).toBe(true);
     expect(res.body).toHaveLength(1);
     expect(res.body[0].serviceType).toBe('Social Media & Conteúdo');
+    expect(JSON.stringify(res.body)).not.toContain('storedName');
     expect(prisma.contract.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
         where: expect.objectContaining({
@@ -273,6 +274,7 @@ describe('Contratos — Testes de Integração (RF-10 a RF-13)', () => {
     expect(res.body.id).toBe(mockContract.id);
     expect(res.body.client).toBeDefined();
     expect(Array.isArray(res.body.files)).toBe(true);
+    expect(JSON.stringify(res.body)).not.toContain('storedName');
   });
 
   it('7. Deve atualizar status e valor de um contrato (PATCH)', async () => {

@@ -119,6 +119,7 @@ describe('Cobranças e Pagamentos — Testes de Integração (RF-20 a RF-32)', (
     expect(res.body.data[0].number).toBe('COB-2026-0001');
     expect(res.body.data[0].effectiveStatus).toBeDefined();
     expect(res.body.summary).toBeDefined();
+    expect(JSON.stringify(res.body)).not.toContain('storedName');
   });
 
   it('2. GET /api/payments/:id - Deve retornar os detalhes completos da cobrança', async () => {

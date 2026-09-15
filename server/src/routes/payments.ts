@@ -135,7 +135,6 @@ paymentsRouter.get('/', requirePermission('payments.view'), async (req: Request,
           orderBy: { uploadedAt: 'desc' },
           select: {
             id: true,
-            storedName: true,
             originalName: true,
             fileSize: true,
             mimeType: true,
@@ -224,6 +223,13 @@ paymentsRouter.get('/:id', requirePermission('payments.view'), async (req: Reque
       },
       invoices: {
         orderBy: { uploadedAt: 'desc' },
+        select: {
+          id: true,
+          originalName: true,
+          fileSize: true,
+          mimeType: true,
+          uploadedAt: true,
+        },
       },
     },
   });
@@ -294,7 +300,15 @@ paymentsRouter.post('/', requirePermission('payments.create'), async (req: Reque
         contract: {
           include: { client: true },
         },
-        invoices: true,
+        invoices: {
+          select: {
+            id: true,
+            originalName: true,
+            fileSize: true,
+            mimeType: true,
+            uploadedAt: true,
+          },
+        },
       },
     });
   });
@@ -393,6 +407,13 @@ paymentsRouter.patch('/:id', async (req: Request, res: Response) => {
       },
       invoices: {
         orderBy: { uploadedAt: 'desc' },
+        select: {
+          id: true,
+          originalName: true,
+          fileSize: true,
+          mimeType: true,
+          uploadedAt: true,
+        },
       },
     },
   });

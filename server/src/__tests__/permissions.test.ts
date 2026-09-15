@@ -445,6 +445,7 @@ describe('Permissões — Testes de Integração', () => {
         'GET /api/operational-stages',
         // TODO F-01 / F-07: remover desta allowlist quando a guarda for adicionada
         'POST /api/files/logo',
+        // logo público autenticado; restrito por regex e diretório
         'GET /api/files/public/:filename',
         'GET /api/operational-tasks',
         'POST /api/operational-tasks',

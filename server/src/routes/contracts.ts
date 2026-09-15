@@ -101,7 +101,6 @@ contractsRouter.get('/', requirePermission('contracts.view'), async (req: Reques
         orderBy: { uploadedAt: 'desc' },
         select: {
           id: true,
-          storedName: true,
           originalName: true,
           fileSize: true,
           mimeType: true,
@@ -177,7 +176,15 @@ contractsRouter.post('/', requirePermission('contracts.create'), async (req: Req
             documentNumber: true,
           },
         },
-        files: true,
+        files: {
+          select: {
+            id: true,
+            originalName: true,
+            fileSize: true,
+            mimeType: true,
+            uploadedAt: true,
+          },
+        },
       },
     });
 
@@ -233,6 +240,13 @@ contractsRouter.get('/:id', requirePermission('contracts.view'), async (req: Req
       },
       files: {
         orderBy: { uploadedAt: 'desc' },
+        select: {
+          id: true,
+          originalName: true,
+          fileSize: true,
+          mimeType: true,
+          uploadedAt: true,
+        },
       },
       _count: {
         select: {
@@ -342,6 +356,13 @@ contractsRouter.patch('/:id', requirePermission('contracts.update'), async (req:
       },
       files: {
         orderBy: { uploadedAt: 'desc' },
+        select: {
+          id: true,
+          originalName: true,
+          fileSize: true,
+          mimeType: true,
+          uploadedAt: true,
+        },
       },
     },
   });
