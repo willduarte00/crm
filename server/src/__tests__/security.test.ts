@@ -96,27 +96,55 @@ describe('Segurança — Testes de Integração', () => {
     expect(blockedRes.status).toBe(429);
   });
 
-  it('5. Boot sem JWT_SECRET ou com valor proibido deve lançar erro de validação', async () => {
-    const { z } = await import('zod');
-    const FORBIDDEN_JWT_SECRETS = [
-      'change-me',
-      'secret',
-      'jwt_secret',
-      'sua_chave_jwt_aqui',
-      'example',
-      '12345678',
-      'admin',
-      'default_secret',
-    ];
+  it('5. Boot sem JWT_SECRET longo, ADMIN_PASSWORD forte, ou config incorreta, deve lançar erro de validação', async () => {
+    const { envSchema } = await import('../env.js');
 
-    const testSchema = z.string().min(8).refine(
-      (secret) => !FORBIDDEN_JWT_SECRETS.includes(secret.toLowerCase())
-    );
+    // Teste JWT_SECRET
+    expect(() => envSchema.parse({
+      DATABASE_URL: 'postgres://valid',
+      ADMIN_EMAIL: 'admin@agencia.com',
+      ADMIN_PASSWORD: 'umaSenhaMuitoForte123!',
+      JWT_SECRET: '',
+    })).toThrow();
 
-    expect(() => testSchema.parse('')).toThrow();
-    expect(() => testSchema.parse('change-me')).toThrow();
-    expect(() => testSchema.parse('secret')).toThrow();
-    expect(() => testSchema.parse('a-valid-secure-jwt-secret-123456')).not.toThrow();
+    expect(() => envSchema.parse({
+      DATABASE_URL: 'postgres://valid',
+      ADMIN_EMAIL: 'admin@agencia.com',
+      ADMIN_PASSWORD: 'umaSenhaMuitoForte123!',
+      JWT_SECRET: 'change-me',
+    })).toThrow();
+
+    expect(() => envSchema.parse({
+      DATABASE_URL: 'postgres://valid',
+      ADMIN_EMAIL: 'admin@agencia.com',
+      ADMIN_PASSWORD: 'umaSenhaMuitoForte123!',
+      JWT_SECRET: 'a-valid-secure-jwt-secret-that-is-at-least-32-chars-long',
+    })).not.toThrow();
+
+    // Teste ADMIN_PASSWORD
+    expect(() => envSchema.parse({
+      DATABASE_URL: 'postgres://valid',
+      ADMIN_EMAIL: 'admin@agencia.com',
+      ADMIN_PASSWORD: 'admin123456',
+      JWT_SECRET: 'a-valid-secure-jwt-secret-that-is-at-least-32-chars-long',
+    })).toThrow();
+
+    expect(() => envSchema.parse({
+      DATABASE_URL: 'postgres://valid',
+      ADMIN_EMAIL: 'admin@agencia.com',
+      ADMIN_PASSWORD: 'curta',
+      JWT_SECRET: 'a-valid-secure-jwt-secret-that-is-at-least-32-chars-long',
+    })).toThrow();
+
+    // Teste NODE_ENV=production + APP_ENV=local
+    expect(() => envSchema.parse({
+      DATABASE_URL: 'postgres://valid',
+      ADMIN_EMAIL: 'admin@agencia.com',
+      ADMIN_PASSWORD: 'umaSenhaMuitoForte123!',
+      JWT_SECRET: 'a-valid-secure-jwt-secret-that-is-at-least-32-chars-long',
+      NODE_ENV: 'production',
+      APP_ENV: 'local',
+    })).toThrow('Em NODE_ENV=production o APP_ENV deve ser production (cookie Secure)');
   });
 
   it('6. Em produção o cookie sai com Secure; em local, sem', () => {

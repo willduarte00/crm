@@ -8,8 +8,13 @@ dotenv.config();
 const prisma = new PrismaClient();
 
 async function main() {
-  const adminEmail = process.env.ADMIN_EMAIL || 'admin@agencia.com';
-  const adminPassword = process.env.ADMIN_PASSWORD || 'admin123456';
+  const adminEmail = process.env.ADMIN_EMAIL;
+  const adminPassword = process.env.ADMIN_PASSWORD;
+
+  if (!adminEmail || !adminPassword) {
+    console.error('❌ Erro: ADMIN_EMAIL e ADMIN_PASSWORD são obrigatórios para o seed.');
+    process.exit(1);
+  }
 
   // Seed dos Grupos
   const adminGroup = await prisma.group.upsert({
@@ -63,7 +68,7 @@ async function main() {
         passwordHash,
         name: 'Administrador',
         active: true,
-        mustChangePassword: false,
+        mustChangePassword: true,
         tokenVersion: 0,
       },
     });

@@ -23,8 +23,8 @@ CRM interno de alta produtividade para agências de marketing gerenciarem client
    ```
    Edite o `.env` e configure:
    - `JWT_SECRET`: Chave secreta de pelo menos 32 caracteres (diferente dos exemplos).
-   - `ADMIN_EMAIL`: E-mail do primeiro usuário administrador.
-   - `ADMIN_PASSWORD`: Senha do primeiro usuário administrador (mínimo 8 caracteres).
+   - `ADMIN_EMAIL`: E-mail obrigatório do primeiro usuário administrador.
+   - `ADMIN_PASSWORD`: Senha do primeiro usuário administrador (mínimo 12 caracteres, sem valor padrão).
 
 2. **Subir os serviços:**
    ```bash
@@ -209,7 +209,7 @@ npm test
 | `POSTGRES_PASSWORD` | Sim | `crm_password` | Senha do container Postgres. |
 | `POSTGRES_DB` | Sim | `crm_db` | Nome da base de dados. |
 | `JWT_SECRET` | Sim | — | Chave secreta de assinatura JWT (mínimo 32 caracteres). |
-| `ADMIN_EMAIL` | Sim (no Seed) | `admin@agencia.com` | E-mail do usuário admin criado na inicialização. |
-| `ADMIN_PASSWORD` | Sim (no Seed) | `admin123456` | Senha do usuário admin criado na inicialização. |
+| `ADMIN_EMAIL` | Sim | — | E-mail do usuário admin criado na inicialização. |
+| `ADMIN_PASSWORD` | Sim | — | Senha do usuário admin criado na inicialização (mínimo 12 caracteres). |
 | `UPLOAD_DIR` | Não | `./uploads` | Diretório de armazenamento de anexos (`/app/uploads` no container). |
 | `OFFSITE_DESTINATION` | Não | — | Destino remoto para sincronização de backups via rclone/scp. |

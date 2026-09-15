@@ -11,6 +11,8 @@ export default defineConfig({
       PORT: '3000',
       DATABASE_URL: 'postgresql://test_user:test_pass@localhost:5432/test_db',
       JWT_SECRET: 'super-secret-jwt-key-for-tests-123456789',
+      ADMIN_EMAIL: 'admin@agencia.com',
+      ADMIN_PASSWORD: 'secure_password_123456',
     },
     coverage: {
       provider: 'v8',
