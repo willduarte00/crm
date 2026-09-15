@@ -1,13 +1,4 @@
 services:
-  db:
-    ports: !reset []
-
-  app:
-    ports: !reset []
-    environment:
-      NODE_ENV: production
-      APP_ENV: production
-
   proxy:
     image: caddy:2-alpine
     container_name: crm_proxy

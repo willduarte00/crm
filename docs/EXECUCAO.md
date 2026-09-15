@@ -82,7 +82,7 @@ docker compose up -d --build
 Só o banco no Docker, aplicação na máquina. É o modo do dia a dia.
 
 ```bash
-docker compose up -d db
+docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d db
 ```
 
 Em terminais separados:
@@ -96,8 +96,9 @@ npm --prefix client run dev
 ```
 
 Neste modo o `DATABASE_URL` aponta para `localhost:5432` em vez de `db:5432`. É por isso
-que a porta 5432 fica exposta em desenvolvimento — e **fechada em produção**, onde o app
+que a porta 5432 fica exposta no compose de desenvolvimento — e **fechada em produção**, onde o app
 alcança o banco pela rede interna do Compose.
+
 
 ---
 
@@ -159,8 +160,8 @@ docker compose down
 docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
 ```
 
-O arquivo de produção sobrepõe o de desenvolvimento: adiciona o Caddy como reverse proxy,
-remove a exposição da porta 5432 e ajusta as variáveis de ambiente.
+O arquivo de produção sobrepõe o base: adiciona o Caddy como reverse proxy.
+As portas e variáveis seguras já estão como padrão no base.
 
 ### 5.3. Atualizar uma versão já em produção
 

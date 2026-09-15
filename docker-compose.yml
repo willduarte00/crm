@@ -4,15 +4,13 @@ services:
     container_name: crm_postgres
     restart: unless-stopped
     environment:
-      POSTGRES_USER: ${POSTGRES_USER:-crm_user}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-crm_password}
-      POSTGRES_DB: ${POSTGRES_DB:-crm_db}
-    ports:
-      - "5432:5432"
+      POSTGRES_USER: ${POSTGRES_USER:?defina no .env}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?defina no .env}
+      POSTGRES_DB: ${POSTGRES_DB:?defina no .env}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-crm_user} -d ${POSTGRES_DB:-crm_db}"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -24,16 +22,14 @@ services:
       dockerfile: Dockerfile
     container_name: crm_app
     restart: unless-stopped
-    ports:
-      - "${PORT:-3000}:3000"
     environment:
       PORT: 3000
-      NODE_ENV: ${NODE_ENV:-development}
-      APP_ENV: ${APP_ENV:-local}
-      DATABASE_URL: ${DATABASE_URL:-postgresql://crm_user:crm_password@db:5432/crm_db?schema=public}
-      JWT_SECRET: ${JWT_SECRET}
-      ADMIN_EMAIL: ${ADMIN_EMAIL}
-      ADMIN_PASSWORD: ${ADMIN_PASSWORD}
+      NODE_ENV: ${NODE_ENV:-production}
+      APP_ENV: ${APP_ENV:-production}
+      DATABASE_URL: ${DATABASE_URL:?defina no .env}
+      JWT_SECRET: ${JWT_SECRET:?defina no .env}
+      ADMIN_EMAIL: ${ADMIN_EMAIL:?defina no .env}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:?defina no .env}
       UPLOAD_DIR: /app/uploads
     volumes:
       - uploads_data:/app/uploads

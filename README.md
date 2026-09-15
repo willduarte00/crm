@@ -28,8 +28,9 @@ CRM interno de alta produtividade para agências de marketing gerenciarem client
 
 2. **Subir os serviços:**
    ```bash
-   docker compose up --build
+   docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build
    ```
+   *Nota: `docker compose up` sem arquivos extras não publica porta alguma por segurança.*
 3. **Acessar a aplicação:**
    Abra seu navegador em [http://localhost:3000](http://localhost:3000).
 
@@ -208,13 +209,13 @@ npm run audit:prod
 | Variável | Obrigatória? | Padrão | Descrição |
 |---|---|---|---|
 | `PORT` | Não | `3000` | Porta interna em que o Express escuta. |
-| `NODE_ENV` | Não | `development` | Ambiente Node (`development`, `production`, `test`). |
-| `APP_ENV` | Não | `local` | Define o comportamento do cookie `Secure` (`local`, `staging`, `production`). |
+| `NODE_ENV` | Não | `production` | Ambiente Node (`development`, `production`, `test`). |
+| `APP_ENV` | Não | `production` | Define o comportamento do cookie `Secure` (`local`, `staging`, `production`). |
 | `DOMAIN` | Sim (em Prod) | `localhost` | Domínio FQDN para emissão de certificado SSL Let's Encrypt pelo Caddy. |
 | `DATABASE_URL` | Sim | — | String de conexão com o PostgreSQL. |
-| `POSTGRES_USER` | Sim | `crm_user` | Usuário do container Postgres. |
-| `POSTGRES_PASSWORD` | Sim | `crm_password` | Senha do container Postgres. |
-| `POSTGRES_DB` | Sim | `crm_db` | Nome da base de dados. |
+| `POSTGRES_USER` | Sim | — | Usuário do container Postgres. |
+| `POSTGRES_PASSWORD` | Sim | — | Senha do container Postgres. |
+| `POSTGRES_DB` | Sim | — | Nome da base de dados. |
 | `JWT_SECRET` | Sim | — | Chave secreta de assinatura JWT (mínimo 32 caracteres). |
 | `ADMIN_EMAIL` | Sim | — | E-mail do usuário admin criado na inicialização. |
 | `ADMIN_PASSWORD` | Sim | — | Senha do usuário admin criado na inicialização (mínimo 12 caracteres). |
