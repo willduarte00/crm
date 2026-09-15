@@ -120,7 +120,7 @@ export const AgencyTab: React.FC<AgencyTabProps> = ({ formData, setFormData }) =
             )}
           </Field>
 
-          <Field label="Logotipo" hint="Formatos: JPG, PNG, WEBP, SVG">
+          <Field label="Logotipo" hint="PNG, JPG ou WebP até 2 MB">
             {(props) => (
               <div className="space-y-3">
                 {formData.logoUrl && (
@@ -131,7 +131,7 @@ export const AgencyTab: React.FC<AgencyTabProps> = ({ formData, setFormData }) =
                 <input
                   {...props}
                   type="file"
-                  accept="image/*"
+                  accept="image/png,image/jpeg,image/webp"
                   onChange={async (e) => {
                     const file = e.target.files?.[0];
                     if (!file) return;

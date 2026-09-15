@@ -9,7 +9,7 @@ export class ForbiddenError extends Error {
 
 /** Guarda de rota: exige uma permissão. */
 export function requirePermission(permission: Permission): RequestHandler {
-  return (req: Request, res: Response, next: NextFunction) => {
+  return function requirePermission(req: Request, res: Response, next: NextFunction) {
     if (!req.user || !req.user.permissions.has(permission)) {
       console.warn(`Acesso negado: userId=${req.user?.id || 'unauthenticated'}, method=${req.method}, path=${req.path}, requiredPermission=${permission}`);
       return res.status(403).json({
@@ -23,7 +23,7 @@ export function requirePermission(permission: Permission): RequestHandler {
 
 /** Guarda de rota: concede quando o usuário tem ao menos uma das permissões. */
 export function requireAnyPermission(...permissions: Permission[]): RequestHandler {
-  return (req: Request, res: Response, next: NextFunction) => {
+  return function requireAnyPermission(req: Request, res: Response, next: NextFunction) {
     if (!req.user) {
       console.warn(`Acesso negado: userId=unauthenticated, method=${req.method}, path=${req.path}, requiredPermission=${permissions[0]}`);
       return res.status(403).json({

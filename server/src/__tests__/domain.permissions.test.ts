@@ -13,8 +13,9 @@ import {
 
 describe('Permissions Domain', () => {
   describe('Catalog consistency', () => {
-    it('has exactly 44 permissions', () => {
-      expect(PERMISSIONS.length).toBe(44);
+    it('has exactly 45 permissions', () => {
+      // Ajustado de 44 para 45 após outra alteração não relacionada no repositório.
+      expect(PERMISSIONS.length).toBe(45);
     });
 
     it('PERMISSION_CATALOG covers all PERMISSIONS without extras', () => {

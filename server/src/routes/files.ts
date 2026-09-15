@@ -5,6 +5,8 @@ import { prisma } from '../prisma.js';
 import { env } from '../env.js';
 import {
   uploadMiddleware,
+  uploadLogoMiddleware,
+  sniffFileKind,
   ALLOWED_EXTENSIONS,
   ALLOWED_MIME_TYPES,
 } from '../middlewares/upload.js';
@@ -26,6 +28,24 @@ const handleUpload = (req: Request, res: Response, next: NextFunction) => {
     }
     return next();
   });
+};
+
+const handleUploadLogo = (req: Request, res: Response, next: NextFunction) => {
+  uploadLogoMiddleware.single('file')(req, res, (err: any) => {
+    if (err) {
+      if (err.code === 'LIMIT_FILE_SIZE') {
+        return res.status(400).json({ error: 'Arquivo excede o tamanho máximo permitido de 2 MB.' });
+      }
+      return res.status(400).json({ error: err.message || 'Erro no upload do arquivo.' });
+    }
+    return next();
+  });
+};
+
+const setFileResponseHeaders = (res: Response, { inline, isPublic }: { inline?: boolean, isPublic?: boolean } = {}) => {
+  res.setHeader('Content-Security-Policy', "default-src 'none'; sandbox");
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('Cache-Control', isPublic ? 'public, max-age=3600' : 'private, no-store');
 };
 
 // POST /api/files - Upload de arquivo vinculado a contrato ou cobrança
@@ -140,7 +160,7 @@ filesRouter.post('/', handleUpload, async (req: Request, res: Response) => {
 });
 
 // POST /api/files/logo - Upload de logotipo da agência
-filesRouter.post('/logo', handleUpload, async (req: Request, res: Response) => {
+filesRouter.post('/logo', requirePermission('settings.update'), handleUploadLogo, async (req: Request, res: Response) => {
   if (!req.file) {
     return res.status(400).json({ error: 'Nenhum arquivo enviado.' });
   }
@@ -148,6 +168,19 @@ filesRouter.post('/logo', handleUpload, async (req: Request, res: Response) => {
   try {
     const ext = path.extname(req.file.originalname).toLowerCase();
     const mime = req.file.mimetype.toLowerCase();
+    const sniffKind = await sniffFileKind(req.file.path);
+    
+    const extToKind: Record<string, string[]> = {
+      '.png': ['png'],
+      '.jpg': ['jpeg'],
+      '.jpeg': ['jpeg'],
+      '.webp': ['webp']
+    };
+
+    if (!extToKind[ext] || !extToKind[ext].includes(sniffKind as string)) {
+      await fs.promises.unlink(req.file.path).catch(() => {});
+      return res.status(400).json({ error: 'Conteúdo do arquivo não corresponde ao formato declarado.' });
+    }
 
     const isValidLogo =
       ALLOWED_EXTENSIONS.logo.includes(ext) &&
@@ -183,6 +216,7 @@ filesRouter.get('/public/:filename', (req: Request, res: Response) => {
     return res.status(403).json({ error: 'Acesso não autorizado.' });
   }
 
+  setFileResponseHeaders(res, { isPublic: true });
   res.sendFile(filePath);
 });
 
@@ -250,6 +284,7 @@ filesRouter.get('/:id', async (req: Request, res: Response) => {
   const inline = req.query.inline === 'true';
   const dispositionType = inline ? 'inline' : 'attachment';
 
+  setFileResponseHeaders(res, { inline, isPublic: false });
   res.setHeader('Content-Type', fileRecord.mimeType || 'application/octet-stream');
   res.setHeader('Content-Length', fileRecord.fileSize.toString());
   res.setHeader(

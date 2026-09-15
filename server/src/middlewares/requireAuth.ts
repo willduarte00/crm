@@ -15,6 +15,7 @@ const PUBLIC_ROUTES = [
   '/auth/login',
   '/api/health',
   '/health',
+  '/api/files/public'
 ];
 
 const MUST_CHANGE_PASSWORD_ALLOWED_ROUTES = [
@@ -63,7 +64,8 @@ export async function requireAuth(req: Request, res: Response, next: NextFunctio
     PUBLIC_ROUTES.includes(path) ||
     PUBLIC_ROUTES.includes(originalUrl) ||
     originalUrl === '/api/auth/login' ||
-    originalUrl === '/api/health'
+    originalUrl === '/api/health' ||
+    originalUrl.startsWith('/api/files/public/')
   ) {
     return next();
   }

@@ -214,4 +214,76 @@ describe('Arquivos e Uploads — Testes de Integração (RF-12, Seção 6.2 e 6.
     });
     expect(fs.existsSync(physicalFilePath)).toBe(false);
   });
+
+  it('7. POST /api/files/logo sem settings.update retorna 403', async () => {
+    const token = createToken(activeUser); // activeUser doesn't have settings.update
+    vi.mocked(prisma.user.findUnique).mockResolvedValue(activeUser as any);
+
+    const res = await request(app)
+      .post('/api/files/logo')
+      .set('Cookie', [`token=${token}`])
+      .send({}); // Send object instead of attach to avoid ECONNRESET when connection is closed early
+
+    expect(res.status).toBe(403);
+  });
+
+  it('8. POST /api/files/logo de .svg retorna 400', async () => {
+    const adminUser = {
+      ...activeUser,
+      groups: [{ group: { ...activeUser.groups[0].group, permissions: [...activeUser.groups[0].group.permissions, 'settings.update'] } }]
+    };
+    const token = createToken(adminUser);
+    vi.mocked(prisma.user.findUnique).mockResolvedValue(adminUser as any);
+    
+    const svgPath = path.resolve(process.cwd(), 'test.svg');
+    fs.writeFileSync(svgPath, '<svg></svg>');
+
+    const res = await request(app)
+      .post('/api/files/logo')
+      .set('Cookie', [`token=${token}`])
+      .attach('file', svgPath);
+
+    expect(res.status).toBe(400);
+    expect(res.body.error).toContain('não permitido'); // Multer intercepts it first
+    
+    if (fs.existsSync(svgPath)) fs.unlinkSync(svgPath);
+  });
+
+  it('9. POST /api/files/logo com .png falsificado retorna 400', async () => {
+    const adminUser = {
+      ...activeUser,
+      groups: [{ group: { ...activeUser.groups[0].group, permissions: [...activeUser.groups[0].group.permissions, 'settings.update'] } }]
+    };
+    const token = createToken(adminUser);
+    vi.mocked(prisma.user.findUnique).mockResolvedValue(adminUser as any);
+    
+    const fakePngPath = path.resolve(process.cwd(), 'fake.png');
+    fs.writeFileSync(fakePngPath, 'MZ not a png');
+
+    const res = await request(app)
+      .post('/api/files/logo')
+      .set('Cookie', [`token=${token}`])
+      .attach('file', fakePngPath);
+
+    expect(res.status).toBe(400);
+    expect(res.body.error).toContain('não corresponde ao formato declarado');
+    
+    if (fs.existsSync(fakePngPath)) fs.unlinkSync(fakePngPath);
+  });
+
+  it('10. GET /api/files/public/:filename responde com CSP e nosniff', async () => {
+    const uploadDir = path.resolve(process.cwd(), env.UPLOAD_DIR || './uploads');
+    if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
+    const fakeLogoPath = path.resolve(uploadDir, 'logo.png');
+    fs.writeFileSync(fakeLogoPath, 'fake image data');
+
+    const res = await request(app).get('/api/files/public/logo.png');
+
+    expect(res.status).toBe(200);
+    expect(res.header['content-security-policy']).toBe("default-src 'none'; sandbox");
+    expect(res.header['x-content-type-options']).toBe('nosniff');
+    expect(res.header['cache-control']).toContain('public, max-age=3600');
+    
+    if (fs.existsSync(fakeLogoPath)) fs.unlinkSync(fakeLogoPath);
+  });
 });
