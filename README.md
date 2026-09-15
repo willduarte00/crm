@@ -194,6 +194,12 @@ cd server
 npm test
 ```
 
+Para verificar as dependências de produção em busca de vulnerabilidades:
+
+```bash
+npm run audit:prod
+```
+
 ---
 
 ## 📋 7. Tabela de Variáveis de Ambiente

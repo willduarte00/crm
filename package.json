@@ -11,6 +11,7 @@
     "test:server": "npm --prefix server test",
     "prisma:generate": "npm --prefix server run prisma:generate",
     "prisma:migrate": "npm --prefix server run prisma:migrate",
-    "prisma:seed": "npm --prefix server run prisma:seed"
+    "prisma:seed": "npm --prefix server run prisma:seed",
+    "audit:prod": "npm --prefix server audit --omit=dev --audit-level=high && npm --prefix client audit --omit=dev --audit-level=high"
   }
 }
