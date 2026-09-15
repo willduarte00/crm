@@ -13,8 +13,8 @@ const updateSettingsSchema = z.object({
   bankName: z.string().optional(),
   bankBranch: z.string().optional(),
   bankAccount: z.string().optional(),
-  logoUrl: z.string().optional(),
-  primaryColor: z.string().optional(),
+  logoUrl: z.string().regex(/^\/api\/files\/public\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\.(png|jpe?g|webp)$/i, 'logoUrl deve apontar para um arquivo enviado pelo upload de logo').or(z.literal('')).nullable().optional(),
+  primaryColor: z.string().regex(/^#[0-9a-f]{6}$/i).or(z.literal('')).nullable().optional(),
 });
 
 import { requirePermission } from '../middlewares/requirePermission.js';
