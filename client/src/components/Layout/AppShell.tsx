@@ -88,6 +88,38 @@ export const AppShell: React.FC = () => {
     return (words[0][0] + words[1][0]).toUpperCase();
   }
 
+  // Apply custom shades dynamically
+  useEffect(() => {
+    if (!customShades) return;
+    
+    const root = document.documentElement;
+    root.style.setProperty('--tw-color-teal-50', customShades[50]);
+    root.style.setProperty('--tw-color-teal-100', customShades[100]);
+    root.style.setProperty('--tw-color-teal-200', customShades[200]);
+    root.style.setProperty('--tw-color-teal-300', customShades[300]);
+    root.style.setProperty('--tw-color-teal-400', customShades[400]);
+    root.style.setProperty('--tw-color-teal-500', customShades[500]);
+    root.style.setProperty('--tw-color-teal-600', customShades[600]);
+    root.style.setProperty('--tw-color-teal-700', customShades[700]);
+    root.style.setProperty('--tw-color-teal-800', customShades[800]);
+    root.style.setProperty('--tw-color-teal-900', customShades[900]);
+    root.style.setProperty('--tw-color-teal-950', customShades[950]);
+    
+    return () => {
+      root.style.removeProperty('--tw-color-teal-50');
+      root.style.removeProperty('--tw-color-teal-100');
+      root.style.removeProperty('--tw-color-teal-200');
+      root.style.removeProperty('--tw-color-teal-300');
+      root.style.removeProperty('--tw-color-teal-400');
+      root.style.removeProperty('--tw-color-teal-500');
+      root.style.removeProperty('--tw-color-teal-600');
+      root.style.removeProperty('--tw-color-teal-700');
+      root.style.removeProperty('--tw-color-teal-800');
+      root.style.removeProperty('--tw-color-teal-900');
+      root.style.removeProperty('--tw-color-teal-950');
+    };
+  }, [customShades]);
+
   // Sincroniza o título da aba com o nome da agência quando ele chega.
   useEffect(() => {
     document.title = agencyName ? `${agencyName} — CRM` : 'CRM';
@@ -142,23 +174,7 @@ export const AppShell: React.FC = () => {
 
   return (
     <div className="min-h-dvh bg-slate-50 lg:flex">
-      {customShades && (
-        <style>{`
-          :root {
-            --tw-color-teal-50: ${customShades[50]};
-            --tw-color-teal-100: ${customShades[100]};
-            --tw-color-teal-200: ${customShades[200]};
-            --tw-color-teal-300: ${customShades[300]};
-            --tw-color-teal-400: ${customShades[400]};
-            --tw-color-teal-500: ${customShades[500]};
-            --tw-color-teal-600: ${customShades[600]};
-            --tw-color-teal-700: ${customShades[700]};
-            --tw-color-teal-800: ${customShades[800]};
-            --tw-color-teal-900: ${customShades[900]};
-            --tw-color-teal-950: ${customShades[950]};
-          }
-        `}</style>
-      )}
+
 
       {/* Fundo escurecido da gaveta no mobile */}
       {isSidebarOpen && (

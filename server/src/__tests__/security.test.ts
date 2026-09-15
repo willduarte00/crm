@@ -251,4 +251,12 @@ describe('Segurança — Testes de Integração', () => {
       .send({ email: 'another@agencia.com', password: 'wrongpassword' });
     expect(resB.status).toBe(401);
   });
+  it('9. GET /api/health deve retornar cabeçalhos de segurança (CSP, nosniff, sem x-powered-by)', async () => {
+    const res = await request(app).get('/api/health');
+    expect(res.status).toBe(200);
+    expect(res.headers['content-security-policy']).toContain("frame-ancestors 'none'");
+    expect(res.headers['x-content-type-options']).toBe('nosniff');
+    expect(res.headers['referrer-policy']).toBe('same-origin');
+    expect(res.headers['x-powered-by']).toBeUndefined();
+  });
 });

@@ -128,6 +128,7 @@ O Caddy obterá automaticamente o certificado SSL/TLS gratuito da Let's Encrypt 
 - **Revogação Instantânea de Sessão (`tokenVersion`):** Alterações de papel, desativação de usuário ou troca de senha incrementam o `tokenVersion`, invalidando imediatamente todas as sessões ativas do usuário.
 - **Proteção do Último Administrador (RF-09 e RF-09a):** O backend impede com HTTP 422 qualquer tentativa de desativar ou rebaixar o único admin ativo ou de alterar o próprio papel.
 - **Proteção contra Brute Force:** Rate limit de 5 tentativas por IP a cada 15 minutos na rota `/api/auth/login`.
+- **Cabeçalhos de Segurança (CSP/HSTS):** A aplicação usa Helmet para enviar uma Content-Security-Policy (CSP) rigorosa, X-Content-Type-Options e Referrer-Policy. O proxy reverso Caddy injeta automaticamente HTTP Strict Transport Security (HSTS) exigindo HTTPS, e o cabeçalho X-Powered-By é removido para evitar fingerprinting.
 
 ---
 

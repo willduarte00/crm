@@ -4,6 +4,8 @@ import cookieParser from 'cookie-parser';
 import cors from 'cors';
 import path from 'path';
 import fs from 'fs';
+import helmet from 'helmet';
+import { env } from './env.js';
 import { requireAuth } from './middlewares/requireAuth.js';
 import { errorHandler } from './middlewares/errorHandler.js';
 import { apiLimiter } from './middlewares/rateLimits.js';
@@ -26,6 +28,25 @@ export const app = express();
 // O Caddy é o único salto em produção, então confiamos apenas em 1 proxy.
 // express-rate-limit rejeita true.
 app.set('trust proxy', 1);
+
+app.disable('x-powered-by');
+app.use(helmet({
+  contentSecurityPolicy: { directives: {
+    defaultSrc: ["'self'"],
+    scriptSrc: ["'self'"],
+    styleSrc: env.NODE_ENV === 'development' ? ["'self'", 'https://fonts.googleapis.com', "'unsafe-inline'"] : ["'self'", 'https://fonts.googleapis.com'],
+    fontSrc: ["'self'", 'https://fonts.gstatic.com'],
+    imgSrc: ["'self'", 'data:', 'blob:'],
+    connectSrc: ["'self'"],
+    frameAncestors: ["'none'"],
+    objectSrc: ["'none'"],
+    baseUri: ["'self'"],
+    formAction: ["'self'"],
+  } },
+  referrerPolicy: { policy: 'same-origin' },
+  crossOriginEmbedderPolicy: false,
+  strictTransportSecurity: false,
+}));
 
 // Middlewares essenciais
 app.use(express.json());
