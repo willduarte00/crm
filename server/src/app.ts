@@ -23,6 +23,10 @@ import { permissionsRouter } from './routes/permissions.js';
 
 export const app = express();
 
+// O Caddy é o único salto em produção, então confiamos apenas em 1 proxy.
+// express-rate-limit rejeita true.
+app.set('trust proxy', 1);
+
 // Middlewares essenciais
 app.use(express.json());
 app.use(cookieParser());

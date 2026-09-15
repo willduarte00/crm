@@ -15,6 +15,28 @@ const loginLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   message: { error: 'Muitas tentativas de login. Tente novamente em 15 minutos.' },
+  validate: { xForwardedForHeader: false },
+});
+
+const accountLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  keyGenerator: (req) => String(req.body?.email ?? '').toLowerCase().trim() || req.ip || 'unknown',
+  standardHeaders: true,
+  legacyHeaders: false,
+  skipSuccessfulRequests: true,
+  message: { error: 'Muitas tentativas para esta conta. Tente novamente em 15 minutos.' },
+  validate: { xForwardedForHeader: false },
+});
+
+const changePasswordLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  keyGenerator: (req) => req.user?.id || req.ip || 'unknown',
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Muitas tentativas. Tente novamente em 15 minutos.' },
+  validate: { xForwardedForHeader: false },
 });
 
 const loginSchema = z.object({
@@ -28,7 +50,7 @@ const changePasswordSchema = z.object({
 });
 
 // POST /api/auth/login
-authRouter.post('/login', loginLimiter, async (req: Request, res: Response) => {
+authRouter.post('/login', loginLimiter, accountLimiter, async (req: Request, res: Response) => {
   const { email, password } = loginSchema.parse(req.body);
 
   const user = await prisma.user.findUnique({
@@ -89,7 +111,7 @@ authRouter.get('/me', (req: Request, res: Response) => {
 });
 
 // POST /api/auth/change-password (RF-09c e RF-09d)
-authRouter.post('/change-password', async (req: Request, res: Response) => {
+authRouter.post('/change-password', changePasswordLimiter, async (req: Request, res: Response) => {
   if (!req.user) {
     return res.status(401).json({ error: 'Não autenticado' });
   }

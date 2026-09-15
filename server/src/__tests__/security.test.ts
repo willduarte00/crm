@@ -186,4 +186,69 @@ describe('Segurança — Testes de Integração', () => {
       expect.objectContaining({ secure: false })
     );
   });
+
+  it('7. 11 tentativas de login para o mesmo e-mail de IPs diferentes devem retornar 429 na 11ª (accountLimiter)', async () => {
+    vi.mocked(prisma.user.findUnique).mockResolvedValue({
+      id: 'user-2',
+      email: 'target@agencia.com',
+      name: 'Target User',
+      role: 'membro',
+      active: true,
+      mustChangePassword: false,
+      tokenVersion: 0,
+      passwordHash: '$2a$12$invalidhashinvalidhashinvalidhashinvalidhashinvalidhas',
+      createdAt: new Date(),
+    } as any);
+
+    for (let i = 0; i < 10; i++) {
+      const res = await request(app)
+        .post('/api/auth/login')
+        .set('X-Forwarded-For', `192.168.1.${i}`)
+        .send({ email: 'target@agencia.com', password: 'wrongpassword' });
+      expect(res.status).toBe(401);
+    }
+
+    const blockedRes = await request(app)
+      .post('/api/auth/login')
+      .set('X-Forwarded-For', `192.168.1.10`)
+      .send({ email: 'target@agencia.com', password: 'wrongpassword' });
+    expect(blockedRes.status).toBe(429);
+  });
+
+  it('8. 5 tentativas de um IP não bloqueiam outro IP (loginLimiter por IP)', async () => {
+    vi.mocked(prisma.user.findUnique).mockResolvedValue({
+      id: 'user-3',
+      email: 'user3@agencia.com',
+      name: 'User 3',
+      role: 'membro',
+      active: true,
+      mustChangePassword: false,
+      tokenVersion: 0,
+      passwordHash: '$2a$12$invalidhashinvalidhashinvalidhashinvalidhashinvalidhas',
+      createdAt: new Date(),
+    } as any);
+
+    // 5 attempts from IP A
+    for (let i = 0; i < 5; i++) {
+      const res = await request(app)
+        .post('/api/auth/login')
+        .set('X-Forwarded-For', '10.0.0.1')
+        .send({ email: 'user3@agencia.com', password: 'wrongpassword' });
+      expect(res.status).toBe(401);
+    }
+
+    // IP A is blocked
+    const blockedRes = await request(app)
+      .post('/api/auth/login')
+      .set('X-Forwarded-For', '10.0.0.1')
+      .send({ email: 'user3@agencia.com', password: 'wrongpassword' });
+    expect(blockedRes.status).toBe(429);
+
+    // IP B is not blocked
+    const resB = await request(app)
+      .post('/api/auth/login')
+      .set('X-Forwarded-For', '10.0.0.2')
+      .send({ email: 'another@agencia.com', password: 'wrongpassword' });
+    expect(resB.status).toBe(401);
+  });
 });
