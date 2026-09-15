@@ -37,6 +37,7 @@ const adminUser = {
   email: 'admin@agencia.com',
   name: 'Admin Teste',
   role: 'admin',
+  groups: [{ group: { id: 'g-admin', name: 'Admin', permissions: ['operational_tasks.view', 'operational_tasks.create', 'operational_tasks.update', 'operational_tasks.delete'] } }],
   active: true,
   mustChangePassword: false,
   tokenVersion: 0,
@@ -99,9 +100,20 @@ describe('Pipeline Operacional — Demandas', () => {
   });
 
   describe('GET /api/operational-tasks', () => {
-    it('membro e admin recebem 200', async () => {
+    it('membro sem permissao recebe 403', async () => {
       const token = createToken(memberUser);
       vi.mocked(prisma.user.findUnique).mockResolvedValue(memberUser);
+
+      const res = await request(app)
+        .get('/api/operational-tasks')
+        .set('Cookie', [`token=${token}`]);
+
+      expect(res.status).toBe(403);
+    });
+
+    it('admin recebe 200', async () => {
+      const token = createToken(adminUser);
+      vi.mocked(prisma.user.findUnique).mockResolvedValue(adminUser);
       vi.mocked(prisma.operationalTask.findMany).mockResolvedValue([sampleTask]);
 
       const res = await request(app)
@@ -120,6 +132,22 @@ describe('Pipeline Operacional — Demandas', () => {
   });
 
   describe('POST /api/operational-tasks', () => {
+    it('membro sem permissao recebe 403', async () => {
+      const token = createToken(memberUser);
+      vi.mocked(prisma.user.findUnique).mockResolvedValue(memberUser);
+
+      const res = await request(app)
+        .post('/api/operational-tasks')
+        .set('Cookie', [`token=${token}`])
+        .send({
+          clientId: sampleClient.id,
+          stageId: sampleStage.id,
+          title: 'Tarefa de teste',
+        });
+
+      expect(res.status).toBe(403);
+    });
+
     it('cria tarefa com sucesso', async () => {
       const token = createToken(adminUser);
       vi.mocked(prisma.user.findUnique).mockResolvedValue(adminUser);
@@ -180,6 +208,18 @@ describe('Pipeline Operacional — Demandas', () => {
   });
 
   describe('PATCH /api/operational-tasks/:id/stage', () => {
+    it('membro sem permissao recebe 403', async () => {
+      const token = createToken(memberUser);
+      vi.mocked(prisma.user.findUnique).mockResolvedValue(memberUser);
+
+      const res = await request(app)
+        .patch(`/api/operational-tasks/${sampleTask.id}/stage`)
+        .set('Cookie', [`token=${token}`])
+        .send({ stageId: sampleStage.id });
+
+      expect(res.status).toBe(403);
+    });
+
     it('move card com sucesso', async () => {
       const newStage = { ...sampleStage, id: 'dddddddd-dddd-dddd-dddd-dddddddddddd', name: 'Briefing', color: 'amber' };
       const token = createToken(adminUser);
@@ -218,6 +258,17 @@ describe('Pipeline Operacional — Demandas', () => {
   });
 
   describe('DELETE /api/operational-tasks/:id', () => {
+    it('membro sem permissao recebe 403', async () => {
+      const token = createToken(memberUser);
+      vi.mocked(prisma.user.findUnique).mockResolvedValue(memberUser);
+
+      const res = await request(app)
+        .delete(`/api/operational-tasks/${sampleTask.id}`)
+        .set('Cookie', [`token=${token}`]);
+
+      expect(res.status).toBe(403);
+    });
+
     it('soft delete — task some da listagem', async () => {
       const token = createToken(adminUser);
       vi.mocked(prisma.user.findUnique).mockResolvedValue(adminUser);

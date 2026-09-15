@@ -24,6 +24,12 @@ export const PERMISSIONS = [
   'logs.view',
   'logs.create',
 
+  // Pipeline operacional
+  'operational_tasks.view',
+  'operational_tasks.create',
+  'operational_tasks.update',
+  'operational_tasks.delete',
+
   // Contratos
   'contracts.view',
   'contracts.create',
@@ -67,6 +73,7 @@ export type PermissionCategory =
   | 'Telas'
   | 'Clientes'
   | 'Interações'
+  | 'Pipeline operacional'
   | 'Contratos'
   | 'Cobranças'
   | 'Dashboard'
@@ -84,7 +91,7 @@ export const SCREEN_DEPENDENCIES: Record<string, Permission[]> = {
   'screen.dashboard': ['dashboard.financial.view', 'dashboard.operational.view'],
   'screen.clientes': ['clients.view'],
   'screen.pipeline': ['clients.view'],
-  'screen.pipeline_operacional': ['clients.view'],
+  'screen.pipeline_operacional': ['operational_tasks.view'],
   'screen.contratos': ['contracts.view'],
   'screen.financeiro': ['payments.view'],
   'screen.usuarios': ['users.view'],
@@ -141,6 +148,12 @@ export const PERMISSION_CATALOG: PermissionMeta[] = [
   // Interações
   { key: 'logs.view', label: 'Ver histórico de interações', category: 'Interações' },
   { key: 'logs.create', label: 'Registrar interação', category: 'Interações' },
+
+  // Pipeline operacional
+  { key: 'operational_tasks.view', label: 'Ver pipeline operacional', category: 'Pipeline operacional' },
+  { key: 'operational_tasks.create', label: 'Criar demanda', category: 'Pipeline operacional' },
+  { key: 'operational_tasks.update', label: 'Editar e mover demanda', category: 'Pipeline operacional' },
+  { key: 'operational_tasks.delete', label: 'Excluir demanda', category: 'Pipeline operacional' },
 
   // Contratos
   { key: 'contracts.view', label: 'Listar e ver contrato', category: 'Contratos' },

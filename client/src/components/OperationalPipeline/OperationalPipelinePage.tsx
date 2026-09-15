@@ -94,6 +94,8 @@ export default function OperationalPipelinePage() {
   };
 
   const handleDragEnd = async (result: DropResult) => {
+    if (!has('operational_tasks.update')) return;
+
     const { destination, source, draggableId } = result;
 
     if (!destination) return;
@@ -140,6 +142,7 @@ export default function OperationalPipelinePage() {
   };
 
   const handleOpenModal = (task?: OperationalTask) => {
+    if (task && !has('operational_tasks.update')) return;
     setTaskToEdit(task || null);
     setIsModalOpen(true);
   };
@@ -202,13 +205,15 @@ export default function OperationalPipelinePage() {
               />
             </IconButton>
 
-            <Button
-              size="sm"
-              onClick={() => handleOpenModal()}
-              icon={<Plus className="w-4 h-4" aria-hidden="true" />}
-            >
-              Nova demanda
-            </Button>
+            {has('operational_tasks.create') && (
+              <Button
+                size="sm"
+                onClick={() => handleOpenModal()}
+                icon={<Plus className="w-4 h-4" aria-hidden="true" />}
+              >
+                Nova demanda
+              </Button>
+            )}
           </div>
         </div>
 

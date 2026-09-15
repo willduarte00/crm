@@ -2,6 +2,7 @@ import { Router, Request, Response } from 'express';
 import { z } from 'zod';
 import { prisma } from '../prisma.js';
 import { PRIORITIES } from '../domain/clients.js';
+import { requirePermission } from '../middlewares/requirePermission.js';
 
 export const operationalTasksRouter = Router();
 
@@ -40,7 +41,7 @@ const changeStageSchema = z.object({
 });
 
 // GET /api/operational-tasks
-operationalTasksRouter.get('/', async (req: Request, res: Response) => {
+operationalTasksRouter.get('/', requirePermission('operational_tasks.view'), async (req: Request, res: Response) => {
   const { search, stageId, ownerId, priority, clientId } = req.query;
 
   const where: any = { deletedAt: null };
@@ -89,7 +90,7 @@ operationalTasksRouter.get('/', async (req: Request, res: Response) => {
 });
 
 // POST /api/operational-tasks
-operationalTasksRouter.post('/', async (req: Request, res: Response) => {
+operationalTasksRouter.post('/', requirePermission('operational_tasks.create'), async (req: Request, res: Response) => {
   const data = createTaskSchema.parse(req.body);
 
   // Validar etapa
@@ -140,7 +141,7 @@ operationalTasksRouter.post('/', async (req: Request, res: Response) => {
 });
 
 // PATCH /api/operational-tasks/:id
-operationalTasksRouter.patch('/:id', async (req: Request, res: Response) => {
+operationalTasksRouter.patch('/:id', requirePermission('operational_tasks.update'), async (req: Request, res: Response) => {
   const { id } = req.params;
   const data = updateTaskSchema.parse(req.body);
 
@@ -208,7 +209,7 @@ operationalTasksRouter.patch('/:id', async (req: Request, res: Response) => {
 });
 
 // PATCH /api/operational-tasks/:id/stage — mover card (espelha clients.ts)
-operationalTasksRouter.patch('/:id/stage', async (req: Request, res: Response) => {
+operationalTasksRouter.patch('/:id/stage', requirePermission('operational_tasks.update'), async (req: Request, res: Response) => {
   const { id } = req.params;
   const { stageId } = changeStageSchema.parse(req.body);
 
@@ -237,7 +238,7 @@ operationalTasksRouter.patch('/:id/stage', async (req: Request, res: Response) =
 });
 
 // DELETE /api/operational-tasks/:id — soft delete
-operationalTasksRouter.delete('/:id', async (req: Request, res: Response) => {
+operationalTasksRouter.delete('/:id', requirePermission('operational_tasks.delete'), async (req: Request, res: Response) => {
   const { id } = req.params;
 
   const existing = await prisma.operationalTask.findFirst({

@@ -1,7 +1,7 @@
 import { Router, Request, Response } from 'express';
 import { z } from 'zod';
 import { prisma } from '../prisma.js';
-import { requirePermission } from '../middlewares/requirePermission.js';
+import { requirePermission, requireAnyPermission } from '../middlewares/requirePermission.js';
 
 export const operationalStagesRouter = Router();
 
@@ -24,8 +24,8 @@ const reorderSchema = z.object({
   ids: z.array(z.string().uuid()).min(1, 'Pelo menos uma etapa deve ser informada'),
 });
 
-// GET /api/operational-stages — qualquer usuário autenticado
-operationalStagesRouter.get('/', async (_req: Request, res: Response) => {
+// GET /api/operational-stages — exige operational_tasks.view ou settings.view
+operationalStagesRouter.get('/', requireAnyPermission('operational_tasks.view', 'settings.view'), async (_req: Request, res: Response) => {
   const stages = await prisma.operationalStage.findMany({
     orderBy: { position: 'asc' },
     include: {

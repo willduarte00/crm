@@ -38,7 +38,7 @@ const adminUser = {
   email: 'admin@agencia.com',
   name: 'Admin Teste',
   role: 'admin',
-  groups: [{ group: { id: 'g-admin', name: 'Admin', permissions: ['settings.update'] } }],
+  groups: [{ group: { id: 'g-admin', name: 'Admin', permissions: ['settings.update', 'settings.view', 'operational_tasks.view'] } }],
   active: true,
   mustChangePassword: false,
   tokenVersion: 0,
@@ -76,19 +76,15 @@ describe('Pipeline Operacional — Etapas', () => {
   });
 
   describe('GET /api/operational-stages', () => {
-    it('membro recebe 200 com a lista de etapas', async () => {
+    it('membro sem permissao recebe 403', async () => {
       const token = createToken(memberUser);
       vi.mocked(prisma.user.findUnique).mockResolvedValue(memberUser);
-      vi.mocked(prisma.operationalStage.findMany).mockResolvedValue([sampleStage]);
 
       const res = await request(app)
         .get('/api/operational-stages')
         .set('Cookie', [`token=${token}`]);
 
-      expect(res.status).toBe(200);
-      expect(Array.isArray(res.body)).toBe(true);
-      expect(res.body).toHaveLength(1);
-      expect(res.body[0].name).toBe('Onboarding');
+      expect(res.status).toBe(403);
     });
 
     it('admin recebe 200 com a lista de etapas', async () => {

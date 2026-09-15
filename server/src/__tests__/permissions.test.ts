@@ -447,11 +447,6 @@ describe('Permissões — Testes de Integração', () => {
         'POST /api/files/logo',
         // logo público autenticado; restrito por regex e diretório
         'GET /api/files/public/:filename',
-        'GET /api/operational-tasks',
-        'POST /api/operational-tasks',
-        'PATCH /api/operational-tasks/:id',
-        'DELETE /api/operational-tasks/:id',
-        'PATCH /api/operational-tasks/:id/stage',
       ];
 
       function getRoutes(router: any, basePath = ''): any[] {
