@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import request from 'supertest';
 import jwt from 'jsonwebtoken';
+import fs from 'fs';
 import { app } from '../app.js';
 import { prisma } from '../prisma.js';
 import { env } from '../env.js';
@@ -110,5 +111,29 @@ describe('Settings Router', () => {
   
         expect(res.status).toBe(200);
       });
+
+    it('logoUrl novo chama unlink do logo antigo', async () => {
+      const token = createToken(activeUser);
+
+      vi.mocked(prisma.settings.findFirst).mockResolvedValue({ 
+        id: 'set-1',
+        logoUrl: '/api/files/public/old-logo.png'
+      } as any);
+      vi.mocked(prisma.settings.update).mockResolvedValue({ id: 'set-1', logoUrl: '/api/files/public/new-logo.png' } as any);
+
+      const unlinkSpy = vi.spyOn(fs.promises, 'unlink').mockResolvedValue(undefined);
+
+      const res = await request(app)
+        .put('/api/settings')
+        .set('Cookie', [`token=${token}`])
+        .send({
+          logoUrl: '/api/files/public/12345678-1234-1234-1234-123456789012.png',
+        });
+
+      expect(res.status).toBe(200);
+      expect(unlinkSpy).toHaveBeenCalled();
+      
+      unlinkSpy.mockRestore();
+    });
   });
 });

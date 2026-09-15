@@ -11,7 +11,7 @@ import {
   ALLOWED_MIME_TYPES,
 } from '../middlewares/upload.js';
 import { requirePermission, assertPermission } from '../middlewares/requirePermission.js';
-import { Permission } from '../domain/permissions.js';
+import { uploadLimiter } from '../middlewares/rateLimits.js';
 
 export const filesRouter = Router();
 
@@ -49,7 +49,7 @@ const setFileResponseHeaders = (res: Response, { inline, isPublic }: { inline?: 
 };
 
 // POST /api/files - Upload de arquivo vinculado a contrato ou cobrança
-filesRouter.post('/', handleUpload, async (req: Request, res: Response) => {
+filesRouter.post('/', uploadLimiter, handleUpload, async (req: Request, res: Response) => {
   if (!req.file) {
     return res.status(400).json({ error: 'Nenhum arquivo enviado.' });
   }
@@ -174,7 +174,7 @@ filesRouter.post('/', handleUpload, async (req: Request, res: Response) => {
 });
 
 // POST /api/files/logo - Upload de logotipo da agência
-filesRouter.post('/logo', requirePermission('settings.update'), handleUploadLogo, async (req: Request, res: Response) => {
+filesRouter.post('/logo', requirePermission('settings.update'), uploadLimiter, handleUploadLogo, async (req: Request, res: Response) => {
   if (!req.file) {
     return res.status(400).json({ error: 'Nenhum arquivo enviado.' });
   }
@@ -207,9 +207,33 @@ filesRouter.post('/logo', requirePermission('settings.update'), handleUploadLogo
       });
     }
 
+    const newLogoFilename = req.file.filename;
+
+    try {
+      const settings = await prisma.settings.findFirst();
+      const currentLogoUrl = settings?.logoUrl || null;
+      let currentLogoFilename = '';
+
+      if (currentLogoUrl && currentLogoUrl.startsWith('/api/files/public/')) {
+        currentLogoFilename = currentLogoUrl.replace('/api/files/public/', '');
+      }
+
+      const logoDir = path.resolve(uploadDir, 'logo');
+      const files = await fs.promises.readdir(logoDir).catch(() => []);
+      
+      for (const file of files) {
+        if (file !== newLogoFilename && file !== currentLogoFilename) {
+          const filePath = path.resolve(logoDir, file);
+          await fs.promises.unlink(filePath).catch(() => {});
+        }
+      }
+    } catch (cleanupError) {
+      // Ignorar erros de cleanup
+    }
+
     // Apenas retornamos a URL/nome, o front-end salva em Settings
     return res.status(201).json({
-      url: `/api/files/public/${req.file.filename}`
+      url: `/api/files/public/${newLogoFilename}`
     });
   } catch (error) {
     await fs.promises.unlink(req.file.path).catch(() => {});

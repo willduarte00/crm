@@ -6,6 +6,7 @@ import path from 'path';
 import fs from 'fs';
 import { requireAuth } from './middlewares/requireAuth.js';
 import { errorHandler } from './middlewares/errorHandler.js';
+import { apiLimiter } from './middlewares/rateLimits.js';
 import { authRouter } from './routes/auth.js';
 import { usersRouter } from './routes/users.js';
 import { settingsRouter, settingsSummaryRouter } from './routes/settings.js';
@@ -36,6 +37,9 @@ app.use(
 app.get('/api/health', (_req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
+
+// Limite de taxa na API
+app.use('/api', apiLimiter);
 
 // Autenticação opt-out em todas as rotas /api
 app.use('/api', requireAuth);

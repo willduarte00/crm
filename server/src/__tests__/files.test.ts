@@ -365,4 +365,35 @@ describe('Arquivos e Uploads — Testes de Integração (RF-12, Seção 6.2 e 6.
 
     if (fs.existsSync(physicalFilePath)) fs.unlinkSync(physicalFilePath);
   });
+
+  it('15. Upload rate limit deve bloquear no 31º upload', async () => {
+    const token = createToken(activeUser);
+    vi.mocked(prisma.user.findUnique).mockResolvedValue(activeUser as any);
+    vi.mocked(prisma.contract.findFirst).mockResolvedValue(testContract as any);
+    
+    vi.mocked(prisma.contractFile.create).mockResolvedValue({ id: 'f' } as any);
+
+    const agent = request(app);
+    const promises = [];
+    for (let i = 0; i < 30; i++) {
+      promises.push(
+        agent
+          .post('/api/files')
+          .set('Cookie', [`token=${token}`])
+          .set('x-test-rate-limit', 'true')
+          .send({ contractId: testContract.id })
+      );
+    }
+    
+    await Promise.all(promises);
+
+    const res = await agent
+      .post('/api/files')
+      .set('Cookie', [`token=${token}`])
+      .set('x-test-rate-limit', 'true')
+      .send({ contractId: testContract.id });
+
+    expect(res.status).toBe(429);
+    expect(res.body.error).toContain('Muitos uploads');
+  });
 });

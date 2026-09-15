@@ -46,6 +46,10 @@ settingsRouter.get('/', requirePermission('settings.view'), async (_req: Request
   return res.json(settings);
 });
 
+import { env } from '../env.js';
+import path from 'path';
+import fs from 'fs';
+
 // PUT /api/settings
 settingsRouter.put('/', requirePermission('settings.update'), async (req: Request, res: Response) => {
   const data = updateSettingsSchema.parse(req.body);
@@ -53,6 +57,16 @@ settingsRouter.put('/', requirePermission('settings.update'), async (req: Reques
 
   let updated;
   if (settings) {
+    // Apaga arquivo de logo antigo se o nome for diferente
+    if (settings.logoUrl && data.logoUrl !== undefined && data.logoUrl !== settings.logoUrl) {
+      if (settings.logoUrl.startsWith('/api/files/public/')) {
+        const oldFilename = settings.logoUrl.replace('/api/files/public/', '');
+        const uploadDir = path.resolve(process.cwd(), env.UPLOAD_DIR || './uploads');
+        const oldFilePath = path.resolve(uploadDir, 'logo', oldFilename);
+        await fs.promises.unlink(oldFilePath).catch(() => {});
+      }
+    }
+
     updated = await prisma.settings.update({
       where: { id: settings.id },
       data,
