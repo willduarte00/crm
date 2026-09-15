@@ -497,8 +497,64 @@ describe('Permissões — Testes de Integração', () => {
       }
 
       if (unprotected.length > 0) {
-        throw new Error(`As rotas a seguir estão sem guarda de permissão:\n${unprotected.join('\n')}`);
+        throw new Error(`As rotas a seguir estÃ£o sem guarda de permissÃ£o:\n${unprotected.join('\n')}`);
       }
+    });
+  });
+
+  describe('9. F-08 Ocultar dados bancÃ¡rios em settings summary', () => {
+    it('deve ocultar dados bancÃ¡rios se o usuÃ¡rio nÃ£o tiver settings.bank.view', async () => {
+      const token = jwt.sign({ id: operUser.id, tokenVersion: 0 }, env.JWT_SECRET);
+      vi.mocked(prisma.user.findUnique).mockResolvedValue(operUser as any);
+      vi.mocked(prisma.settings.findFirst).mockResolvedValue({
+        id: 'set-1',
+        agencyName: 'Minha AgÃªncia',
+        pixKey: '12345678909',
+        pixKeyType: 'CPF',
+        bankName: 'Nubank',
+        bankBranch: '0001',
+        bankAccount: '12345-6',
+        contactEmail: 'contato@agencia.com',
+      } as any);
+
+      const res = await request(app).get('/api/settings/summary').set('Cookie', [`token=${token}`]);
+      expect(res.status).toBe(200);
+      expect(res.body.agencyName).toBe('Minha AgÃªncia');
+      expect(res.body.contactEmail).toBe('contato@agencia.com');
+      
+      // F-08: bank details must be null
+      expect(res.body.pixKey).toBeNull();
+      expect(res.body.pixKeyType).toBeNull();
+      expect(res.body.bankName).toBeNull();
+      expect(res.body.bankBranch).toBeNull();
+      expect(res.body.bankAccount).toBeNull();
+    });
+
+    it('deve retornar dados bancÃ¡rios se o usuÃ¡rio tiver settings.bank.view', async () => {
+      const token = jwt.sign({ id: adminUser.id, tokenVersion: 0 }, env.JWT_SECRET);
+      vi.mocked(prisma.user.findUnique).mockResolvedValue(adminUser as any);
+      vi.mocked(prisma.settings.findFirst).mockResolvedValue({
+        id: 'set-1',
+        agencyName: 'Minha AgÃªncia',
+        pixKey: '12345678909',
+        pixKeyType: 'CPF',
+        bankName: 'Nubank',
+        bankBranch: '0001',
+        bankAccount: '12345-6',
+        contactEmail: 'contato@agencia.com',
+      } as any);
+
+      const res = await request(app).get('/api/settings/summary').set('Cookie', [`token=${token}`]);
+      expect(res.status).toBe(200);
+      expect(res.body.agencyName).toBe('Minha AgÃªncia');
+      expect(res.body.contactEmail).toBe('contato@agencia.com');
+      
+      // F-08: bank details must be present
+      expect(res.body.pixKey).toBe('12345678909');
+      expect(res.body.pixKeyType).toBe('CPF');
+      expect(res.body.bankName).toBe('Nubank');
+      expect(res.body.bankBranch).toBe('0001');
+      expect(res.body.bankAccount).toBe('12345-6');
     });
   });
 });

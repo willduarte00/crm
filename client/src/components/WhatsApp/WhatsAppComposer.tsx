@@ -7,6 +7,7 @@ import {
   Send,
   Sparkles,
 } from 'lucide-react';
+import { useAuth } from '../../context/AuthContext';
 import { normalizePhoneE164 } from '../../utils/formatters';
 import {
   TEMPLATES,
@@ -45,12 +46,18 @@ export const WhatsAppComposer: React.FC<WhatsAppComposerProps> = ({
   onSend,
   className = '',
 }) => {
+  const { has } = useAuth();
+  const canViewBank = has('settings.bank.view');
+
   const fieldId = useId();
   const templateId = `${fieldId}-template`;
   const messageId = `${fieldId}-message`;
 
   const [selectedTemplate, setSelectedTemplate] =
-    useState<WhatsAppTemplateKey>(initialTemplate);
+    useState<WhatsAppTemplateKey>(() => {
+      if (initialTemplate === 'lembrete_vencimento' && !canViewBank) return 'onboarding';
+      return initialTemplate;
+    });
   const [customText, setCustomText] = useState('');
   const [isEditingCustom, setIsEditingCustom] = useState(false);
 
@@ -60,8 +67,12 @@ export const WhatsAppComposer: React.FC<WhatsAppComposerProps> = ({
   const replacementsSignature = JSON.stringify(replacements);
 
   useEffect(() => {
-    setSelectedTemplate(initialTemplate);
-  }, [initialTemplate]);
+    if (initialTemplate === 'lembrete_vencimento' && !canViewBank) {
+      setSelectedTemplate('onboarding');
+    } else {
+      setSelectedTemplate(initialTemplate);
+    }
+  }, [initialTemplate, canViewBank]);
 
   useEffect(() => {
     setCustomText(
@@ -100,15 +111,23 @@ export const WhatsAppComposer: React.FC<WhatsAppComposerProps> = ({
               }
               className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-sm text-slate-800 focus:outline-none focus:border-teal-600 focus:ring-2 focus:ring-teal-600/20 transition-all cursor-pointer font-medium"
             >
-              {TEMPLATE_ORDER.map((key) => (
-                <option key={key} value={key}>
-                  {TEMPLATES[key].name}
-                </option>
-              ))}
+              {TEMPLATE_ORDER.map((key) => {
+                if (key === 'lembrete_vencimento' && !canViewBank) return null;
+                return (
+                  <option key={key} value={key}>
+                    {TEMPLATES[key].name}
+                  </option>
+                );
+              })}
             </select>
             <p className="text-[11px] text-slate-500 mt-1">
               {TEMPLATES[selectedTemplate].description}
             </p>
+            {!canViewBank && (
+              <p className="text-[11px] text-amber-600 mt-2 font-medium">
+                Requer permissão para ver dados bancários.
+              </p>
+            )}
           </div>
 
           {/* Variáveis Injetadas (RF-52) */}

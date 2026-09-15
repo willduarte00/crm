@@ -93,18 +93,20 @@ settingsRouter.put('/', requirePermission('settings.update'), async (req: Reques
  */
 export const settingsSummaryRouter = Router();
 
-settingsSummaryRouter.get('/', async (_req: Request, res: Response) => {
+settingsSummaryRouter.get('/', async (req: Request, res: Response) => {
   const settings = await prisma.settings.findFirst();
+
+  const canViewBank = req.user?.permissions.has('settings.bank.view') || false;
 
   return res.json({
     agencyName: settings?.agencyName || 'Minha Agência',
     contactEmail: settings?.contactEmail || null,
     phone: settings?.phone || null,
-    pixKey: settings?.pixKey || null,
-    pixKeyType: settings?.pixKeyType || null,
-    bankName: settings?.bankName || null,
-    bankBranch: settings?.bankBranch || null,
-    bankAccount: settings?.bankAccount || null,
+    pixKey: canViewBank ? (settings?.pixKey || null) : null,
+    pixKeyType: canViewBank ? (settings?.pixKeyType || null) : null,
+    bankName: canViewBank ? (settings?.bankName || null) : null,
+    bankBranch: canViewBank ? (settings?.bankBranch || null) : null,
+    bankAccount: canViewBank ? (settings?.bankAccount || null) : null,
     logoUrl: settings?.logoUrl || null,
     primaryColor: settings?.primaryColor || null,
   });
