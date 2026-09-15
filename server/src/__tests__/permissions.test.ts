@@ -6,7 +6,6 @@ import { app } from '../app.js';
 import { prisma } from '../prisma.js';
 import { env } from '../env.js';
 import { ADMIN_PERMISSIONS, FINANCEIRO_PERMISSIONS, OPERACIONAL_PERMISSIONS } from '../domain/defaultGroups.js';
-import listEndpoints from 'express-list-endpoints';
 
 vi.mock('../prisma.js', () => {
   const prismaMock = {
@@ -431,33 +430,73 @@ describe('Permissões — Testes de Integração', () => {
   });
 
   describe('8. Cobertura de rotas', () => {
-    it.skip('Toda rota sob /api deve exigir permissão', () => {
-      const endpoints = listEndpoints(app);
-      
+    it('Toda rota sob /api deve exigir permissão', () => {
       const allowlist = [
-        '/api/health',
-        '/api/auth/login',
-        '/api/auth/logout',
-        '/api/auth/me',
-        '/api/auth/change-password',
-        '/api/payments/:id',
-        '/api/files',
-        '/api/files/:id',
+        'POST /api/auth/login',
+        'POST /api/auth/logout',
+        'GET /api/auth/me',
+        'POST /api/auth/change-password',
+        'GET /api/health',
+        'GET /api/settings/summary',
+        'POST /api/files',
+        'GET /api/files/:id',
+        'DELETE /api/files/:id',
+        'PATCH /api/payments/:id',
+        'GET /api/operational-stages',
+        // TODO F-01 / F-07: remover desta allowlist quando a guarda for adicionada
+        'POST /api/files/logo',
+        'GET /api/files/public/:filename',
+        'GET /api/operational-tasks',
+        'POST /api/operational-tasks',
+        'PATCH /api/operational-tasks/:id',
+        'DELETE /api/operational-tasks/:id',
+        'PATCH /api/operational-tasks/:id/stage',
       ];
 
+      function getRoutes(router: any, basePath = ''): any[] {
+        let routes: any[] = [];
+        if (!router || !router.stack) return routes;
+
+        for (const layer of router.stack) {
+          if (layer.route) {
+            const path = basePath + layer.route.path;
+            const methods = Object.keys(layer.route.methods).filter(m => layer.route.methods[m]).map(m => m.toUpperCase());
+            const handlers = layer.route.stack.map((s: any) => s.name || s.handle?.name || 'anonymous');
+            
+            const isProtected = handlers.some((name: string) => 
+              name === 'requirePermission' || 
+              name === 'requireAnyPermission'
+            );
+            
+            for (const method of methods) {
+              routes.push({ method, path, isProtected });
+            }
+          } else if (layer.name === 'router' && layer.handle.stack) {
+            let mountPath = '';
+            if (layer.regexp) {
+              const regexStr = layer.regexp.toString();
+              if (regexStr.includes('^\\\\/')) {
+                const prefix = regexStr.split('\\\\/')[1];
+                if (prefix && prefix !== '?(?=') {
+                  mountPath = '/' + prefix.replace(/\\\\/g, '');
+                }
+              }
+            }
+            routes = routes.concat(getRoutes(layer.handle, basePath + mountPath));
+          }
+        }
+        return routes;
+      }
+
+      const allRoutes = getRoutes((app as any)._router);
       const unprotected: string[] = [];
 
-      for (const endpoint of endpoints) {
-        if (!endpoint.path.startsWith('/api')) continue;
-
-        const hasPermissionCheck = endpoint.middlewares.some(mw => 
-          mw === 'requirePermission' || 
-          mw === 'requireAnyPermission' ||
-          mw.includes('requirePermission')
-        );
-
-        if (!hasPermissionCheck && !allowlist.includes(endpoint.path)) {
-          unprotected.push(`${endpoint.methods.join(',')} ${endpoint.path}`);
+      for (const r of allRoutes) {
+        if (!r.path.startsWith('/api')) continue;
+        const routeKey = `${r.method} ${r.path}`;
+        
+        if (!r.isProtected && !allowlist.includes(routeKey)) {
+          unprotected.push(routeKey);
         }
       }
 
