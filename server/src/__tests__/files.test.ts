@@ -298,4 +298,71 @@ describe('Arquivos e Uploads — Testes de Integração (RF-12, Seção 6.2 e 6.
     const res = await request(app).get('/api/files/public/%2E%2E%2Fx.png');
     expect(res.status).toBe(404);
   });
+  it('13. Download de XML com ?inline=true deve forçar attachment e application/xml, com CSP e nosniff', async () => {
+    const token = createToken(activeUser);
+    vi.mocked(prisma.user.findUnique).mockResolvedValue(activeUser as any);
+
+    const uploadDir = path.resolve(process.cwd(), env.UPLOAD_DIR || './uploads');
+    if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
+    const storedFileName = 'test-file.xml';
+    const physicalFilePath = path.resolve(uploadDir, storedFileName);
+    fs.writeFileSync(physicalFilePath, '<xml></xml>');
+
+    vi.mocked(prisma.invoiceFile.findUnique).mockResolvedValue({
+      id: 'file-xml',
+      paymentRecordId: 'payment-123',
+      storedName: storedFileName,
+      originalName: 'nota.xml',
+      fileSize: 11,
+      mimeType: 'text/html',
+      uploadedAt: new Date(),
+    });
+    vi.mocked(prisma.contractFile.findUnique).mockResolvedValue(null);
+
+    const res = await request(app)
+      .get('/api/files/file-xml?inline=true')
+      .set('Cookie', [`token=${token}`]);
+
+    expect(res.status).toBe(200);
+    expect(res.header['content-type']).toBe('application/xml');
+    expect(res.header['content-disposition']).toContain('attachment');
+    expect(res.header['content-security-policy']).toBe("default-src 'none'; sandbox");
+    expect(res.header['x-content-type-options']).toBe('nosniff');
+
+    if (fs.existsSync(physicalFilePath)) fs.unlinkSync(physicalFilePath);
+  });
+
+  it('14. Download de PDF com ?inline=true deve retornar inline com CSP e nosniff', async () => {
+    const token = createToken(activeUser);
+    vi.mocked(prisma.user.findUnique).mockResolvedValue(activeUser as any);
+
+    const uploadDir = path.resolve(process.cwd(), env.UPLOAD_DIR || './uploads');
+    if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
+    const storedFileName = 'test-file.pdf';
+    const physicalFilePath = path.resolve(uploadDir, storedFileName);
+    fs.writeFileSync(physicalFilePath, '%PDF-1.4');
+
+    vi.mocked(prisma.invoiceFile.findUnique).mockResolvedValue({
+      id: 'file-pdf',
+      paymentRecordId: 'payment-123',
+      storedName: storedFileName,
+      originalName: 'nota.pdf',
+      fileSize: 8,
+      mimeType: 'application/pdf',
+      uploadedAt: new Date(),
+    });
+    vi.mocked(prisma.contractFile.findUnique).mockResolvedValue(null);
+
+    const res = await request(app)
+      .get('/api/files/file-pdf?inline=true')
+      .set('Cookie', [`token=${token}`]);
+
+    expect(res.status).toBe(200);
+    expect(res.header['content-type']).toBe('application/pdf');
+    expect(res.header['content-disposition']).toContain('inline');
+    expect(res.header['content-security-policy']).toBe("default-src 'none'; sandbox");
+    expect(res.header['x-content-type-options']).toBe('nosniff');
+
+    if (fs.existsSync(physicalFilePath)) fs.unlinkSync(physicalFilePath);
+  });
 });

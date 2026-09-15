@@ -301,11 +301,22 @@ filesRouter.get('/:id', async (req: Request, res: Response) => {
   }
 
   // Define Content-Disposition com nome original seguro
-  const inline = req.query.inline === 'true';
+  const requestedInline = req.query.inline === 'true';
+  const isPdf = fileRecord.mimeType === 'application/pdf';
+  const inline = requestedInline && isPdf;
   const dispositionType = inline ? 'inline' : 'attachment';
 
+  const ext = path.extname(fileRecord.storedName).toLowerCase();
+  const extToMime: Record<string, string> = {
+    '.pdf': 'application/pdf',
+    '.docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    '.doc': 'application/msword',
+    '.xml': 'application/xml',
+  };
+  const derivedMimeType = extToMime[ext] || 'application/octet-stream';
+
   setFileResponseHeaders(res, { inline, isPublic: false });
-  res.setHeader('Content-Type', fileRecord.mimeType || 'application/octet-stream');
+  res.setHeader('Content-Type', derivedMimeType);
   res.setHeader('Content-Length', fileRecord.fileSize.toString());
   res.setHeader(
     'Content-Disposition',
