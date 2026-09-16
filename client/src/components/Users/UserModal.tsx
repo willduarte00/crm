@@ -16,7 +16,7 @@ interface UserModalProps {
   currentUser: User | null;
 }
 
-const MIN_PASSWORD_LENGTH = 8;
+const MIN_PASSWORD_LENGTH = 12;
 
 export const UserModal: React.FC<UserModalProps> = ({
   isOpen,
@@ -70,12 +70,12 @@ export const UserModal: React.FC<UserModalProps> = ({
     setError(null);
 
     if (!isEditing && password.length < MIN_PASSWORD_LENGTH) {
-      setError(`A senha inicial precisa ter pelo menos ${MIN_PASSWORD_LENGTH} caracteres.`);
+      setError(`A senha inicial precisa ter no mínimo ${MIN_PASSWORD_LENGTH} caracteres com letras e números.`);
       return;
     }
 
     if (isEditing && password && password.length < MIN_PASSWORD_LENGTH) {
-      setError(`A nova senha precisa ter pelo menos ${MIN_PASSWORD_LENGTH} caracteres.`);
+      setError(`A nova senha precisa ter no mínimo ${MIN_PASSWORD_LENGTH} caracteres com letras e números.`);
       return;
     }
 
@@ -261,7 +261,7 @@ export const UserModal: React.FC<UserModalProps> = ({
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder={
-                isEditing ? 'Manter a senha atual' : `Mínimo ${MIN_PASSWORD_LENGTH} caracteres`
+                isEditing ? 'Manter a senha atual' : `Mínimo ${MIN_PASSWORD_LENGTH} caracteres com letras e números`
               }
               className={controlClass}
             />

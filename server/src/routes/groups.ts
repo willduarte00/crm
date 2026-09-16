@@ -3,6 +3,7 @@ import { prisma } from '../prisma.js';
 import { z } from 'zod';
 import { requirePermission } from '../middlewares/requirePermission.js';
 import { isValidPermission, findScreenDependencyViolations } from '../domain/permissions.js';
+import { logAudit } from '../services/auditService.js';
 
 export const groupsRouter = Router();
 
@@ -84,6 +85,8 @@ groupsRouter.post('/', requirePermission('groups.manage'), async (req, res, next
       }
     });
 
+    await logAudit({ req, action: 'group.created', targetType: 'group', targetId: newGroup.id, metadata: { name: newGroup.name } });
+
     res.status(201).json(newGroup);
   } catch (error) {
     next(error);
@@ -147,6 +150,8 @@ groupsRouter.patch('/:id', requirePermission('groups.manage'), async (req, res, 
       }
     });
 
+    await logAudit({ req, action: 'group.updated', targetType: 'group', targetId: id, metadata: { changedFields: Object.keys(data) } });
+
     res.json(updated);
   } catch (error) {
     next(error);
@@ -182,6 +187,7 @@ groupsRouter.delete('/:id', requirePermission('groups.manage'), async (req, res,
 
     try {
       await prisma.group.delete({ where: { id } });
+      await logAudit({ req, action: 'group.deleted', targetType: 'group', targetId: id, metadata: { name: group.name } });
       res.status(204).send();
     } catch (e: any) {
       if (e.code === 'P2003') { // Prisma FK violation

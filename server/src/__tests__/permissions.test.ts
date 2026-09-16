@@ -592,7 +592,8 @@ describe('Permissões — Testes de Integração', () => {
         .send({
           name: 'Novo Usuario',
           email: 'novo-usuario@agencia.com',
-          password: 'senha12345',
+          // F-18: senha elevada para 12+ caracteres com letra e número
+          password: 'SenhaForte2026',
           groupIds: [ADMIN_GROUP_ID],
         });
 
@@ -668,7 +669,8 @@ describe('Permissões — Testes de Integração', () => {
         .send({
           name: 'Novo Admin',
           email: 'novo-admin@agencia.com',
-          password: 'senha12345',
+          // F-18: senha elevada para 12+ caracteres com letra e número
+          password: 'SenhaForte2026',
           groupIds: [ADMIN_GROUP_ID],
         });
       expect(resCreate.status).toBe(201);

@@ -12,7 +12,7 @@ interface ChangePasswordModalProps {
   onClose: () => void;
 }
 
-const MIN_PASSWORD_LENGTH = 8;
+const MIN_PASSWORD_LENGTH = 12;
 
 export const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({
   isOpen,
@@ -39,7 +39,7 @@ export const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({
     setError(null);
 
     if (newPassword.length < MIN_PASSWORD_LENGTH) {
-      setError(`A nova senha precisa ter pelo menos ${MIN_PASSWORD_LENGTH} caracteres.`);
+      setError(`A nova senha precisa ter no mínimo ${MIN_PASSWORD_LENGTH} caracteres com letras e números.`);
       return;
     }
 
@@ -109,7 +109,7 @@ export const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({
         <Field
           label="Nova senha"
           required
-          hint={`Mínimo de ${MIN_PASSWORD_LENGTH} caracteres.`}
+          hint={`Mínimo de ${MIN_PASSWORD_LENGTH} caracteres com letras e números.`}
         >
           {(props) => (
             <input

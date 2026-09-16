@@ -21,6 +21,7 @@ model User {
   interactionLogs           InteractionLog[]
   ownedOperationalTasks     OperationalTask[]
   groups             UserGroup[]
+  auditLogs          AuditLog[]
 
   @@map("users")
 }
@@ -226,4 +227,22 @@ model UserGroup {
   @@id([userId, groupId])
   @@index([groupId])
   @@map("user_groups")
+}
+
+model AuditLog {
+  id         String   @id @default(uuid())
+  actorId    String?
+  actorEmail String?
+  action     String
+  targetType String?
+  targetId   String?
+  ip         String?
+  metadata   Json?
+  createdAt  DateTime @default(now())
+  actor      User?    @relation(fields: [actorId], references: [id])
+
+  @@index([actorId])
+  @@index([action])
+  @@index([createdAt])
+  @@map("audit_logs")
 }

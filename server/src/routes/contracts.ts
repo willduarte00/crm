@@ -11,6 +11,7 @@ import {
   ensurePaymentRecords,
   createPontualContractPayments,
 } from '../services/billingService.js';
+import { logAudit } from '../services/auditService.js';
 
 import { requirePermission } from '../middlewares/requirePermission.js';
 
@@ -388,6 +389,8 @@ contractsRouter.delete('/:id', requirePermission('contracts.delete'), async (req
       deletedAt: new Date(),
     },
   });
+
+  await logAudit({ req, action: 'contract.deleted', targetType: 'contract', targetId: id, metadata: { serviceType: existingContract.serviceType } });
 
   return res.json({
     success: true,

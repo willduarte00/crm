@@ -37,9 +37,10 @@ function formatDateTimeBR(date: Date | null | undefined): string {
 }
 
 import { requirePermission } from '../middlewares/requirePermission.js';
+import { logAudit } from '../services/auditService.js';
 
 // GET /api/export/clients - Exportação de clientes em CSV
-exportRouter.get('/clients', requirePermission('clients.export'), async (_req: Request, res: Response) => {
+exportRouter.get('/clients', requirePermission('clients.export'), async (req: Request, res: Response) => {
   const clients = await prisma.client.findMany({
     where: { deletedAt: null },
     include: {
@@ -88,6 +89,8 @@ exportRouter.get('/clients', requirePermission('clients.export'), async (_req: R
   const bom = '\uFEFF';
   const csvContent = bom + [headers.join(';'), ...rows].join('\r\n');
   const today = getTodayCivilDate();
+
+  await logAudit({ req, action: 'export.clients', metadata: { count: clients.length } });
 
   res.setHeader('Content-Type', 'text/csv; charset=utf-8');
   res.setHeader(
@@ -180,6 +183,8 @@ exportRouter.get('/payments', requirePermission('payments.export'), async (req: 
 
   const bom = '\uFEFF';
   const csvContent = bom + [headers.join(';'), ...rows].join('\r\n');
+
+  await logAudit({ req, action: 'export.payments', metadata: { count: payments.length } });
 
   res.setHeader('Content-Type', 'text/csv; charset=utf-8');
   res.setHeader(

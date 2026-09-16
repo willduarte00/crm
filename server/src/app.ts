@@ -22,6 +22,7 @@ import { operationalStagesRouter } from './routes/operationalStages.js';
 import { operationalTasksRouter } from './routes/operationalTasks.js';
 import { groupsRouter } from './routes/groups.js';
 import { permissionsRouter } from './routes/permissions.js';
+import { auditLogsRouter } from './routes/auditLogs.js';
 
 export const app = express();
 
@@ -100,6 +101,7 @@ app.use('/api/operational-tasks', operationalTasksRouter);
 // Grupos e permissões
 app.use('/api/groups', groupsRouter);
 app.use('/api/permissions', permissionsRouter);
+app.use('/api/audit-logs', auditLogsRouter);
 
 // Servindo build do React na mesma origem (se existir)
 const clientDist = path.resolve(process.cwd(), 'public-client');

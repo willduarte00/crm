@@ -5,6 +5,8 @@ import { z } from 'zod';
 import { prisma } from '../prisma.js';
 import { setAuthCookie, clearAuthCookie } from '../middlewares/requireAuth.js';
 import { mergePermissions } from '../domain/permissions.js';
+import { validatePasswordPolicy } from '../domain/passwords.js';
+import { logAudit } from '../services/auditService.js';
 
 export const authRouter = Router();
 
@@ -46,7 +48,9 @@ const loginSchema = z.object({
 
 const changePasswordSchema = z.object({
   currentPassword: z.string().min(1, 'Senha atual é obrigatória'),
-  newPassword: z.string().min(8, 'A nova senha deve ter no mínimo 8 caracteres'),
+  newPassword: z.string().refine((val) => validatePasswordPolicy(val) === null, {
+    message: 'A nova senha deve ter no mínimo 12 caracteres, com letras e números.',
+  }),
 });
 
 // POST /api/auth/login
@@ -61,15 +65,19 @@ authRouter.post('/login', loginLimiter, accountLimiter, async (req: Request, res
   });
 
   if (!user || !user.active) {
+    await logAudit({ req, action: 'auth.login.failed', metadata: { email } });
     return res.status(401).json({ error: 'Credenciais inválidas' });
   }
 
   const isPasswordValid = await bcrypt.compare(password, user.passwordHash);
   if (!isPasswordValid) {
+    await logAudit({ req, action: 'auth.login.failed', metadata: { email } });
     return res.status(401).json({ error: 'Credenciais inválidas' });
   }
 
   setAuthCookie(res, { id: user.id, tokenVersion: user.tokenVersion });
+
+  await logAudit({ req, action: 'auth.login.success', targetType: 'user', targetId: user.id, metadata: { email: user.email } });
 
   const groups = user.groups ? user.groups.map((g) => g.group) : [];
   const permissions = [...mergePermissions(groups)];
@@ -94,6 +102,7 @@ authRouter.post('/logout', async (req: Request, res: Response) => {
       where: { id: req.user.id },
       data: { tokenVersion: { increment: 1 } },
     });
+    await logAudit({ req, action: 'auth.logout', targetType: 'user', targetId: req.user.id });
   }
   clearAuthCookie(res);
   return res.json({ ok: true });
@@ -150,6 +159,8 @@ authRouter.post('/change-password', changePasswordLimiter, async (req: Request, 
 
   // Atualiza cookie da sessão corrente com o novo tokenVersion
   setAuthCookie(res, { id: updatedUser.id, tokenVersion: updatedUser.tokenVersion });
+
+  await logAudit({ req, action: 'auth.password.changed', targetType: 'user', targetId: updatedUser.id });
 
   return res.json({
     ok: true,

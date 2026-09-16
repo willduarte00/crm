@@ -2,14 +2,20 @@ import { Router, Request, Response } from 'express';
 import bcrypt from 'bcryptjs';
 import { z } from 'zod';
 import { prisma } from '../prisma.js';
+import { validatePasswordPolicy } from '../domain/passwords.js';
+import { logAudit } from '../services/auditService.js';
 
 export const usersRouter = Router();
+
+const passwordSchema = z.string().refine((val) => validatePasswordPolicy(val) === null, {
+  message: 'A senha deve ter no mínimo 12 caracteres, com letras e números.',
+});
 
 const createUserSchema = z.object({
   name: z.string().min(1, 'Nome é obrigatório'),
   email: z.string().email('E-mail inválido'),
   groupIds: z.array(z.string().uuid()).default([]),
-  password: z.string().min(8, 'Senha deve ter no mínimo 8 caracteres'),
+  password: passwordSchema,
 });
 
 const updateUserSchema = z.object({
@@ -17,7 +23,7 @@ const updateUserSchema = z.object({
   email: z.string().email().optional(),
   groupIds: z.array(z.string().uuid()).optional(),
   active: z.boolean().optional(),
-  password: z.string().min(8).optional(),
+  password: passwordSchema.optional(),
 });
 
 import { requirePermission } from '../middlewares/requirePermission.js';
@@ -115,6 +121,8 @@ usersRouter.post('/', requirePermission('users.manage'), async (req: Request, re
     ...user,
     groups: user.groups.map(g => g.group),
   };
+
+  await logAudit({ req, action: 'user.created', targetType: 'user', targetId: user.id, metadata: { email: user.email } });
 
   return res.status(201).json(formattedUser);
 });
@@ -239,6 +247,9 @@ usersRouter.patch('/:id', requirePermission('users.manage'), async (req: Request
     ...updatedUser,
     groups: updatedUser!.groups.map(g => g.group),
   };
+
+  const changedFields = Object.keys(data);
+  await logAudit({ req, action: 'user.updated', targetType: 'user', targetId: id, metadata: { changedFields } });
 
   return res.json(formattedUser);
 });

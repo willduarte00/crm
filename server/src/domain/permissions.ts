@@ -65,6 +65,7 @@ export const PERMISSIONS = [
   'users.manage',
   'groups.view',
   'groups.manage',
+  'audit.view',
 ] as const;
 
 export type Permission = (typeof PERMISSIONS)[number];
@@ -190,6 +191,7 @@ export const PERMISSION_CATALOG: PermissionMeta[] = [
   { key: 'users.manage', label: 'Gerenciar usuários', category: 'Usuários e grupos' },
   { key: 'groups.view', label: 'Ver grupos e permissões', category: 'Usuários e grupos' },
   { key: 'groups.manage', label: 'Gerenciar grupos', category: 'Usuários e grupos' },
+  { key: 'audit.view', label: 'Ver trilha de auditoria', category: 'Usuários e grupos' },
 ];
 
 export function isValidPermission(value: string): value is Permission {

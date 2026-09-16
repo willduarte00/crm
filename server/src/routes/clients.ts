@@ -1,6 +1,7 @@
 import { Router, Request, Response } from 'express';
 import { z } from 'zod';
 import { prisma } from '../prisma.js';
+import { logAudit } from '../services/auditService.js';
 import {
   cleanDigits,
   cleanAlphanumeric,
@@ -457,6 +458,8 @@ clientsRouter.delete('/:id', requirePermission('clients.delete'), async (req: Re
       deletedAt: new Date(),
     },
   });
+
+  await logAudit({ req, action: 'client.deleted', targetType: 'client', targetId: id, metadata: { name: existingClient.name } });
 
   return res.json({
     success: true,

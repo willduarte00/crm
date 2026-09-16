@@ -7,7 +7,7 @@ import { Button } from '../ui/Button';
 import { Field, controlClass } from '../ui/Field';
 import { FormAlert } from '../ui/States';
 
-const MIN_PASSWORD_LENGTH = 8;
+const MIN_PASSWORD_LENGTH = 12;
 
 /**
  * Bloqueia o acesso até a troca da senha temporária. Diferente dos demais
@@ -27,7 +27,7 @@ export const ForceChangePasswordModal: React.FC = () => {
     setError(null);
 
     if (newPassword.length < MIN_PASSWORD_LENGTH) {
-      setError(`A nova senha precisa ter pelo menos ${MIN_PASSWORD_LENGTH} caracteres.`);
+      setError(`A nova senha precisa ter no mínimo ${MIN_PASSWORD_LENGTH} caracteres com letras e números.`);
       return;
     }
 
@@ -99,7 +99,7 @@ export const ForceChangePasswordModal: React.FC = () => {
           <Field
             label="Nova senha"
             required
-            hint={`Mínimo de ${MIN_PASSWORD_LENGTH} caracteres.`}
+            hint={`Mínimo de ${MIN_PASSWORD_LENGTH} caracteres com letras e números.`}
           >
             {(props) => (
               <input
