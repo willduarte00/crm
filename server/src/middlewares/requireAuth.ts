@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
+import crypto from 'crypto';
 import { env } from '../env.js';
 import { prisma } from '../prisma.js';
 import { AuthUser } from '../types/express.js';
@@ -8,7 +9,17 @@ import { mergePermissions } from '../domain/permissions.js';
 interface JwtPayload {
   id: string;
   tokenVersion: number;
+  sid?: string;
+  iss?: string;
+  oat?: number;
+  iat: number;
+  exp: number;
 }
+
+const SESSION_TTL = '12h';
+const SESSION_TTL_SECONDS = 12 * 60 * 60;
+const ABSOLUTE_SESSION_SECONDS = 7 * 24 * 60 * 60; // vida máxima de uma sessão, mesmo renovando
+const RENEWAL_THRESHOLD_SECONDS = 6 * 60 * 60; // só renova o cookie quando faltar menos que isso
 
 const PUBLIC_ROUTES = [
   '/api/auth/login',
@@ -27,11 +38,17 @@ const MUST_CHANGE_PASSWORD_ALLOWED_ROUTES = [
   '/auth/me',
 ];
 
-export const setAuthCookie = (res: Response, user: { id: string; tokenVersion: number }) => {
+export const setAuthCookie = (
+  res: Response,
+  user: { id: string; tokenVersion: number },
+  opts?: { oat?: number }
+) => {
+  const oat = opts?.oat ?? Math.floor(Date.now() / 1000);
+
   const token = jwt.sign(
-    { id: user.id, tokenVersion: user.tokenVersion },
+    { id: user.id, tokenVersion: user.tokenVersion, sid: crypto.randomUUID(), iss: 'crm', oat },
     env.JWT_SECRET,
-    { expiresIn: '7d' }
+    { expiresIn: SESSION_TTL }
   );
 
   const isSecure = env.APP_ENV === 'production';
@@ -40,7 +57,7 @@ export const setAuthCookie = (res: Response, user: { id: string; tokenVersion: n
     httpOnly: true,
     sameSite: 'lax',
     secure: isSecure,
-    maxAge: 7 * 24 * 60 * 60 * 1000, // 7 dias
+    maxAge: SESSION_TTL_SECONDS * 1000,
   });
 
   return token;
@@ -97,6 +114,13 @@ export async function requireAuth(req: Request, res: Response, next: NextFunctio
       return res.status(401).json({ error: 'Sessão inválida ou expirada' });
     }
 
+    const oat = decoded.oat ?? decoded.iat;
+    const sessionAgeSeconds = Math.floor(Date.now() / 1000) - oat;
+    if (sessionAgeSeconds > ABSOLUTE_SESSION_SECONDS) {
+      clearAuthCookie(res);
+      return res.status(401).json({ error: 'Sessão expirada, faça login novamente' });
+    }
+
     const groups = user.groups ? user.groups.map((g) => g.group) : [];
     const permissions = mergePermissions(groups);
 
@@ -127,8 +151,12 @@ export async function requireAuth(req: Request, res: Response, next: NextFunctio
       }
     }
 
-    // Sessão deslizante: renova o cookie a cada requisição válida
-    setAuthCookie(res, { id: user.id, tokenVersion: user.tokenVersion });
+    // Sessão deslizante: só renova o cookie quando estiver perto de expirar,
+    // preservando o oat original para respeitar o limite absoluto de 7 dias.
+    const secondsUntilExpiry = decoded.exp - Math.floor(Date.now() / 1000);
+    if (secondsUntilExpiry < RENEWAL_THRESHOLD_SECONDS) {
+      setAuthCookie(res, { id: user.id, tokenVersion: user.tokenVersion }, { oat });
+    }
 
     return next();
   } catch {

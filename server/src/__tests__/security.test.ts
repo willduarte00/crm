@@ -259,4 +259,90 @@ describe('Segurança — Testes de Integração', () => {
     expect(res.headers['referrer-policy']).toBe('same-origin');
     expect(res.headers['x-powered-by']).toBeUndefined();
   });
+
+  it('10. Token com oat de 8 dias atrás deve retornar 401 mesmo sem estar expirado (vida absoluta de 7 dias)', async () => {
+    const eightDaysAgo = Math.floor(Date.now() / 1000) - 8 * 24 * 60 * 60;
+    const oldSessionToken = jwt.sign(
+      { id: 'user-1', tokenVersion: 0, oat: eightDaysAgo },
+      env.JWT_SECRET,
+      { expiresIn: '12h' }
+    );
+
+    vi.mocked(prisma.user.findUnique).mockResolvedValueOnce({
+      id: 'user-1',
+      email: 'membro@agencia.com',
+      name: 'Membro Teste',
+      role: 'membro',
+      active: true,
+      mustChangePassword: false,
+      tokenVersion: 0,
+      passwordHash: 'hash',
+      createdAt: new Date(),
+    });
+
+    const res = await request(app)
+      .get('/api/auth/me')
+      .set('Cookie', [`token=${oldSessionToken}`]);
+
+    expect(res.status).toBe(401);
+  });
+
+  it('11. Logout incrementa o tokenVersion do usuário autenticado, revogando as demais sessões', async () => {
+    const token = jwt.sign(
+      { id: 'user-1', tokenVersion: 0, oat: Math.floor(Date.now() / 1000) },
+      env.JWT_SECRET,
+      { expiresIn: '12h' }
+    );
+
+    vi.mocked(prisma.user.findUnique).mockResolvedValueOnce({
+      id: 'user-1',
+      email: 'membro@agencia.com',
+      name: 'Membro Teste',
+      role: 'membro',
+      active: true,
+      mustChangePassword: false,
+      tokenVersion: 0,
+      passwordHash: 'hash',
+      createdAt: new Date(),
+    });
+
+    vi.mocked(prisma.user.update).mockResolvedValueOnce({} as any);
+
+    const res = await request(app)
+      .post('/api/auth/logout')
+      .set('Cookie', [`token=${token}`]);
+
+    expect(res.status).toBe(200);
+    expect(prisma.user.update).toHaveBeenCalledWith({
+      where: { id: 'user-1' },
+      data: { tokenVersion: { increment: 1 } },
+    });
+  });
+
+  it('12. Requisição com token com 10h de validade restante não recebe Set-Cookie de renovação', async () => {
+    const token = jwt.sign(
+      { id: 'user-1', tokenVersion: 0, oat: Math.floor(Date.now() / 1000) },
+      env.JWT_SECRET,
+      { expiresIn: '10h' }
+    );
+
+    vi.mocked(prisma.user.findUnique).mockResolvedValueOnce({
+      id: 'user-1',
+      email: 'membro@agencia.com',
+      name: 'Membro Teste',
+      role: 'membro',
+      active: true,
+      mustChangePassword: false,
+      tokenVersion: 0,
+      passwordHash: 'hash',
+      createdAt: new Date(),
+    });
+
+    const res = await request(app)
+      .get('/api/auth/me')
+      .set('Cookie', [`token=${token}`]);
+
+    expect(res.status).toBe(200);
+    expect(res.headers['set-cookie']).toBeUndefined();
+  });
 });

@@ -126,6 +126,8 @@ O Caddy obterá automaticamente o certificado SSL/TLS gratuito da Let's Encrypt 
 ## 🔒 4. Segurança e Sessão
 
 - **Cookies `httpOnly` e `Secure`:** O token JWT de sessão é transmitido em cookie `httpOnly`, com `SameSite=Lax`. Em produção (`APP_ENV=production`), a flag `Secure` é ativada automaticamente, impedindo tráfego em texto claro.
+- **Sessão de 12h com limite absoluto de 7 dias:** cada token expira em 12h; enquanto a sessão está ativa, o cookie é renovado (sessão deslizante) só quando faltarem menos de 6h para expirar — não a cada requisição. O horário da autenticação original (`oat`) é preservado nas renovações, e a sessão é recusada após 7 dias corridos desde o login, mesmo que continue sendo usada.
+- **Logout encerra todas as sessões do usuário:** `POST /api/auth/logout` incrementa o `tokenVersion` do usuário antes de limpar o cookie, revogando também qualquer outra sessão/token ativo do mesmo usuário (outros dispositivos, navegadores, cópias de token).
 - **Revogação Instantânea de Sessão (`tokenVersion`):** Alterações de papel, desativação de usuário ou troca de senha incrementam o `tokenVersion`, invalidando imediatamente todas as sessões ativas do usuário.
 - **Proteção do Último Administrador (RF-09 e RF-09a):** O backend impede com HTTP 422 qualquer tentativa de desativar ou rebaixar o único admin ativo ou de alterar o próprio papel.
 - **Proteção contra Brute Force:** Rate limit de 5 tentativas por IP a cada 15 minutos na rota `/api/auth/login`.

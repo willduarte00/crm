@@ -87,7 +87,14 @@ authRouter.post('/login', loginLimiter, accountLimiter, async (req: Request, res
 });
 
 // POST /api/auth/logout
-authRouter.post('/logout', (_req: Request, res: Response) => {
+authRouter.post('/logout', async (req: Request, res: Response) => {
+  if (req.user) {
+    // Incrementar tokenVersion derruba todas as sessões do usuário, não só a atual.
+    await prisma.user.update({
+      where: { id: req.user.id },
+      data: { tokenVersion: { increment: 1 } },
+    });
+  }
   clearAuthCookie(res);
   return res.json({ ok: true });
 });
