@@ -260,6 +260,14 @@ describe('Segurança — Testes de Integração', () => {
     expect(res.headers['x-powered-by']).toBeUndefined();
   });
 
+  it('9a. GET /api/health com Origin de terceiro não deve receber Access-Control-Allow-Origin (sem CORS_ORIGINS em produção/teste)', async () => {
+    const res = await request(app)
+      .get('/api/health')
+      .set('Origin', 'https://evil.example');
+    expect(res.status).toBe(200);
+    expect(res.headers['access-control-allow-origin']).toBeUndefined();
+  });
+
   it('10. Token com oat de 8 dias atrás deve retornar 401 mesmo sem estar expirado (vida absoluta de 7 dias)', async () => {
     const eightDaysAgo = Math.floor(Date.now() / 1000) - 8 * 24 * 60 * 60;
     const oldSessionToken = jwt.sign(

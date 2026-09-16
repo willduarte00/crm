@@ -132,6 +132,7 @@ O Caddy obterá automaticamente o certificado SSL/TLS gratuito da Let's Encrypt 
 - **Proteção do Último Administrador (RF-09 e RF-09a):** O backend impede com HTTP 422 qualquer tentativa de desativar ou rebaixar o único admin ativo ou de alterar o próprio papel.
 - **Proteção contra Brute Force:** Rate limit de 5 tentativas por IP a cada 15 minutos na rota `/api/auth/login`.
 - **Cabeçalhos de Segurança (CSP/HSTS):** A aplicação usa Helmet para enviar uma Content-Security-Policy (CSP) rigorosa, X-Content-Type-Options e Referrer-Policy. O proxy reverso Caddy injeta automaticamente HTTP Strict Transport Security (HSTS) exigindo HTTPS, e o cabeçalho X-Powered-By é removido para evitar fingerprinting.
+- **CORS restrito:** em produção, sem `CORS_ORIGINS` configurada, nenhum middleware de CORS é registrado — cliente e API são servidos na mesma origem pelo Express. Em `NODE_ENV=development`, o CORS libera apenas `http://localhost:5173` (proxy do Vite). Se a API precisar ser acessada de outra origem, defina `CORS_ORIGINS` (lista separada por vírgula) no `.env`.
 
 ---
 

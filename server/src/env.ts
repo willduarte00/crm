@@ -48,6 +48,7 @@ export const envSchema = z.object({
       'Senha de administrador muito fraca ou comum'
     ),
   UPLOAD_DIR: z.string().default('./uploads'),
+  CORS_ORIGINS: z.string().optional().default(''),
 }).refine(
   (data) => !(data.NODE_ENV === 'production' && data.APP_ENV !== 'production'),
   { message: 'Em NODE_ENV=production o APP_ENV deve ser production (cookie Secure)' }

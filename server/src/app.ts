@@ -51,12 +51,19 @@ app.use(helmet({
 // Middlewares essenciais
 app.use(express.json());
 app.use(cookieParser());
-app.use(
-  cors({
-    origin: true,
-    credentials: true,
-  })
-);
+
+// CORS só é necessário quando cliente e API não são servidos na mesma origem:
+// dev (proxy do Vite em :5173) ou quando CORS_ORIGINS lista origens explícitas.
+// Em produção sem CORS_ORIGINS, nada é registrado (mesma origem via Express).
+const corsOrigins = env.CORS_ORIGINS
+  ? env.CORS_ORIGINS.split(',').map((origin) => origin.trim()).filter(Boolean)
+  : [];
+
+if (env.NODE_ENV === 'development') {
+  app.use(cors({ origin: 'http://localhost:5173', credentials: true }));
+} else if (corsOrigins.length > 0) {
+  app.use(cors({ origin: corsOrigins, credentials: true }));
+}
 
 // Health check público
 app.get('/api/health', (_req, res) => {
