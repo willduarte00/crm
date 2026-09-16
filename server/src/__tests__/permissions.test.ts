@@ -443,8 +443,6 @@ describe('Permissões — Testes de Integração', () => {
         'DELETE /api/files/:id',
         'PATCH /api/payments/:id',
         'GET /api/operational-stages',
-        // TODO F-01 / F-07: remover desta allowlist quando a guarda for adicionada
-        'POST /api/files/logo',
         // logo público autenticado; restrito por regex e diretório
         'GET /api/files/public/:filename',
       ];
@@ -455,29 +453,30 @@ describe('Permissões — Testes de Integração', () => {
 
         for (const layer of router.stack) {
           if (layer.route) {
-            const path = basePath + layer.route.path;
+            // Um router montado em /api/files com rota '/' concatena "/api/files/";
+            // normalizar a barra final faz a chave bater com a allowlist.
+            const path = (basePath + layer.route.path).replace(/\/+$/, '') || '/';
             const methods = Object.keys(layer.route.methods).filter(m => layer.route.methods[m]).map(m => m.toUpperCase());
-            const handlers = layer.route.stack.map((s: any) => s.name || s.handle?.name || 'anonymous');
-            
-            const isProtected = handlers.some((name: string) => 
-              name === 'requirePermission' || 
-              name === 'requireAnyPermission'
+            // s.name (do Layer) preserva o nome original; s.handle.name vira "newFn"
+            // porque express-async-errors troca o handle. E o bundler desambigua a
+            // função interna com sufixo ("requirePermission2"), daí startsWith.
+            const handlers = layer.route.stack.map((s: any) => s.name || 'anonymous');
+
+            const isProtected = handlers.some((name: string) =>
+              name.startsWith('requirePermission') ||
+              name.startsWith('requireAnyPermission')
             );
             
             for (const method of methods) {
               routes.push({ method, path, isProtected });
             }
           } else if (layer.name === 'router' && layer.handle.stack) {
-            let mountPath = '';
-            if (layer.regexp) {
-              const regexStr = layer.regexp.toString();
-              if (regexStr.includes('^\\\\/')) {
-                const prefix = regexStr.split('\\\\/')[1];
-                if (prefix && prefix !== '?(?=') {
-                  mountPath = '/' + prefix.replace(/\\\\/g, '');
-                }
-              }
-            }
+            // O source do mount é "^\/api\/auth\/?(?=\/|$)": tira as âncoras e
+            // desescapa as barras. A versão anterior devolvia string vazia, e o
+            // filtro startsWith('/api') adiante descartava todas as rotas.
+            const mountPath = (layer.regexp?.source ?? '')
+              .replace(/^\^|\\\/\?\(\?=\\\/\|\$\)$/g, '')
+              .replace(/\\\//g, '/');
             routes = routes.concat(getRoutes(layer.handle, basePath + mountPath));
           }
         }

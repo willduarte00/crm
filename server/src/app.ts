@@ -36,6 +36,9 @@ app.use(helmet({
     defaultSrc: ["'self'"],
     scriptSrc: ["'self'"],
     styleSrc: env.NODE_ENV === 'development' ? ["'self'", "'unsafe-inline'"] : ["'self'"],
+    // Sem esta diretiva, style-src também governa o atributo style="" e apaga as cores
+    // dos gráficos (Recharts e as legendas). Libera só atributos; <style> segue bloqueado.
+    styleSrcAttr: ["'unsafe-inline'"],
     fontSrc: ["'self'"],
     imgSrc: ["'self'", 'data:', 'blob:'],
     connectSrc: ["'self'"],
