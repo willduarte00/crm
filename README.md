@@ -171,22 +171,50 @@ Adicione a linha:
 ### 5.3. Envio para Armazenamento Offsite (Fora da VPS)
 Defina a variável `OFFSITE_DESTINATION` no `.env` do servidor (ex: `rclone:meu-bucket:crm-backups` ou `usuario@servidor-remoto:/backups/crm`). O script `scripts/backup.sh` detecta e sincroniza automaticamente via `rclone` ou `scp`.
 
-### 5.4. Procedimento de Restauração
-Para restaurar a aplicação a partir de um backup:
+Os scripts de backup/restauração leem do `.env` **apenas** as variáveis que precisam
+(`POSTGRES_USER`, `POSTGRES_DB`, `UPLOAD_DIR`, `OFFSITE_DESTINATION`,
+`BACKUP_ENCRYPTION_RECIPIENT`, `BACKUP_AGE_IDENTITY`) — segredos como `JWT_SECRET`,
+`ADMIN_PASSWORD` e `POSTGRES_PASSWORD` nunca são exportados para os processos de backup.
+
+### 5.4. Criptografia do Backup (age)
+O pacote de backup contém dump completo do banco (hashes de senha, CPF/CNPJ, telefones,
+dados bancários) e deve ser criptografado antes de sair da VPS.
+
+1. Gere o par de chaves **em uma máquina que não seja a VPS**:
+   ```bash
+   age-keygen -o backup-key.txt
+   ```
+   O arquivo `backup-key.txt` contém a chave privada (`AGE-SECRET-KEY-...`) e imprime a
+   chave pública correspondente (`age1...`). Guarde `backup-key.txt` fora da VPS (ex.: cofre
+   de senhas, storage separado) — quem tiver essa chave consegue ler todos os backups.
+2. No `.env` da VPS, defina apenas a chave **pública** como destinatário:
+   ```
+   BACKUP_ENCRYPTION_RECIPIENT=age1...
+   ```
+3. A partir daí, `scripts/backup.sh`/`backup.ps1` passam a gerar
+   `backup_crm_YYYYMMDD_HHMMSS.tar.gz.age` (o `.tar.gz` em claro é apagado) e o envio
+   offsite passa a transferir o `.age`. Sem `BACKUP_ENCRYPTION_RECIPIENT`, o script imprime
+   um aviso de que o backup está sem criptografia.
+
+### 5.5. Procedimento de Restauração
+Para restaurar a aplicação a partir de um backup (aceita `.tar.gz` ou `.tar.gz.age`):
 
 ```bash
-# No Linux / VPS:
-./scripts/restore.sh ./backups/backup_crm_20260819_210000.tar.gz --yes
+# No Linux / VPS (backup criptografado — requer a chave privada local):
+BACKUP_AGE_IDENTITY=./backup-key.txt ./scripts/restore.sh ./backups/backup_crm_20260819_210000.tar.gz.age --yes
 
 # No Windows (PowerShell):
-.\scripts\restore.ps1 -BackupFile .\backups\backup_crm_20260819_210000.tar.gz -Yes
+.\scripts\restore.ps1 -BackupFile .\backups\backup_crm_20260819_210000.tar.gz.age -BackupAgeIdentity .\backup-key.txt -Yes
 ```
 
+Para um backup não criptografado (`.tar.gz`), basta omitir `BACKUP_AGE_IDENTITY`/`-BackupAgeIdentity`.
+
 O procedimento:
-1. Valida os arquivos e os hashes SHA256 do manifesto.
-2. Limpa e restaura o volume de uploads.
-3. Aplica o dump SQL no PostgreSQL.
-4. Confirma a integridade da sincronização.
+1. Se o pacote for `.age`, descriptografa com a chave privada indicada em `BACKUP_AGE_IDENTITY`.
+2. Valida os arquivos e os hashes SHA256 do manifesto.
+3. Limpa e restaura o volume de uploads.
+4. Aplica o dump SQL no PostgreSQL.
+5. Confirma a integridade da sincronização.
 
 ---
 
