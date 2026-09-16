@@ -5,6 +5,7 @@ import { app } from '../app.js';
 import { prisma } from '../prisma.js';
 import { env } from '../env.js';
 import { PERMISSION_CATALOG, SCREEN_DEPENDENCIES } from '../domain/permissions.js';
+import { ADMIN_PERMISSIONS } from '../domain/defaultGroups.js';
 
 vi.mock('../prisma.js', () => ({
   prisma: {
@@ -35,7 +36,7 @@ describe('Groups API', () => {
           id: 'group-admin',
           name: 'Admin',
           isSystem: true,
-          permissions: ['groups.manage', 'groups.view']
+          permissions: ADMIN_PERMISSIONS
         }
       }
     ],
@@ -207,7 +208,58 @@ describe('Groups API', () => {
 
       expect(res.status).toBe(403);
     });
-    
+
+    // F-09: usuário com groups.manage mas sem users.manage não pode criar grupo que conceda users.manage
+    it("should return 403 when granting a permission the author does not possess ('users.manage')", async () => {
+      const groupsManagerUser = {
+        id: 'groupsmgr-1',
+        email: 'groupsmgr@agencia.com',
+        name: 'Groups Manager',
+        active: true,
+        mustChangePassword: false,
+        tokenVersion: 1,
+        groups: [
+          {
+            group: {
+              id: 'group-groupsmgr',
+              name: 'Gerencia Grupos',
+              isSystem: false,
+              permissions: ['groups.manage', 'groups.view']
+            }
+          }
+        ],
+      };
+      vi.mocked(prisma.user.findUnique).mockResolvedValue(groupsManagerUser as any);
+      vi.mocked(prisma.group.findUnique).mockResolvedValue(null);
+
+      const token = createToken(groupsManagerUser);
+
+      const res = await request(app)
+        .post('/api/groups')
+        .set('Cookie', [`token=${token}`])
+        .send({ name: 'G6', permissions: ['users.manage'] });
+
+      expect(res.status).toBe(403);
+      expect(res.body.error).toMatch(/não pode conceder permissões/i);
+      expect(res.body.missing).toContain('users.manage');
+      expect(prisma.group.create).not.toHaveBeenCalled();
+    });
+
+    it('should allow an Admin to create a group granting any permission', async () => {
+      vi.mocked(prisma.user.findUnique).mockResolvedValue(adminUser as any);
+      vi.mocked(prisma.group.findUnique).mockResolvedValue(null);
+      vi.mocked(prisma.group.create).mockResolvedValue({ id: 'g-admin-created' } as any);
+
+      const token = createToken(adminUser);
+
+      const res = await request(app)
+        .post('/api/groups')
+        .set('Cookie', [`token=${token}`])
+        .send({ name: 'G7', permissions: ['users.manage', 'groups.manage'] });
+
+      expect(res.status).toBe(201);
+    });
+
     it('screen.dashboard aceita com só dashboard.financial.view; aceita com só dashboard.operational.view; rejeitada sem nenhuma das duas', async () => {
       vi.mocked(prisma.user.findUnique).mockResolvedValue(adminUser as any);
       const token = createToken(adminUser);

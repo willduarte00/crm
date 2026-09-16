@@ -54,6 +54,15 @@ groupsRouter.post('/', requirePermission('groups.manage'), async (req, res, next
       }
     }
 
+    // F-09: não permite conceder permissões que o próprio autor não possui
+    const missingPermissions = data.permissions.filter((perm) => !req.user!.permissions.has(perm));
+    if (missingPermissions.length > 0) {
+      return res.status(403).json({
+        error: 'Você não pode conceder permissões que não possui.',
+        missing: missingPermissions,
+      });
+    }
+
     const violations = findScreenDependencyViolations(data.permissions);
     if (violations.length > 0) {
       return res.status(422).json({
@@ -110,7 +119,16 @@ groupsRouter.patch('/:id', requirePermission('groups.manage'), async (req, res, 
           return res.status(400).json({ error: `Permissão inválida: ${perm}` });
         }
       }
-      
+
+      // F-09: não permite conceder permissões que o próprio autor não possui
+      const missingPermissions = data.permissions.filter((perm) => !req.user!.permissions.has(perm));
+      if (missingPermissions.length > 0) {
+        return res.status(403).json({
+          error: 'Você não pode conceder permissões que não possui.',
+          missing: missingPermissions,
+        });
+      }
+
       const violations = findScreenDependencyViolations(finalPermissions);
       if (violations.length > 0) {
         return res.status(422).json({

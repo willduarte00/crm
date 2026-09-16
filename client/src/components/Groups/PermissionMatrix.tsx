@@ -7,6 +7,8 @@ interface PermissionMatrixProps {
   value: string[];
   onChange: (newValue: string[]) => void;
   violations?: { screen: string; missingAnyOf: string[] }[];
+  /** Permissões que o usuário logado possui e, portanto, pode conceder. Quando omitido, nenhuma restrição é aplicada. */
+  grantableKeys?: string[];
 }
 
 export const PermissionMatrix: React.FC<PermissionMatrixProps> = ({
@@ -14,7 +16,9 @@ export const PermissionMatrix: React.FC<PermissionMatrixProps> = ({
   value,
   onChange,
   violations = [],
+  grantableKeys,
 }) => {
+  const grantableSet = grantableKeys ? new Set(grantableKeys) : null;
   const valueSet = new Set(value);
   const [announcement, setAnnouncement] = useState('');
 
@@ -92,6 +96,12 @@ export const PermissionMatrix: React.FC<PermissionMatrixProps> = ({
                 }
               }
 
+              const isNotGrantable = !!grantableSet && !grantableSet.has(perm.key);
+              if (isNotGrantable && !isMissingReqs) {
+                disabled = true;
+                hint = 'Você não possui esta permissão.';
+              }
+
               const isExport = perm.key.endsWith('.export');
               const isViolated = hasViolation(perm.key);
 
@@ -104,16 +114,17 @@ export const PermissionMatrix: React.FC<PermissionMatrixProps> = ({
                     disabled={disabled}
                     onChange={() => togglePermission(perm.key)}
                     className="mt-1 w-4 h-4 text-teal-600 border-slate-300 rounded focus:ring-teal-600 cursor-pointer disabled:cursor-not-allowed disabled:opacity-50 transition-colors"
-                    aria-describedby={isMissingReqs ? `hint-${perm.key}` : undefined}
+                    aria-describedby={isMissingReqs || isNotGrantable ? `hint-${perm.key}` : undefined}
+                    title={isNotGrantable ? 'Você não possui esta permissão.' : undefined}
                   />
                   <div className="flex flex-col flex-1">
-                    <label 
+                    <label
                       htmlFor={`perm-${perm.key}`}
                       className={`text-sm font-medium ${disabled ? 'text-slate-400 cursor-not-allowed' : (isViolated ? 'text-rose-600 font-bold' : 'text-slate-700 cursor-pointer')}`}
                     >
                       {perm.label}
                     </label>
-                    {isMissingReqs && (
+                    {(isMissingReqs || isNotGrantable) && (
                       <span id={`hint-${perm.key}`} className="text-xs text-rose-600 mt-0.5 font-medium">
                         {hint}
                       </span>

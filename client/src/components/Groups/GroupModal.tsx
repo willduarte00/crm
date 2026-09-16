@@ -7,6 +7,7 @@ import { GroupDetail } from '../../types';
 import { PermissionCatalog } from '../../types/permission';
 import { apiFetch, AppApiError } from '../../services/api';
 import { toast } from 'sonner';
+import { useAuth } from '../../context/AuthContext';
 
 interface GroupModalProps {
   isOpen: boolean;
@@ -30,6 +31,9 @@ export const GroupModal: React.FC<GroupModalProps> = ({
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [violations, setViolations] = useState<{ screen: string; missingAnyOf: string[] }[]>([]);
+
+  const { user: currentUser } = useAuth();
+  const grantableKeys = currentUser?.permissions || [];
 
   useEffect(() => {
     if (isOpen) {
@@ -142,6 +146,7 @@ export const GroupModal: React.FC<GroupModalProps> = ({
               value={permissions}
               onChange={setPermissions}
               violations={violations}
+              grantableKeys={grantableKeys}
             />
           ) : (
             <p className="text-sm text-slate-500">Carregando permissões...</p>

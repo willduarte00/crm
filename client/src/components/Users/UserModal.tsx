@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { User, Group } from '../../types';
+import { User, GroupDetail } from '../../types';
 import { apiFetch, errorMessage } from '../../services/api';
 import { UserCheck } from 'lucide-react';
 import { toast } from 'sonner';
@@ -30,7 +30,7 @@ export const UserModal: React.FC<UserModalProps> = ({
   const [groupIds, setGroupIds] = useState<string[]>([]);
   const [password, setPassword] = useState('');
   const [active, setActive] = useState(true);
-  const [availableGroups, setAvailableGroups] = useState<Group[]>([]);
+  const [availableGroups, setAvailableGroups] = useState<GroupDetail[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -57,9 +57,12 @@ export const UserModal: React.FC<UserModalProps> = ({
 
   useEffect(() => {
     if (isOpen && availableGroups.length === 0) {
-      apiFetch<Group[]>('/api/groups').then(setAvailableGroups).catch(() => {});
+      apiFetch<GroupDetail[]>('/api/groups').then(setAvailableGroups).catch(() => {});
     }
   }, [isOpen, availableGroups.length]);
+
+  const adminGroup = availableGroups.find((g) => g.isSystem);
+  const currentUserIsAdmin = !!adminGroup && !!currentUser?.groups.some((g) => g.id === adminGroup.id);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -168,24 +171,31 @@ export const UserModal: React.FC<UserModalProps> = ({
             Grupos de acesso
           </legend>
           <div className="space-y-2">
-            {availableGroups.map((group) => (
-              <label key={group.id} className="flex items-start gap-2 text-sm text-slate-700 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={groupIds.includes(group.id)}
-                  disabled={isSelf}
-                  onChange={(e) => {
-                    if (e.target.checked) {
-                      setGroupIds([...groupIds, group.id]);
-                    } else {
-                      setGroupIds(groupIds.filter((id) => id !== group.id));
-                    }
-                  }}
-                  className="mt-0.5 text-teal-600 focus:ring-teal-600 rounded"
-                />
-                <span>{group.name}</span>
-              </label>
-            ))}
+            {availableGroups.map((group) => {
+              const disableAdminGroup = group.isSystem && !currentUserIsAdmin;
+              return (
+                <label
+                  key={group.id}
+                  className="flex items-start gap-2 text-sm text-slate-700 cursor-pointer"
+                  title={disableAdminGroup ? 'Somente administradores' : undefined}
+                >
+                  <input
+                    type="checkbox"
+                    checked={groupIds.includes(group.id)}
+                    disabled={isSelf || disableAdminGroup}
+                    onChange={(e) => {
+                      if (e.target.checked) {
+                        setGroupIds([...groupIds, group.id]);
+                      } else {
+                        setGroupIds(groupIds.filter((id) => id !== group.id));
+                      }
+                    }}
+                    className="mt-0.5 text-teal-600 focus:ring-teal-600 rounded"
+                  />
+                  <span>{group.name}</span>
+                </label>
+              );
+            })}
             {availableGroups.length === 0 && (
               <p className="text-sm text-slate-500 italic">Carregando grupos...</p>
             )}

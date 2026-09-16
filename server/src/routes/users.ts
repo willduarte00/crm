@@ -77,6 +77,15 @@ usersRouter.post('/', requirePermission('users.manage'), async (req: Request, re
     }
   }
 
+  // F-09: só quem já pertence ao grupo Admin pode conceder o grupo Admin a outro usuário
+  const adminGroupOnCreate = await prisma.group.findFirst({ where: { isSystem: true } });
+  if (adminGroupOnCreate && groupIds.includes(adminGroupOnCreate.id)) {
+    const authorIsAdmin = req.user!.groups.some((g) => g.id === adminGroupOnCreate.id);
+    if (!authorIsAdmin) {
+      return res.status(403).json({ error: 'Apenas administradores podem conceder o grupo Admin.' });
+    }
+  }
+
   const passwordHash = await bcrypt.hash(password, 12);
 
   const user = await prisma.user.create({
@@ -136,8 +145,21 @@ usersRouter.patch('/:id', requirePermission('users.manage'), async (req: Request
     return res.status(422).json({ error: 'Não é possível alterar os próprios grupos' });
   }
 
-  // RF-10: O último admin ativo não pode ser removido nem desativado
   const adminGroup = await prisma.group.findFirst({ where: { isSystem: true } });
+
+  // F-09: só quem já pertence ao grupo Admin pode conceder ou remover o grupo Admin de alguém
+  if (adminGroup && data.groupIds !== undefined) {
+    const targetHasAdmin = targetUser.groups.some((g) => g.groupId === adminGroup.id);
+    const newHasAdmin = data.groupIds.includes(adminGroup.id);
+    if (newHasAdmin !== targetHasAdmin) {
+      const authorIsAdmin = req.user!.groups.some((g) => g.id === adminGroup.id);
+      if (!authorIsAdmin) {
+        return res.status(403).json({ error: 'Apenas administradores podem conceder o grupo Admin.' });
+      }
+    }
+  }
+
+  // RF-10: O último admin ativo não pode ser removido nem desativado
   if (adminGroup) {
     const isTargetActiveAdmin = targetUser.active &&
       targetUser.groups.some((g) => g.groupId === adminGroup.id);

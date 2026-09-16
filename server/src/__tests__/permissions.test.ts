@@ -557,4 +557,127 @@ describe('Permissões — Testes de Integração', () => {
       expect(res.body.bankAccount).toBe('12345-6');
     });
   });
+
+  describe('10. F-09 Escalada de privilegio pelo gerenciamento de usuarios e grupos', () => {
+    const userManagerUser = {
+      id: 'usermgr-1',
+      email: 'usermgr@agencia.com',
+      name: 'Gerente de Usuarios',
+      groups: [
+        {
+          groupId: 'g-usermgr',
+          group: { id: 'g-usermgr', name: 'Gerencia Usuarios', permissions: ['users.manage', 'users.view'], isSystem: false },
+        },
+      ],
+      active: true,
+      mustChangePassword: false,
+      tokenVersion: 0,
+      passwordHash: '$2a$12$dummyhash',
+      createdAt: new Date(),
+    };
+
+    const ADMIN_GROUP_ID = '11111111-1111-1111-1111-111111111111';
+
+    it('usuario com users.manage fora do Admin recebe 403 ao criar usuario com o grupo Admin', async () => {
+      const token = createToken(userManagerUser);
+      vi.mocked(prisma.user.findUnique)
+        .mockResolvedValueOnce(userManagerUser as any) // requireAuth
+        .mockResolvedValueOnce(null); // existingUser (email livre)
+      vi.mocked(prisma.group.count).mockResolvedValue(1);
+      vi.mocked(prisma.group.findFirst).mockResolvedValue({ id: ADMIN_GROUP_ID, isSystem: true } as any);
+
+      const res = await request(app)
+        .post('/api/users')
+        .set('Cookie', [`token=${token}`])
+        .send({
+          name: 'Novo Usuario',
+          email: 'novo-usuario@agencia.com',
+          password: 'senha12345',
+          groupIds: [ADMIN_GROUP_ID],
+        });
+
+      expect(res.status).toBe(403);
+      expect(res.body.error).toMatch(/Apenas administradores/);
+      expect(prisma.user.create).not.toHaveBeenCalled();
+    });
+
+    it('usuario com users.manage fora do Admin recebe 403 ao adicionar Admin a outro usuario', async () => {
+      const token = createToken(userManagerUser);
+      const targetUser = { id: 'target-1', active: true, groups: [] };
+
+      vi.mocked(prisma.user.findUnique)
+        .mockResolvedValueOnce(userManagerUser as any) // requireAuth
+        .mockResolvedValueOnce(targetUser as any); // targetUser
+      vi.mocked(prisma.group.count).mockResolvedValue(1);
+      vi.mocked(prisma.group.findFirst).mockResolvedValue({ id: ADMIN_GROUP_ID, isSystem: true } as any);
+
+      const res = await request(app)
+        .patch('/api/users/target-1')
+        .set('Cookie', [`token=${token}`])
+        .send({ groupIds: [ADMIN_GROUP_ID] });
+
+      expect(res.status).toBe(403);
+      expect(res.body.error).toMatch(/Apenas administradores/);
+      expect(prisma.user.update).not.toHaveBeenCalled();
+    });
+
+    it('usuario com users.manage fora do Admin recebe 403 ao remover alguem do Admin', async () => {
+      const token = createToken(userManagerUser);
+      const targetUser = { id: 'target-2', active: true, groups: [{ groupId: ADMIN_GROUP_ID }] };
+
+      vi.mocked(prisma.user.findUnique)
+        .mockResolvedValueOnce(userManagerUser as any) // requireAuth
+        .mockResolvedValueOnce(targetUser as any); // targetUser
+      vi.mocked(prisma.group.count).mockResolvedValue(0);
+      vi.mocked(prisma.group.findFirst).mockResolvedValue({ id: ADMIN_GROUP_ID, isSystem: true } as any);
+
+      const res = await request(app)
+        .patch('/api/users/target-2')
+        .set('Cookie', [`token=${token}`])
+        .send({ groupIds: [] });
+
+      expect(res.status).toBe(403);
+      expect(res.body.error).toMatch(/Apenas administradores/);
+    });
+
+    it('Admin continua podendo criar usuario no grupo Admin e alterar o grupo Admin de outros', async () => {
+      const token = createToken(adminUser);
+      const targetUser = { id: 'target-3', active: true, groups: [] };
+
+      vi.mocked(prisma.user.findUnique)
+        .mockResolvedValueOnce(adminUser as any) // requireAuth (POST)
+        .mockResolvedValueOnce(null) // existingUser
+        .mockResolvedValueOnce(adminUser as any) // requireAuth (PATCH)
+        .mockResolvedValueOnce(targetUser as any); // targetUser (PATCH)
+      vi.mocked(prisma.group.count).mockResolvedValue(1);
+      vi.mocked(prisma.group.findFirst).mockResolvedValue({ id: ADMIN_GROUP_ID, isSystem: true } as any);
+      vi.mocked(prisma.user.create).mockResolvedValue({
+        id: 'novo-admin',
+        name: 'Novo Admin',
+        email: 'novo-admin@agencia.com',
+        active: true,
+        mustChangePassword: true,
+        createdAt: new Date(),
+        groups: [],
+      } as any);
+      vi.mocked(prisma.user.update).mockResolvedValue({ id: 'target-3' } as any);
+
+      const resCreate = await request(app)
+        .post('/api/users')
+        .set('Cookie', [`token=${token}`])
+        .send({
+          name: 'Novo Admin',
+          email: 'novo-admin@agencia.com',
+          password: 'senha12345',
+          groupIds: [ADMIN_GROUP_ID],
+        });
+      expect(resCreate.status).toBe(201);
+
+      const resPatch = await request(app)
+        .patch('/api/users/target-3')
+        .set('Cookie', [`token=${token}`])
+        .send({ groupIds: [ADMIN_GROUP_ID] });
+      expect(resPatch.status).toBe(200);
+    });
+  });
 });
