@@ -36,8 +36,10 @@ CRM interno de alta produtividade para agências de marketing gerenciarem client
 
 O container executa automaticamente no boot:
 - As migrations do PostgreSQL via Prisma (`prisma migrate deploy`).
-- O seed idempotente do primeiro administrador e configurações da agência (`prisma/seed.ts`).
+- O seed idempotente do primeiro administrador e configurações da agência (`dist/prisma/seed.js`, compilado a partir de `prisma/seed.ts`).
 - O servidor Express servindo a API e a aplicação React na mesma origem.
+
+O processo do container roda como usuário não-root (`node`), a imagem final não contém código-fonte TypeScript nem ferramentas de desenvolvimento, e o filesystem raiz é somente leitura (`read_only`), com `/tmp` em tmpfs e limites de memória/CPU aplicados via Docker Compose.
 
 ---
 

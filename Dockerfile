@@ -30,20 +30,18 @@ COPY server/prisma ./prisma/
 RUN npm ci --omit=dev
 RUN npx prisma generate
 
-# Copia build do servidor
+# Copia build do servidor (inclui dist/prisma/seed.js e dist/src/index.js)
 COPY --from=server-builder /app/server/dist ./dist
-
-# Copia fontes TypeScript necessários para o seed (tsx executa .ts diretamente)
-COPY --from=server-builder /app/server/src ./src
-COPY --from=server-builder /app/server/tsconfig.json ./tsconfig.json
 
 # Copia build do cliente para a pasta pública do Express
 COPY --from=client-builder /app/client/dist ./public-client
 
-# Diretório para uploads
-RUN mkdir -p /app/uploads
+# Diretório para uploads, pertencente ao usuário não-root que executará o processo
+RUN mkdir -p /app/uploads && chown -R node:node /app
 
 EXPOSE 3000
 
+USER node
+
 # Executa migrations, seed idempotente e inicia o servidor
-CMD ["sh", "-c", "npx prisma migrate deploy && npx tsx prisma/seed.ts && node dist/index.js"]
+CMD ["sh", "-c", "npx prisma migrate deploy && node dist/prisma/seed.js && node dist/src/index.js"]
