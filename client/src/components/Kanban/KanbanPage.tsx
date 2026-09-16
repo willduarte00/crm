@@ -247,7 +247,7 @@ export const KanbanPage: React.FC = () => {
             <div className="flex items-center gap-2 flex-wrap">
               <KanbanIcon className="w-5 h-5 text-teal-600" aria-hidden="true" />
               <h1 className="text-xl font-bold text-navy-900 leading-tight">
-                Pipeline de vendas
+                Funil de vendas
               </h1>
               <span className="text-xs font-semibold px-2 py-0.5 bg-slate-100 text-slate-700 rounded-full border border-slate-200 tabular-nums">
                 {totalLeads} {totalLeads === 1 ? 'oportunidade' : 'oportunidades'}

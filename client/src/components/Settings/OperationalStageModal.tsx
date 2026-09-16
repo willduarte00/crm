@@ -99,7 +99,7 @@ export const OperationalStageModal: React.FC<OperationalStageModalProps> = ({
       isOpen={isOpen}
       onClose={onClose}
       title={isEditing ? 'Editar Etapa' : 'Nova Etapa'}
-      description="Configure as propriedades desta etapa do pipeline operacional."
+      description="Configure as propriedades desta etapa da operação."
       icon={<Layers className="w-5 h-5 text-teal-600" />}
       iconTone="teal"
       size="md"

@@ -156,7 +156,7 @@ export default function OperationalPipelinePage() {
         <EmptyState
           icon={<Settings className="w-12 h-12 text-slate-300" />}
           title="Nenhuma etapa configurada"
-          message="O pipeline operacional ainda não possui etapas ativas. Para começar a usar, cadastre as etapas nas configurações."
+          message="A operação ainda não possui etapas ativas. Para começar a usar, cadastre as etapas nas configurações."
           action={
             isAdmin ? (
               <Link to="/configuracoes">
@@ -180,7 +180,7 @@ export default function OperationalPipelinePage() {
             <div className="flex items-center gap-2 flex-wrap">
               <Settings className="w-5 h-5 text-teal-600" aria-hidden="true" />
               <h1 className="text-xl font-bold text-navy-900 leading-tight">
-                Pipeline Operacional
+                Operação
               </h1>
               <span className="text-xs font-semibold px-2 py-0.5 bg-slate-100 text-slate-700 rounded-full border border-slate-200 tabular-nums">
                 {totalTasks} {totalTasks === 1 ? 'demanda' : 'demandas'}

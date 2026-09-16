@@ -324,7 +324,7 @@ export const ClientsPage: React.FC = () => {
             Clientes e leads
           </h1>
           <p className="text-sm text-slate-500 mt-0.5">
-            Gerencie o pipeline comercial, a base de contatos e o histórico de atendimentos.
+            Gerencie o funil de vendas, a base de contatos e o histórico de atendimentos.
           </p>
         </div>
 
@@ -549,7 +549,7 @@ export const ClientsPage: React.FC = () => {
             message={
               hasActiveFilters
                 ? 'Ajuste os filtros ou limpe-os para ver toda a base.'
-                : 'Cadastre o primeiro cliente ou lead para começar a acompanhar o pipeline comercial.'
+                : 'Cadastre o primeiro cliente ou lead para começar a acompanhar o funil de vendas.'
             }
             action={
               hasActiveFilters ? (

@@ -146,7 +146,7 @@ export const SettingsPage: React.FC = () => {
             Configurações
           </h1>
           <p className="text-sm text-slate-500 mt-0.5">
-            Gerencie os dados da agência e o pipeline operacional.
+            Gerencie os dados da agência e as etapas da operação.
           </p>
         </div>
 
@@ -188,7 +188,7 @@ export const SettingsPage: React.FC = () => {
             value="operational-stages"
             className="px-4 py-2 text-sm font-medium border-b-2 border-transparent data-[state=active]:border-teal-500 data-[state=active]:text-teal-600 text-slate-500 hover:text-slate-700 outline-none focus-visible:ring-2 focus-visible:ring-teal-500 transition-colors"
           >
-            Pipeline Operacional
+            Operação
           </Tabs.Trigger>
         </Tabs.List>
 

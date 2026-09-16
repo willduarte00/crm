@@ -80,7 +80,7 @@ export const OperationalStagesTab: React.FC = () => {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-lg font-semibold text-slate-800">Pipeline Operacional</h2>
+          <h2 className="text-lg font-semibold text-slate-800">Operação</h2>
           <p className="text-sm text-slate-500 mt-1">
             Gerencie as etapas do fluxo de trabalho operacional. A ordem definida aqui reflete no quadro Kanban.
           </p>
@@ -101,7 +101,7 @@ export const OperationalStagesTab: React.FC = () => {
         <EmptyState
           icon={<Edit2 className="w-12 h-12 text-slate-300" />}
           title="Nenhuma etapa cadastrada"
-          message="Você ainda não possui etapas no pipeline operacional."
+          message="Você ainda não possui etapas cadastradas na operação."
           action={
             <Button
               variant="primary"

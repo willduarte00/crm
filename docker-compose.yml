@@ -26,7 +26,7 @@ services:
       PORT: 3000
       NODE_ENV: ${NODE_ENV:-production}
       APP_ENV: ${APP_ENV:-production}
-      DATABASE_URL: ${DATABASE_URL:?defina no .env}
+      DATABASE_URL: ${DOCKER_DATABASE_URL:-postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}?schema=public}
       JWT_SECRET: ${JWT_SECRET:?defina no .env}
       ADMIN_EMAIL: ${ADMIN_EMAIL:?defina no .env}
       ADMIN_PASSWORD: ${ADMIN_PASSWORD:?defina no .env}

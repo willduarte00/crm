@@ -127,8 +127,8 @@ export const PERMISSION_CATALOG: PermissionMeta[] = [
   // Telas
   { key: 'screen.dashboard', label: 'Dashboard', category: 'Telas', requiresAnyOf: SCREEN_DEPENDENCIES['screen.dashboard'] },
   { key: 'screen.clientes', label: 'Clientes', category: 'Telas', requiresAnyOf: SCREEN_DEPENDENCIES['screen.clientes'] },
-  { key: 'screen.pipeline', label: 'Pipeline', category: 'Telas', requiresAnyOf: SCREEN_DEPENDENCIES['screen.pipeline'] },
-  { key: 'screen.pipeline_operacional', label: 'Pipeline Operacional', category: 'Telas', requiresAnyOf: SCREEN_DEPENDENCIES['screen.pipeline_operacional'] },
+  { key: 'screen.pipeline', label: 'Funil de Vendas', category: 'Telas', requiresAnyOf: SCREEN_DEPENDENCIES['screen.pipeline'] },
+  { key: 'screen.pipeline_operacional', label: 'Operação', category: 'Telas', requiresAnyOf: SCREEN_DEPENDENCIES['screen.pipeline_operacional'] },
   { key: 'screen.contratos', label: 'Contratos', category: 'Telas', requiresAnyOf: SCREEN_DEPENDENCIES['screen.contratos'] },
   { key: 'screen.financeiro', label: 'Financeiro', category: 'Telas', requiresAnyOf: SCREEN_DEPENDENCIES['screen.financeiro'] },
   { key: 'screen.usuarios', label: 'Usuários', category: 'Telas', requiresAnyOf: SCREEN_DEPENDENCIES['screen.usuarios'] },
