@@ -28,7 +28,7 @@ vi.mock('../prisma.js', () => ({
       update: vi.fn(),
     },
     $transaction: vi.fn(),
-    $queryRawUnsafe: vi.fn(),
+    $queryRaw: vi.fn(),
   },
 }));
 
@@ -281,7 +281,7 @@ describe('Faturamento — domain/billing.ts e billingService (RF-20 a RF-26, RF-
           findUnique: vi.fn().mockResolvedValue({ year: 2026, lastNumber: 0 }),
           update: vi.fn().mockResolvedValue({ year: 2026, lastNumber: 2 }),
         },
-        $queryRawUnsafe: vi.fn().mockResolvedValue([{ lastNumber: 0 }]),
+        $queryRaw: vi.fn().mockResolvedValue([{ lastNumber: 0 }]),
         paymentRecord: {
           create: vi.fn().mockResolvedValue({}),
         },

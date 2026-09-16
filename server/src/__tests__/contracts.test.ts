@@ -48,7 +48,7 @@ vi.mock('../prisma.js', () => ({
       }
       return cb;
     }),
-    $queryRawUnsafe: vi.fn().mockResolvedValue([{ lastNumber: 0 }]),
+    $queryRaw: vi.fn().mockResolvedValue([{ lastNumber: 0 }]),
   },
 }));
 

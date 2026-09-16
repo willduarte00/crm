@@ -22,9 +22,13 @@ const handleUpload = (req: Request, res: Response, next: NextFunction) => {
   uploadMiddleware.single('file')(req, res, (err: any) => {
     if (err) {
       if (err.code === 'LIMIT_FILE_SIZE') {
-        return res.status(400).json({ error: 'Arquivo excede o tamanho máximo permitido de 10 MB.' });
+        return res.status(400).json({ error: 'Arquivo excede o tamanho máximo permitido.' });
       }
-      return res.status(400).json({ error: err.message || 'Erro no upload do arquivo.' });
+      if (typeof err.message === 'string' && err.message.startsWith('Tipo de arquivo não permitido')) {
+        return res.status(400).json({ error: err.message });
+      }
+      console.error(err);
+      return res.status(400).json({ error: 'Erro no upload do arquivo.' });
     }
     return next();
   });

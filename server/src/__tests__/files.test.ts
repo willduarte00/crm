@@ -148,6 +148,28 @@ describe('Arquivos e Uploads — Testes de Integração (RF-12, Seção 6.2 e 6.
     expect(res.body.error).toContain('não permitido');
   });
 
+  it('4b. Deve rejeitar upload acima do limite de tamanho sem vazar mensagem interna do Multer (F-20)', async () => {
+    const token = createToken(activeUser);
+    vi.mocked(prisma.user.findUnique).mockResolvedValue(activeUser as any);
+    vi.mocked(prisma.contract.findFirst).mockResolvedValue(testContract as any);
+
+    const oversizedPath = path.resolve(process.cwd(), 'temp_test_oversized.pdf');
+    fs.writeFileSync(oversizedPath, Buffer.alloc(11 * 1024 * 1024, 'a'));
+
+    try {
+      const res = await request(app)
+        .post('/api/files')
+        .set('Cookie', [`token=${token}`])
+        .field('contractId', testContract.id)
+        .attach('file', oversizedPath);
+
+      expect(res.status).toBe(400);
+      expect(res.body.error).toBe('Arquivo excede o tamanho máximo permitido.');
+    } finally {
+      if (fs.existsSync(oversizedPath)) fs.unlinkSync(oversizedPath);
+    }
+  });
+
   it('5. Download autenticado deve entregar o arquivo com header Content-Disposition preservando o nome original', async () => {
     const token = createToken(activeUser);
     vi.mocked(prisma.user.findUnique).mockResolvedValue(activeUser as any);

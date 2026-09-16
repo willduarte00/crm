@@ -30,10 +30,7 @@ export async function getNextPaymentNumbers(
 
   // Lock de linha exclusivo (SELECT ... FOR UPDATE) para Postgres (RF-32)
   try {
-    const rows = await tx.$queryRawUnsafe(
-      `SELECT "lastNumber" FROM "payment_sequences" WHERE "year" = $1 FOR UPDATE`,
-      year
-    );
+    const rows = await tx.$queryRaw`SELECT "lastNumber" FROM "payment_sequences" WHERE "year" = ${year} FOR UPDATE`;
     if (Array.isArray(rows) && rows.length > 0) {
       currentLast = Number(rows[0].lastNumber);
     } else {

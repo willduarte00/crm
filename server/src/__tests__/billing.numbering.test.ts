@@ -34,7 +34,7 @@ describe('Numeração de cobranças — domain/billing.ts e billingService (RF-3
           return { year: 2026, lastNumber: mockSequenceState };
         }),
       },
-      $queryRawUnsafe: vi.fn().mockImplementation(() => [{ lastNumber: mockSequenceState }]),
+      $queryRaw: vi.fn().mockImplementation(() => [{ lastNumber: mockSequenceState }]),
     };
 
     const numbers = await getNextPaymentNumbers(mockTx, 2026, 5);
@@ -63,7 +63,7 @@ describe('Numeração de cobranças — domain/billing.ts e billingService (RF-3
           return { year: 2026, lastNumber: dbLastNumber };
         }),
       },
-      $queryRawUnsafe: vi.fn().mockImplementation(async () => {
+      $queryRaw: vi.fn().mockImplementation(async () => {
         // Simula a fila de bloqueio exclusivo (SELECT ... FOR UPDATE) no Postgres
         let unlock: () => void;
         const acquired = new Promise<void>((resolve) => {
@@ -118,7 +118,7 @@ describe('Numeração de cobranças — domain/billing.ts e billingService (RF-3
           return { year: where.year, lastNumber: data.lastNumber };
         }),
       },
-      $queryRawUnsafe: vi.fn().mockImplementation((_query: string, year: number) => [
+      $queryRaw: vi.fn().mockImplementation((_query: any, year: number) => [
         { lastNumber: sequencesByYear[year] || 0 },
       ]),
     };
@@ -144,7 +144,7 @@ describe('Numeração de cobranças — domain/billing.ts e billingService (RF-3
           return { year: 2026, lastNumber: sequenceCounter };
         }),
       },
-      $queryRawUnsafe: vi.fn().mockImplementation(() => [{ lastNumber: sequenceCounter }]),
+      $queryRaw: vi.fn().mockImplementation(() => [{ lastNumber: sequenceCounter }]),
     };
 
     // Gera COB-2026-0006
